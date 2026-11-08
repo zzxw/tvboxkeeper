@@ -1,0 +1,13 @@
+# 人工种子源清单：`tvboxkeeper import` 会把它们登记进源库
+# 注意：这类公开地址失效很常见，属于正常现象，体检会自动标记
+# 常用字段：url（必填）、name、starred（置顶推荐）、banned（永不收录）
+
+sources:
+  - url: https://www.饭太硬.top/tv/
+    name: 饭太硬
+  - url: https://12586.kstore.space/123.txt
+    name: kstore合集
+  - url: http://我不是.肥猫.love/接口禁止贩卖/
+    name: 肥猫
+  - url: https://tvbox.cainisi.cf/
+    name: 菜妮丝

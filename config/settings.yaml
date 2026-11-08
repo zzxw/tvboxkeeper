@@ -1,0 +1,36 @@
+# TVBox 源维护工具 · 全局配置
+# 与 src/tvboxkeeper/config.py 中 DEFAULTS 对应，可按需覆盖
+
+network:
+  timeout: 10          # 单次请求超时（秒）
+  retries: 2           # 失败重试次数
+  concurrency: 8       # 全局并发上限
+  max_bytes: 5242880   # 配置文件大小上限（5MB）
+  verify_ssl: false    # 社区站点证书链常不完整（TVBox 客户端也不校验）；仅解析 JSON 不执行代码，风险可控
+  user_agents:
+    - "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+    - "okhttp/4.10.0"
+
+validate:
+  level: L2                  # 默认验证深度：L1 | L2（L3 预留）
+  dead_after_failures: 3     # 连续失败 N 次判死
+  max_probes: 12             # L2 最多探测的子资源数
+  probe_timeout: 8           # 子资源探测超时（秒）
+
+score:
+  weights:
+    success: 0.5   # 近 10 次检查成功率权重
+    subs: 0.3      # 子资源（jar/直播等）探测通过率权重
+    richness: 0.2  # 内容丰富度权重
+
+publish:
+  min_health: 60           # 进入多仓订阅的健康分门槛
+  duocang: output/多仓.json
+  report: output/报告.md
+
+snapshot:
+  keep: 10   # 每个源保留的快照份数
+
+discover:
+  max_depth: 2          # 多仓递归展开深度
+  max_new_per_run: 100  # 单轮 discover 最多登记的新源数
