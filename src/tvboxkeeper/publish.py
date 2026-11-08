@@ -36,10 +36,12 @@ def build_duocang(
         url = r["url"]
         if mirror_base and r.get("id") in mirrored_sids:
             url = f"{mirror_base.rstrip('/')}/{r['id']}.json"
-        entries.append({
+        entry = {
             "sourceName": r.get("name") or guess_name(r["url"]),
             "sourceUrl": url,
-        })
+            "sourceDelay": int(r.get("latency_ms") or 0),  # 最近一次体检延迟 ms
+        }
+        entries.append(entry)
     return {"storeHouse": entries}
 
 

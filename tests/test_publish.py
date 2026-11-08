@@ -37,6 +37,13 @@ def test_duocang_names():
     assert names == ["置顶", "正常"]
 
 
+def test_duocang_includes_delay():
+    data = build_duocang(ROWS, min_health=60)
+    delays = [e["sourceDelay"] for e in data["storeHouse"]]
+    assert delays == [100, 100]  # make_row 默认 latency_ms=100
+    assert all(isinstance(d, int) for d in delays)
+
+
 def test_duocang_with_mirror():
     rows = [
         dict(make_row("有镜像", "http://b/c.json", health=90), id="aaa111"),
