@@ -66,6 +66,24 @@ def _now() -> str:
     return time.strftime("%Y-%m-%d %H:%M:%S")
 
 
+def reason_of(detail: dict) -> str:
+    """把 check_log.detail 里的错误归一成可统计的原因。"""
+    err = str(detail.get("error") or "")
+    if err.startswith("HTTP "):
+        return err[:12]
+    if "getaddrinfo" in err:
+        return "DNS 解析失败"
+    if "Timeout" in err or "timed out" in err:
+        return "超时"
+    if "ConnectError" in err or "RemoteProtocolError" in err or "ReadError" in err:
+        return "连接失败/被重置"
+    if "SSL" in err or "CERTIFICATE" in err:
+        return "SSL 证书错误"
+    if err.startswith("可达但解析不出"):
+        return "结构无效/反爬页"
+    return err[:24] or "未知"
+
+
 class Registry:
     def __init__(self, db_path: Path, snap_root: Path | None = None):
         db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -138,6 +156,83 @@ class Registry:
             self.conn.execute(
                 "UPDATE source SET status='banned' WHERE id=?", (sid,))
         self.conn.commit()
+
+    # ---------- 挖源记录（GitHub hunt 去重用） ----------
+
+    def note_hunt_batch(self, repo_full_names: list[str]) -> None:
+        now = _now()
+        self.conn.executemany(
+            "INSERT INTO origin(source_id, channel, ref, ts) VALUES('','github_repo',?,?)",
+            [(ref, now) for ref in repo_full_names],
+        )
+        self.conn.commit()
+
+    def hunted_recently(self, repo_full_name: str, days: int) -> bool:
+        cutoff = time.strftime(
+            "%Y-%m-%d %H:%M:%S", time.localtime(time.time() - days * 86400))
+        row = self.conn.execute(
+            "SELECT 1 FROM origin WHERE channel='github_repo' AND ref=? "
+            "AND ts>=? LIMIT 1",
+            (repo_full_name, cutoff),
+        ).fetchone()
+        return bool(row)
+
+    # ---------- 历史与统计 ----------
+
+    def history(self, sid: str, limit: int = 50) -> list[dict]:
+        rows = self.conn.execute(
+            "SELECT ts, level, ok, latency_ms, detail FROM check_log "
+            "WHERE source_id=? ORDER BY rowid DESC LIMIT ?",
+            (sid, limit),
+        ).fetchall()
+        out = []
+        for r in reversed(rows):
+            d = dict(r)
+            try:
+                d["parsed"] = json.loads(d.pop("detail") or "{}")
+            except ValueError:
+                d["parsed"] = {}
+            out.append(d)
+        return out
+
+    def availability(self, sid: str, days: int = 30) -> float | None:
+        """近 N 天体检成功率（%），无记录返回 None。"""
+        cutoff = time.strftime(
+            "%Y-%m-%d %H:%M:%S", time.localtime(time.time() - days * 86400))
+        row = self.conn.execute(
+            "SELECT COUNT(*) AS n, SUM(ok) AS ok_n FROM check_log "
+            "WHERE source_id=? AND ts>=?",
+            (sid, cutoff),
+        ).fetchone()
+        n = row["n"] or 0
+        if n == 0:
+            return None
+        return (row["ok_n"] or 0) / n * 100
+
+    def failure_reasons(self, days: int = 30) -> list[dict]:
+        """聚合近 N 天失败原因：[{reason, count, sources}]。"""
+        cutoff = time.strftime(
+            "%Y-%m-%d %H:%M:%S", time.localtime(time.time() - days * 86400))
+        rows = self.conn.execute(
+            "SELECT source_id, detail FROM check_log WHERE ok=0 AND ts>=?",
+            (cutoff,),
+        ).fetchall()
+        agg: dict[str, dict] = {}
+        for r in rows:
+            try:
+                parsed = json.loads(r["detail"] or "{}")
+            except ValueError:
+                parsed = {}
+            reason = reason_of(parsed)
+            entry = agg.setdefault(reason, {"reason": reason, "count": 0, "sids": set()})
+            entry["count"] += 1
+            entry["sids"].add(r["source_id"])
+        out = sorted(
+            ({"reason": e["reason"], "count": e["count"],
+              "sources": len(e["sids"])} for e in agg.values()),
+            key=lambda x: -x["count"],
+        )
+        return out
 
     # ---------- 体检记录 ----------
 

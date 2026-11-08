@@ -87,3 +87,35 @@ def test_banned_excluded(tmp_path):
     assert all(r["banned"] == 0 for r in rows)
     reg.record(make_outcome(url="http://e.com/ban.json", ok=False), SETTINGS)
     assert reg.get_by_url("http://e.com/ban.json")["status"] == "banned"
+
+
+def test_availability_and_failure_reasons(tmp_path):
+    import pytest
+    reg = make_registry(tmp_path)
+    reg.upsert("http://e.com/h.json", name="H")
+    for ok in (True, True, False):
+        reg.record(make_outcome(url="http://e.com/h.json", ok=ok), SETTINGS)
+    sid = reg.get_by_url("http://e.com/h.json")["id"]
+    assert reg.availability(sid) == pytest.approx(66.7, abs=0.1)
+    assert reg.availability("nonexistent") is None
+
+    reasons = reg.failure_reasons(days=30)
+    assert reasons and reasons[0]["reason"] == "HTTP 404"
+    assert reasons[0]["count"] == 1 and reasons[0]["sources"] == 1
+
+
+def test_history_order(tmp_path):
+    reg = make_registry(tmp_path)
+    reg.upsert("http://e.com/h2.json")
+    for ok in (True, False, True):
+        reg.record(make_outcome(url="http://e.com/h2.json", ok=ok), SETTINGS)
+    hist = reg.history(reg.get_by_url("http://e.com/h2.json")["id"])
+    assert [h["ok"] for h in hist] == [1, 0, 1]  # 旧 → 新
+
+
+def test_hunted_recently(tmp_path):
+    reg = make_registry(tmp_path)
+    assert not reg.hunted_recently("o/r1", 7)
+    reg.note_hunt_batch(["o/r1"])
+    assert reg.hunted_recently("o/r1", 7)
+    assert not reg.hunted_recently("o/r2", 7)

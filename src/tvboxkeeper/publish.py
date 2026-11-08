@@ -46,6 +46,7 @@ def build_report(
     duocang_path: str,
     duocang_count: int,
     min_health: float,
+    failure_stats: list[dict] | None = None,
 ) -> str:
     now = time.strftime("%Y-%m-%d %H:%M:%S")
     by_status = Counter(r["status"] for r in rows)
@@ -80,20 +81,35 @@ def build_report(
         f"多仓文件：`{duocang_path}`（{duocang_count} 个源），"
         "在 TVBox「配置地址」中填入该文件地址（或其 raw 链接）即可导入。",
         "",
+    ]
+
+    if failure_stats:
+        lines += [
+            "## 近 30 天失败原因",
+            "",
+            "| 原因 | 次数 | 涉及源数 |",
+            "|---|---|---|",
+        ]
+        for f in failure_stats[:10]:
+            lines.append(f"| {f['reason']} | {f['count']} | {f['sources']} |")
+        lines.append("")
+
+    lines += [
         "## 源榜单",
         "",
-        "| 状态 | 名称 | 站点 | 直播 | 子仓 | 探测 | 健康分 | 延迟ms | 最近检查 | URL |",
-        "|---|---|---|---|---|---|---|---|---|---|",
+        "| 状态 | 名称 | 站点 | 直播 | 子仓 | 探测 | 健康分 | 30天可用 | 延迟ms | 最近检查 | URL |",
+        "|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for r in sorted((r for r in rows if not r.get("banned")),
                     key=lambda x: (-x.get("starred", 0), -x.get("health_score", 0))):
         name = (r.get("name") or "").replace("|", "\\|")[:28]
         probe = (f"{r['sub_ok']}/{r['sub_total']}"
                  if r.get("sub_total") else "-")
+        avail = r.get("avail") or "-"
         lines.append(
             f"| {r['status']} | {name} | {r['sites_count']} | {r['lives_count']} "
             f"| {r['storehouse_count']} | {probe} | {r['health_score']} "
-            f"| {r['latency_ms']} | {r.get('last_checked') or '-'} "
+            f"| {avail} | {r['latency_ms']} | {r.get('last_checked') or '-'} "
             f"| `{r['url'].replace('|', '\\|')}` |"
         )
     banned_n = len([r for r in rows if r.get("banned")])

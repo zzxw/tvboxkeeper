@@ -34,6 +34,20 @@ DEFAULTS: dict[str, Any] = {
     },
     "snapshot": {"keep": 10},
     "discover": {"max_depth": 2, "max_new_per_run": 100},
+    "github": {
+        "token_env": "GITHUB_TOKEN",
+        "repo_queries": ["tvbox 接口", "tvbox config", "topic:tvbox"],
+        "code_query": '"storeHouse" extension:json',  # 需要 token
+        "candidate_files": [
+            "config.json", "tvbox.json", "box.json", "api.json",
+            "index.json", "app.json", "duocang.json", "多仓.json",
+        ],
+        "max_repos_per_run": 30,
+        "max_fetches_per_run": 60,
+        "raw_mirror": "",  # raw 加速镜像，如 https://gh-proxy.com（国内建议配置）
+        "search_interval": 6.5,  # 无 token 时 Search API 限 10 次/分钟
+        "rehunt_days": 7,
+    },
 }
 
 

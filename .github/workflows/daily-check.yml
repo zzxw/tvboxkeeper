@@ -1,0 +1,44 @@
+name: daily-check
+
+on:
+  schedule:
+    - cron: "30 21 * * *"   # UTC 21:30 = 北京时间次日 05:30
+  workflow_dispatch:        # 支持手动触发
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-check
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 安装
+        run: pip install -e .
+
+      - name: 发现 + 体检 + 发布
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tvboxkeeper import
+          tvboxkeeper discover
+          tvboxkeeper hunt
+          tvboxkeeper check
+          tvboxkeeper publish
+
+      - name: 提交产物与源库
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "chore: 每日源体检更新 [skip ci]"
+          git push

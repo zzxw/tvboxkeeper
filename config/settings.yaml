@@ -34,3 +34,15 @@ snapshot:
 discover:
   max_depth: 2          # 多仓递归展开深度
   max_new_per_run: 100  # 单轮 discover 最多登记的新源数
+
+github:
+  token_env: GITHUB_TOKEN   # 从哪个环境变量读 token（可选，但强烈建议）
+  repo_queries:             # 仓库搜索关键词（无 token 可用，限 10 次/分钟）
+    - "tvbox 接口"
+    - "tvbox config"
+    - "topic:tvbox"
+  code_query: '"storeHouse" extension:json'   # 代码搜索（需要 token）
+  max_repos_per_run: 30
+  max_fetches_per_run: 60
+  raw_mirror: "https://gh-proxy.com"   # raw 直连不通时配置加速镜像；Actions 里可留空
+  rehunt_days: 7            # 同一仓库 N 天内不重复探测

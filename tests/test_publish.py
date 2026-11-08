@@ -49,6 +49,17 @@ def test_report_contains_diff_and_table():
     assert "banned" in report
 
 
+def test_report_with_avail_and_failures():
+    rows = [make_row("可用", "http://b/c.json")]
+    rows[0]["avail"] = "93%"
+    report = build_report(rows, set(), set(), "output/多仓.json", 1, 60,
+                          failure_stats=[{"reason": "DNS 解析失败",
+                                          "count": 5, "sources": 2}])
+    assert "93%" in report
+    assert "近 30 天失败原因" in report
+    assert "DNS 解析失败" in report
+
+
 def test_previous_urls(tmp_path):
     p = tmp_path / "duo.json"
     p.write_text(json.dumps({"storeHouse": [

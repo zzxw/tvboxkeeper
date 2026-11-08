@@ -208,10 +208,103 @@ def discover() -> None:
 
 
 @app.command()
+def hunt() -> None:
+    """GitHub 挖源：搜索仓库/代码，探测常见配置文件名并登记。"""
+    from .github_hunt import Hunter
+    _, settings, reg = _open()
+    cfg = settings["github"]
+    token = os.environ.get(cfg.get("token_env", "GITHUB_TOKEN"), "")
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "tvboxkeeper",
+        **({"Authorization": f"Bearer {token}"} if token else {}),
+    }
+    with httpx.Client(headers=headers, timeout=20, follow_redirects=True) as client:
+        hunter = Hunter(client, reg, settings, token=token)
+        stats = hunter.hunt()
+    typer.echo(
+        f"hunt 完成：搜索仓库 {stats['repos']} 个，"
+        f"探测配置文件 {stats['probes']} 次，新登记 {stats['registered']} 个源。"
+    )
+    for note in hunter.notes:
+        typer.echo(f"提示：{note}")
+    if not token:
+        typer.echo("提示：未设置 GITHUB_TOKEN，代码搜索未启用且仓库搜索受限流。")
+    reg.close()
+
+
+@app.command()
+def history(
+    url_or_id: str,
+    limit: int = typer.Option(30, "--limit", help="最多显示 N 条记录"),
+) -> None:
+    """查看单个源的体检历史与近 30 天可用率。"""
+    _, _, reg = _open()
+    row = reg.get(url_or_id) or reg.get_by_url(url_or_id)
+    if not row:
+        typer.echo("找不到该源。")
+        raise typer.Exit(1)
+    avail = reg.availability(row["id"])
+    typer.echo(f"{row['name']}  {row['url']}")
+    typer.echo(
+        f"状态={row['status']} 健康={row['health_score']} "
+        f"30天可用={'-' if avail is None else f'{avail:.0f}%'} "
+        f"连续 ok={row['streak_ok']} fail={row['streak_fail']}"
+    )
+    for h in reg.history(row["id"], limit):
+        d = h["parsed"]
+        mark = "OK  " if h["ok"] else "FAIL"
+        err = str(d.get("error") or "")
+        typer.echo(
+            f"{h['ts']} [{mark}] {h['level']} {h['latency_ms']:>5}ms "
+            f"schema={str(d.get('schema') or '-'):<10} {err[:70]}"
+        )
+    reg.close()
+
+
+@app.command()
+def stats() -> None:
+    """源库整体统计：状态分布、失败原因、低可用源。"""
+    _, _, reg = _open()
+    rows = reg.sources(include_banned=True)
+    by_status: dict[str, int] = {}
+    for r in rows:
+        by_status[r["status"]] = by_status.get(r["status"], 0) + 1
+    typer.echo(f"源总数：{len(rows)}")
+    for status, n in sorted(by_status.items(), key=lambda x: -x[1]):
+        typer.echo(f"  {status:<10} {n}")
+
+    active = [r for r in rows if r["status"] == "active"]
+    if active:
+        avg = sum(r["latency_ms"] for r in active) / len(active)
+        typer.echo(f"\nactive 源平均延迟：{avg:.0f}ms")
+
+    reasons = reg.failure_reasons(days=30)
+    if reasons:
+        typer.echo("\n近 30 天失败原因 Top：")
+        for f in reasons[:8]:
+            typer.echo(f"  {f['reason']:<16} {f['count']:>4} 次 / {f['sources']} 个源")
+
+    weak = []
+    for r in active:
+        a = reg.availability(r["id"])
+        if a is not None and a < 80:
+            weak.append((r["name"], a))
+    if weak:
+        typer.echo("\n近 30 天可用率 < 80% 的 active 源：")
+        for name, a in weak:
+            typer.echo(f"  {_fmt(name, 16)} {a:.0f}%")
+    reg.close()
+
+
+@app.command()
 def publish() -> None:
     """生成多仓订阅 JSON 与 Markdown 体检报告。"""
     root, settings, reg = _open()
     rows = reg.sources(include_banned=True)
+    for r in rows:
+        a = reg.availability(r["id"])
+        r["avail"] = f"{a:.0f}%" if a is not None else "-"
     pub = settings["publish"]
     duo_path = root / pub["duocang"]
     prev = publish_mod.previous_urls(duo_path)
@@ -221,7 +314,7 @@ def publish() -> None:
     added, removed = cur - prev, prev - cur
     report = publish_mod.build_report(
         rows, added, removed, pub["duocang"], len(data["storeHouse"]),
-        pub["min_health"],
+        pub["min_health"], failure_stats=reg.failure_reasons(days=30),
     )
     report_path = root / pub["report"]
     report_path.parent.mkdir(parents=True, exist_ok=True)
