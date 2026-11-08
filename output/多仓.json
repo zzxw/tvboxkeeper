@@ -1,34 +1,14 @@
 {
   "storeHouse": [
     {
-      "sourceName": "noimank多仓",
-      "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/2ec885d8d3ed0e27.json",
-      "sourceDelay": 780
-    },
-    {
-      "sourceName": "kstore合集",
-      "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/3cf497015dbbcfdf.json",
-      "sourceDelay": 203
-    },
-    {
       "sourceName": "王二小",
       "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/d4d42756f6228813.json",
-      "sourceDelay": 172
+      "sourceDelay": 202
     },
     {
-      "sourceName": "🚀6-FongMI线路",
-      "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/9955aecf591bb06c.json",
-      "sourceDelay": 1000
-    },
-    {
-      "sourceName": "🚀4-健康家用",
-      "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/6b4b3302b8e0695d.json",
-      "sourceDelay": 2438
-    },
-    {
-      "sourceName": "嗷呜",
-      "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/a47397e2e8110fbf.json",
-      "sourceDelay": 141
+      "sourceName": "noimank多仓",
+      "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/2ec885d8d3ed0e27.json",
+      "sourceDelay": 1203
     },
     {
       "sourceName": "小米",
@@ -36,29 +16,54 @@
       "sourceDelay": 734
     },
     {
-      "sourceName": "raw.githubusercontent.com",
-      "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/8ce471aeea5bc733.json",
-      "sourceDelay": 719
+      "sourceName": "嗷呜",
+      "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/a47397e2e8110fbf.json",
+      "sourceDelay": 172
+    },
+    {
+      "sourceName": "kstore合集",
+      "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/3cf497015dbbcfdf.json",
+      "sourceDelay": 515
     },
     {
       "sourceName": "raw.githubusercontent.com",
       "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/31aef7f75002fd33.json",
-      "sourceDelay": 844
+      "sourceDelay": 1593
+    },
+    {
+      "sourceName": "🚀4-健康家用",
+      "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/6b4b3302b8e0695d.json",
+      "sourceDelay": 1280
+    },
+    {
+      "sourceName": "🚀6-FongMI线路",
+      "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/9955aecf591bb06c.json",
+      "sourceDelay": 780
+    },
+    {
+      "sourceName": "raw.githubusercontent.com",
+      "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/8ce471aeea5bc733.json",
+      "sourceDelay": 875
     },
     {
       "sourceName": "二月红",
       "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/7d1afd7dd32144d8.json",
-      "sourceDelay": 375
+      "sourceDelay": 1030
     },
     {
       "sourceName": "🚀10-高天流云js",
       "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/97f4dfa51a2b5d3c.json",
-      "sourceDelay": 1266
+      "sourceDelay": 1500
     },
     {
       "sourceName": "🚀1-心魔在线",
       "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/d9a4a4ac373f01e7.json",
-      "sourceDelay": 1719
+      "sourceDelay": 1827
+    },
+    {
+      "sourceName": "潇洒",
+      "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/53e889f9ec879f2f.json",
+      "sourceDelay": 11484
     }
   ]
 }

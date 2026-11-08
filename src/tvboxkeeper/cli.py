@@ -176,6 +176,7 @@ def check(
             f"[{mark}] {_fmt(row.get('name', ''), 16)} "
             f"{o.url[:60]:60s} {o.latency_ms:>5}ms "
             f"schema={getattr(info, 'schema_type', '-'):<10} "
+            f"适配={getattr(info, 'compat', '') or '-':<5} "
             f"sites={getattr(info, 'sites_count', 0):<4} "
             f"subs={subs} {('err=' + o.error) if o.error else ''}"
         )

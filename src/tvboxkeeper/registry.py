@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS source (
   sub_total        INTEGER DEFAULT 0,
   l3_tested        INTEGER DEFAULT 0,
   l3_ok            INTEGER DEFAULT 0,
+  compat           TEXT DEFAULT '',
   content_md5      TEXT DEFAULT '',
   dup_of           TEXT DEFAULT '',
   health_score     REAL DEFAULT 0,
@@ -109,6 +110,7 @@ class Registry:
         for col, ddl in (
             ("l3_tested", "INTEGER DEFAULT 0"),
             ("l3_ok", "INTEGER DEFAULT 0"),
+            ("compat", "TEXT DEFAULT ''"),
             ("content_md5", "TEXT DEFAULT ''"),
             ("dup_of", "TEXT DEFAULT ''"),
         ):
@@ -313,7 +315,7 @@ class Registry:
             "last_ok=CASE WHEN ? THEN ? ELSE last_ok END, "
             "streak_ok=?, streak_fail=?, latency_ms=?, sites_count=?, "
             "parses_count=?, lives_count=?, storehouse_count=?, sub_ok=?, "
-            "sub_total=?, l3_tested=?, l3_ok=?, "
+            "sub_total=?, l3_tested=?, l3_ok=?, compat=?, "
             "content_md5=CASE WHEN ? THEN ? ELSE content_md5 END, "
             "dup_of='', health_score=? WHERE id=?",
             (schema_type, status, now, 1 if ok else 0, now,
@@ -323,6 +325,7 @@ class Registry:
              schema.lives_count if schema else 0,
              schema.storehouse_count if schema else 0,
              sub_ok, sub_total, outcome.l3_tested, outcome.l3_ok,
+             schema.compat if schema else "",
              1 if ok else 0, content_md5, score, sid),
         )
         self.conn.commit()

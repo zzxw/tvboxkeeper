@@ -55,6 +55,8 @@ github:
     - "tvbox 接口"
     - "tvbox config"
     - "topic:tvbox"
+    - "影视仓 接口"          # 偏影视仓生态
+    - "影视仓 配置"
   code_query: '"storeHouse" extension:json'   # 代码搜索（需要 token）
   max_repos_per_run: 30
   max_fetches_per_run: 60

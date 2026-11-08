@@ -48,7 +48,10 @@ DEFAULTS: dict[str, Any] = {
     "discover": {"max_depth": 2, "max_new_per_run": 100},
     "github": {
         "token_env": "GITHUB_TOKEN",
-        "repo_queries": ["tvbox 接口", "tvbox config", "topic:tvbox"],
+        "repo_queries": [
+            "tvbox 接口", "tvbox config", "topic:tvbox",
+            "影视仓 接口", "影视仓 配置",  # 偏影视仓生态的仓库
+        ],
         "code_query": '"storeHouse" extension:json',  # 需要 token
         "candidate_files": [
             "config.json", "tvbox.json", "box.json", "api.json",

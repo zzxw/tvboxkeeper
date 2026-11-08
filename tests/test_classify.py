@@ -64,6 +64,28 @@ def test_invalid():
     assert parse_config(BASE, '{"foo": 1}').schema_type == "invalid"
 
 
+def test_compat_tags():
+    # csp_ 占比高 → 偏影视仓
+    info = parse_config(BASE, '{"sites": ['
+                              '{"type": 3, "api": "csp_XPath"}, '
+                              '{"type": 3, "api": "csp_AppYs"}, '
+                              '{"type": 0, "api": "http://s.example/api.php"}]}')
+    assert info.compat == "偏影视仓"
+    # drpy JS 占比高 → 需特定分支
+    info = parse_config(BASE, '{"sites": ['
+                              '{"type": 3, "api": "./dr/js/a.js"}, '
+                              '{"type": 3, "api": "./dr/js/b.js"}, '
+                              '{"type": 0, "api": "http://s.example/api.php"}]}')
+    assert info.compat == "需特定分支"
+    # CMS 直连为主 → 通用
+    info = parse_config(BASE, '{"sites": ['
+                              '{"type": 0, "api": "http://s1.example/api.php"}, '
+                              '{"type": 1, "api": "http://s2.example/vod"}]}')
+    assert info.compat == "通用"
+    # 多仓无站点 → 不标注
+    assert parse_config(BASE, STOREHOUSE).compat == ""
+
+
 def test_site_apis_collected():
     info = parse_config(BASE, '{"sites": ['
                               '{"type": 0, "api": "http://s1.example/api.php"}, '

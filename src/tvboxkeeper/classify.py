@@ -50,6 +50,23 @@ def _count(entries) -> int:
     return sum(1 for e in entries if isinstance(e, dict)) if isinstance(entries, list) else 0
 
 
+def _compat_tag(total: int, csp: int, drpy: int, ext: int) -> str:
+    """按站点技术构成启发式标注分支适配性。
+
+    - drpy JS 爬虫 / 私有 type 占比高 → 需特定分支（FongMI/OK 影视等）
+    - csp_ jar 爬虫占比高 → 偏影视仓（内置 csp 运行时最全）
+    - CMS 直连为主 → 通用
+    - 多仓（无站点）不标注
+    """
+    if not total:
+        return ""
+    if drpy / total > 0.3 or ext / total > 0.1:
+        return "需特定分支"
+    if csp / total > 0.3:
+        return "偏影视仓"
+    return "通用"
+
+
 def _resolve_url(value: str, base: str) -> str | None:
     value = value.strip()
     if not value or value.startswith("proxy://"):
@@ -148,13 +165,25 @@ def parse_config(url: str, text: str) -> SchemaInfo:
     else:
         info.schema_type = "tvbox"
 
-    # L3 抽测候选：type 0/1 站点的 http(s) CMS api
+    # 站点技术特征统计 → 分支适配标注（启发式）
+    csp = drpy = ext = 0
     for site in data.get("sites") or []:
-        if (isinstance(site, dict) and site.get("type") in (0, 1)
-                and isinstance(site.get("api"), str)
+        if not isinstance(site, dict):
+            continue
+        api = str(site.get("api") or "")
+        stype = site.get("type")
+        if stype not in (0, 1, 3):
+            ext += 1
+        if api.startswith("csp_"):
+            csp += 1
+        low = api.lower()
+        if low.endswith(".js") or "drpy" in low:
+            drpy += 1
+        if (stype in (0, 1) and isinstance(site.get("api"), str)
                 and _SCHEME_RE.match(site["api"])):
             info.site_apis.append(site["api"])
     info.site_apis = info.site_apis[:10]
+    info.compat = _compat_tag(info.sites_count, csp, drpy, ext)
 
     # 子资源探测清单：jar 优先，其次直播、壁纸
     for sp in _spider_urls(data.get("spider"), url):

@@ -32,6 +32,8 @@ class SchemaInfo:
     storehouse_count: int = 0
     # L3 抽测候选：type 0/1 站点的 http(s) CMS api（最多收集 10 个）
     site_apis: list[str] = field(default_factory=list)
+    # 分支适配标注：通用 / 偏影视仓 / 需特定分支（多仓为空）
+    compat: str = ""
     # L2 待探测的子资源 (kind, url)，顺序即优先级
     probes: list[tuple[str, str]] = field(default_factory=list)
     # 多仓的子仓条目 [{"sourceName": ..., "sourceUrl": ...}]

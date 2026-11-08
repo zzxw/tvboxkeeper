@@ -73,12 +73,21 @@ def test_report_contains_diff_and_table():
 def test_report_with_avail_and_failures():
     rows = [make_row("可用", "http://b/c.json")]
     rows[0]["avail"] = "93%"
+    rows[0]["compat"] = "通用"
     report = build_report(rows, set(), set(), "output/多仓.json", 1, 60,
                           failure_stats=[{"reason": "DNS 解析失败",
                                           "count": 5, "sources": 2}])
     assert "93%" in report
     assert "近 30 天失败原因" in report
     assert "DNS 解析失败" in report
+    assert "| 适配 |" in report and "通用" in report
+
+
+def test_site_shows_compat():
+    rows = [dict(make_row("站点A", "http://b/c.json"),
+                 id="aaa111", l3_tested=0, l3_ok=0, dup_of="", compat="偏影视仓")]
+    out = build_site(rows, {}, [], duocang_count=1, min_health=60)
+    assert "偏影视仓" in out and "适配" in out
 
 
 def test_previous_urls(tmp_path):

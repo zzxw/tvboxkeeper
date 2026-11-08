@@ -180,6 +180,16 @@ def test_dedupe_resets_when_content_diverges(tmp_path):
     assert rows["http://e.com/d2.json"]["dup_of"] == ""
 
 
+def test_compat_persisted(tmp_path):
+    reg = make_registry(tmp_path)
+    reg.upsert("http://e.com/comp.json", name="C")
+    outcome = make_outcome(url="http://e.com/comp.json")
+    outcome.schema = SchemaInfo(schema_type="tvbox", sites_count=2,
+                                lives_count=1, compat="偏影视仓")
+    reg.record(outcome, SETTINGS)
+    assert reg.get_by_url("http://e.com/comp.json")["compat"] == "偏影视仓"
+
+
 def test_reason_of_variants():
     from tvboxkeeper.registry import reason_of
     assert reason_of({"error": "响应为空（疑似反爬或接口异常）"}) == "空响应/疑似反爬"

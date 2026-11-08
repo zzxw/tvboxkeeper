@@ -127,12 +127,13 @@ def build_report(
     lines += [
         "## 源榜单",
         "",
-        "| 状态 | 名称 | 站点 | 直播 | 子仓 | 探测 | L3 | 健康分 | 30天可用 | 延迟ms | 最近检查 | URL |",
-        "|---|---|---|---|---|---|---|---|---|---|---|---|",
+        "| 状态 | 名称 | 适配 | 站点 | 直播 | 子仓 | 探测 | L3 | 健康分 | 30天可用 | 延迟ms | 最近检查 | URL |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for r in sorted((r for r in rows if not r.get("banned")),
                     key=lambda x: (-x.get("starred", 0), -x.get("health_score", 0))):
         name = (r.get("name") or "").replace("|", "\\|")[:28]
+        compat = (r.get("compat") or "-").replace("|", "\\|")
         probe = (f"{r['sub_ok']}/{r['sub_total']}"
                  if r.get("sub_total") else "-")
         l3 = (f"{r['l3_ok']}/{r['l3_tested']}"
@@ -140,7 +141,7 @@ def build_report(
         avail = r.get("avail") or "-"
         dup = f" →#{str(r['dup_of'])[:8]}" if r.get("dup_of") else ""
         lines.append(
-            f"| {r['status']}{dup} | {name} | {r['sites_count']} | {r['lives_count']} "
+            f"| {r['status']}{dup} | {name} | {compat} | {r['sites_count']} | {r['lives_count']} "
             f"| {r['storehouse_count']} | {probe} | {l3} | {r['health_score']} "
             f"| {avail} | {r['latency_ms']} | {r.get('last_checked') or '-'} "
             f"| `{r['url'].replace('|', '\\|')}` |"
@@ -249,6 +250,7 @@ def build_site(
             f'<tr class="{cls}">'
             f'<td><span class="chip {cls}">{esc(r["status"])}</span>{dup}</td>'
             f'<td class="name">{esc(r.get("name") or "")}</td>'
+            f'<td>{esc(r.get("compat") or "—")}</td>'
             f'<td class="num">{r["sites_count"]}</td>'
             f'<td class="num">{r["lives_count"]}</td>'
             f'<td class="num">{r["health_score"]}</td>'
@@ -306,7 +308,7 @@ footer {{ color: #475569; font-size: 12px; }}
 <div class="cards">{cards}</div>
 <input id="q" placeholder="筛选名称 / 状态 / URL…">
 <table id="tbl">
-<tr><th>状态</th><th>名称</th><th>站点</th><th>直播</th><th>健康分</th>
+<tr><th>状态</th><th>名称</th><th>适配</th><th>站点</th><th>直播</th><th>健康分</th>
 <th>30天可用</th><th>L3</th><th>近期体检</th><th>URL</th></tr>
 {''.join(trs)}
 </table>
