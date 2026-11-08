@@ -54,8 +54,10 @@ async def check_source(
     info = classify.parse_config(url, text)
     out.schema = info
     out.content = fr.content
-    if info.schema_type == "invalid":
-        out.error = "可达但解析不出 TVBox 配置结构"
+    if info.schema_type in ("invalid", "anti_crawl"):
+        out.error = ("HTML 反爬页，疑似仍存活，已放宽观察"
+                     if info.schema_type == "anti_crawl"
+                     else "可达但解析不出 TVBox 配置结构")
         return out
 
     out.ok = True

@@ -36,6 +36,18 @@ def test_duocang_names():
     assert names == ["置顶", "正常"]
 
 
+def test_duocang_with_mirror():
+    rows = [
+        dict(make_row("有镜像", "http://b/c.json", health=90), id="aaa111"),
+        dict(make_row("无快照", "http://c/c.json", health=85), id="bbb222"),
+    ]
+    data = build_duocang(rows, 60, mirror_base="https://mirror.example/mirrors",
+                         mirrored_sids={"aaa111"})
+    entries = {e["sourceName"]: e["sourceUrl"] for e in data["storeHouse"]}
+    assert entries["有镜像"] == "https://mirror.example/mirrors/aaa111.json"
+    assert entries["无快照"] == "http://c/c.json"  # 没快照回落原始地址
+
+
 def test_report_contains_diff_and_table():
     report = build_report(ROWS, added={"http://new/c.json"},
                           removed={"http://old/c.json"},

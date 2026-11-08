@@ -81,6 +81,8 @@ def reason_of(detail: dict) -> str:
         return "SSL 证书错误"
     if err.startswith("可达但解析不出"):
         return "结构无效/反爬页"
+    if "HTML 反爬页" in err:
+        return "HTML 反爬页（疑似存活）"
     return err[:24] or "未知"
 
 
@@ -256,6 +258,11 @@ class Registry:
             status = "active"
         elif schema_type == "invalid" and outcome.status > 0:
             status = "invalid"
+        elif schema_type == "anti_crawl":
+            # 反爬页可能是活的：放宽判死时限（grace 倍数 × 判死线）
+            grace = (settings["validate"].get("anti_crawl_grace", 3)
+                     * settings["validate"]["dead_after_failures"])
+            status = "dead" if streak_fail >= grace else "anti_crawl"
         elif streak_fail >= settings["validate"]["dead_after_failures"]:
             status = "dead"
         else:
@@ -345,6 +352,21 @@ class Registry:
         self.conn.commit()
         for old in sorted(d.glob("*.json.gz"))[:-keep] if keep else []:
             old.unlink()
+
+    def latest_snapshot(self, sid: str) -> tuple[bytes, str] | None:
+        """取最近一次内容快照，返回 (内容, 时间戳)；没有则 None。"""
+        row = self.conn.execute(
+            "SELECT ts, gzip_path FROM snapshot WHERE source_id=? "
+            "ORDER BY rowid DESC LIMIT 1",
+            (sid,),
+        ).fetchone()
+        if not row:
+            return None
+        try:
+            with gzip.open(row["gzip_path"], "rb") as fh:
+                return fh.read(), row["ts"]
+        except OSError:
+            return None
 
     def close(self) -> None:
         self.conn.close()

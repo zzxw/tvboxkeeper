@@ -14,6 +14,7 @@ network:
 validate:
   level: L2                  # 默认验证深度：L1 | L2（L3 预留）
   dead_after_failures: 3     # 连续失败 N 次判死
+  anti_crawl_grace: 3        # 反爬页判死宽限倍数（3×3=9 次才判死）
   max_probes: 12             # L2 最多探测的子资源数
   probe_timeout: 8           # 子资源探测超时（秒）
 
@@ -27,6 +28,9 @@ publish:
   min_health: 60           # 进入多仓订阅的健康分门槛
   duocang: output/多仓.json
   report: output/报告.md
+  mirror_base: "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors"
+  # ↑ 镜像基址：有快照的源在多仓里改用本仓库镜像地址（需仓库为 Public）；
+  #   若仓库是 Private 或不想启用镜像，改回 ""
 
 snapshot:
   keep: 10   # 每个源保留的快照份数

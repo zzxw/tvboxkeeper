@@ -10,8 +10,8 @@ from pathlib import Path
 from .normalize import guess_name
 
 
-def build_duocang(rows: list[dict], min_health: float) -> dict:
-    """只收录健康分达标的 active 源，starred 优先、健康分降序。"""
+def pick_sources(rows: list[dict], min_health: float) -> list[dict]:
+    """筛出可进入订阅的源：active + 健康分达标 + 未封禁，置顶优先。"""
     picked = [
         r for r in rows
         if r.get("status") == "active"
@@ -19,15 +19,26 @@ def build_duocang(rows: list[dict], min_health: float) -> dict:
         and not r.get("banned")
     ]
     picked.sort(key=lambda r: (-r.get("starred", 0), -r.get("health_score", 0)))
-    return {
-        "storeHouse": [
-            {
-                "sourceName": r.get("name") or guess_name(r["url"]),
-                "sourceUrl": r["url"],
-            }
-            for r in picked
-        ]
-    }
+    return picked
+
+
+def build_duocang(
+    rows: list[dict],
+    min_health: float,
+    mirror_base: str = "",
+    mirrored_sids: "set[str] | frozenset[str]" = frozenset(),
+) -> dict:
+    """生成 storeHouse 多仓；有镜像的源用镜像地址替代原始 URL。"""
+    entries = []
+    for r in pick_sources(rows, min_health):
+        url = r["url"]
+        if mirror_base and r.get("id") in mirrored_sids:
+            url = f"{mirror_base.rstrip('/')}/{r['id']}.json"
+        entries.append({
+            "sourceName": r.get("name") or guess_name(r["url"]),
+            "sourceUrl": url,
+        })
+    return {"storeHouse": entries}
 
 
 def previous_urls(path: Path) -> set[str]:
@@ -47,6 +58,7 @@ def build_report(
     duocang_count: int,
     min_health: float,
     failure_stats: list[dict] | None = None,
+    mirror_note: str = "",
 ) -> str:
     now = time.strftime("%Y-%m-%d %H:%M:%S")
     by_status = Counter(r["status"] for r in rows)
@@ -80,8 +92,10 @@ def build_report(
         "",
         f"多仓文件：`{duocang_path}`（{duocang_count} 个源），"
         "在 TVBox「配置地址」中填入该文件地址（或其 raw 链接）即可导入。",
-        "",
     ]
+    if mirror_note:
+        lines.append(f"- {mirror_note}")
+    lines.append("")
 
     if failure_stats:
         lines += [
@@ -123,3 +137,9 @@ def write_duocang(path: Path, data: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def write_mirror(path: Path, content: bytes) -> None:
+    """写入源内容镜像（原样字节，保证与最后一次成功快照一致）。"""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(content)

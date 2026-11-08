@@ -40,6 +40,7 @@ tvboxkeeper list        # 查看源库
 | flaky | 失败中，但连续失败次数未达判死线 |
 | dead | 连续 N 次失败（默认 3，可在 settings.yaml 调整） |
 | invalid | 可达但解析不出 TVBox 配置结构 |
+| anti_crawl | 返回 HTML 反爬页（可能仍存活），判死时限放宽 3 倍 |
 | banned | 人工封禁，不参与体检与发布 |
 
 ## 推送到 GitHub（启用每日自动体检）
@@ -60,6 +61,13 @@ git push -u origin main
 `import → discover → hunt → check → publish` 并把产物提交回仓库，
 之后可用 `https://raw.githubusercontent.com/<用户名>/tvboxkeeper/main/output/多仓.json`
 作为 TVBox 订阅地址（国内可加 gh-proxy 前缀）。
+
+## 镜像发布（订阅抗失效）
+
+配置 `publish.mirror_base`（指向本仓库 `output/mirrors/` 的 raw 地址）后，
+`publish` 会把每个订阅源最后一次成功的内容快照写入 `output/mirrors/<id>.json`，
+多仓条目改用镜像地址——**原站失效时订阅依然可用**（内容为最后一次成功快照）。
+镜像与源 ID 的对应关系见 `output/mirrors/index.json`。
 
 ## 安全与合规边界
 

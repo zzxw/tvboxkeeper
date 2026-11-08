@@ -11,6 +11,8 @@ def make_outcome(url="http://e.com/a.json", ok=True, schema="tvbox",
                  probes=(), content=b'{"sites": []}') -> CheckOutcome:
     if schema == "invalid":
         info = SchemaInfo(schema_type="invalid")
+    elif schema == "anti_crawl":
+        info = SchemaInfo(schema_type="anti_crawl")
     else:
         info = SchemaInfo(schema_type=schema, sites_count=10, lives_count=2)
     return CheckOutcome(
@@ -119,3 +121,28 @@ def test_hunted_recently(tmp_path):
     reg.note_hunt_batch(["o/r1"])
     assert reg.hunted_recently("o/r1", 7)
     assert not reg.hunted_recently("o/r2", 7)
+
+
+def test_anti_crawl_grace(tmp_path):
+    reg = make_registry(tmp_path)
+    reg.upsert("http://e.com/ac.json")
+    url = "http://e.com/ac.json"
+    # 连续 3 次反爬页：达到普通判死线但仍在宽限内
+    for _ in range(3):
+        reg.record(make_outcome(url=url, ok=False, schema="anti_crawl"), SETTINGS)
+    assert reg.get_by_url(url)["status"] == "anti_crawl"
+    # 达到 3×3=9 次：判死
+    for _ in range(6):
+        reg.record(make_outcome(url=url, ok=False, schema="anti_crawl"), SETTINGS)
+    assert reg.get_by_url(url)["status"] == "dead"
+
+
+def test_latest_snapshot_roundtrip(tmp_path):
+    reg = make_registry(tmp_path)
+    reg.upsert("http://e.com/snap.json")
+    url = "http://e.com/snap.json"
+    assert reg.latest_snapshot(reg.get_by_url(url)["id"]) is None
+    payload = b'{"sites": [{"name": "x"}]}'
+    reg.record(make_outcome(url=url, content=payload), SETTINGS)
+    got = reg.latest_snapshot(reg.get_by_url(url)["id"])
+    assert got is not None and got[0] == payload and got[1]

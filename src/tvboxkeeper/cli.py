@@ -299,28 +299,67 @@ def stats() -> None:
 
 @app.command()
 def publish() -> None:
-    """生成多仓订阅 JSON 与 Markdown 体检报告。"""
+    """生成多仓订阅 JSON 与 Markdown 体检报告（可含快照镜像）。"""
+    import json
     root, settings, reg = _open()
     rows = reg.sources(include_banned=True)
     for r in rows:
         a = reg.availability(r["id"])
         r["avail"] = f"{a:.0f}%" if a is not None else "-"
     pub = settings["publish"]
+
+    # 镜像发布：把订阅内源的最后快照写进 output/mirrors/<id>.json
+    mirror_base = (pub.get("mirror_base") or "").strip()
+    mirrored: dict[str, str] = {}
+    mirror_dir = root / "output" / "mirrors"
+    if mirror_base:
+        for r in publish_mod.pick_sources(rows, pub["min_health"]):
+            snap = reg.latest_snapshot(r["id"])
+            if snap:
+                content, ts = snap
+                publish_mod.write_mirror(mirror_dir / f"{r['id']}.json", content)
+                mirrored[r["id"]] = ts
+        if mirror_dir.exists():
+            for f in mirror_dir.glob("*.json"):
+                if f.stem not in mirrored and f.name != "index.json":
+                    f.unlink()
+        if mirrored:
+            by_id = {r["id"]: r for r in rows}
+            manifest = {
+                sid: {"name": by_id[sid]["name"], "url": by_id[sid]["url"],
+                      "updated": ts}
+                for sid, ts in mirrored.items()
+            }
+            (mirror_dir / "index.json").write_text(
+                json.dumps(manifest, ensure_ascii=False, indent=2),
+                encoding="utf-8")
+        mirror_note = (
+            f"镜像已启用：{len(mirrored)}/{len(publish_mod.pick_sources(rows, pub['min_health']))} "
+            f"个源使用本仓库快照镜像（{mirror_base}），原站失效不影响订阅。"
+            if mirrored else "镜像基址已配置，但订阅内源暂无可用快照。"
+        )
+    else:
+        mirror_note = "镜像未启用（settings.yaml publish.mirror_base 为空）。"
+
     duo_path = root / pub["duocang"]
     prev = publish_mod.previous_urls(duo_path)
-    data = publish_mod.build_duocang(rows, pub["min_health"])
+    data = publish_mod.build_duocang(rows, pub["min_health"],
+                                     mirror_base=mirror_base,
+                                     mirrored_sids=set(mirrored))
     publish_mod.write_duocang(duo_path, data)
     cur = {e["sourceUrl"] for e in data["storeHouse"]}
     added, removed = cur - prev, prev - cur
     report = publish_mod.build_report(
         rows, added, removed, pub["duocang"], len(data["storeHouse"]),
         pub["min_health"], failure_stats=reg.failure_reasons(days=30),
+        mirror_note=mirror_note,
     )
     report_path = root / pub["report"]
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text(report, encoding="utf-8")
     typer.echo(
-        f"已发布：{pub['duocang']}（{len(data['storeHouse'])} 个源）、"
+        f"已发布：{pub['duocang']}（{len(data['storeHouse'])} 个源，"
+        f"其中 {len(mirrored)} 个走镜像）、"
         f"{pub['report']}（diff: +{len(added)} / -{len(removed)}）"
     )
     reg.close()

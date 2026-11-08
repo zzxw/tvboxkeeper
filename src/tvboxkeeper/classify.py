@@ -12,6 +12,12 @@ from urllib.parse import urljoin
 from .models import SchemaInfo
 
 _SCHEME_RE = re.compile(r"^https?://", re.IGNORECASE)
+# 真正的 TVBox 配置不可能是 HTML；返回 HTML 基本就是反爬/落地页
+_HTML_RE = re.compile(r"<\s*(!doctype|html|body)", re.IGNORECASE)
+
+
+def looks_like_html(text: str) -> bool:
+    return bool(_HTML_RE.search(text[:2048]))
 
 
 def decode_content(data: bytes) -> str:
@@ -91,6 +97,8 @@ def parse_config(url: str, text: str) -> SchemaInfo:
     try:
         data = _extract_json(text)
     except ValueError:
+        if looks_like_html(text):
+            return SchemaInfo(schema_type="anti_crawl")
         return SchemaInfo(schema_type="invalid")
     if not isinstance(data, dict):
         return SchemaInfo(schema_type="invalid")

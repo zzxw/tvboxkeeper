@@ -60,8 +60,13 @@ def test_mixed():
 
 
 def test_invalid():
-    assert parse_config(BASE, "<html>404</html>").schema_type == "invalid"
+    assert parse_config(BASE, "plain text, not json at all").schema_type == "invalid"
     assert parse_config(BASE, '{"foo": 1}').schema_type == "invalid"
+
+
+def test_anti_crawl_html_detected():
+    assert parse_config(BASE, "<!DOCTYPE html><html>Just a moment...</html>").schema_type == "anti_crawl"
+    assert parse_config(BASE, "<html><body>请完成验证</body></html>").schema_type == "anti_crawl"
 
 
 def test_jsonp_and_bom():

@@ -23,6 +23,7 @@ DEFAULTS: dict[str, Any] = {
     "validate": {
         "level": "L2",
         "dead_after_failures": 3,
+        "anti_crawl_grace": 3,
         "max_probes": 12,
         "probe_timeout": 8,
     },
@@ -31,6 +32,9 @@ DEFAULTS: dict[str, Any] = {
         "min_health": 60,
         "duocang": "output/多仓.json",
         "report": "output/报告.md",
+        # 镜像基址（指向本仓库 output/mirrors/ 的 raw 地址，可带加速前缀）。
+        # 配置后，有快照的源在多仓里用镜像地址，原站失效不影响订阅；留空则不启用
+        "mirror_base": "",
     },
     "snapshot": {"keep": 10},
     "discover": {"max_depth": 2, "max_new_per_run": 100},
