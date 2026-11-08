@@ -21,6 +21,10 @@ def _content_ok(kind: str, body: bytes, status: int) -> bool:
         low = body.lower()
         return bool(body) and (b"#genre#" in low or b"#extm3u" in low
                                or b"http" in low or b"rtsp" in low)
+    if kind == "channel":
+        # 直播频道流：m3u8 文本或音视频二进制都行，唯独不能是 HTML 错误页
+        low = body.lower()
+        return bool(body) and b"<html" not in low and b"<!doctype" not in low
     return True  # wallpaper 等只看状态
 
 

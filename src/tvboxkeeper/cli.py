@@ -203,8 +203,11 @@ def discover() -> None:
             sem = asyncio.Semaphore(net["concurrency"])
             return await discover_mod.expand(reg, client, sem, settings)
 
-    created = asyncio.run(_run())
-    typer.echo(f"discover 完成：新登记 {created} 个子仓源（{discover_mod.HINT}）。")
+    created_store, created_live = asyncio.run(_run())
+    typer.echo(
+        f"discover 完成：新登记 {created_store} 个子仓源、"
+        f"{created_live} 个直播源（{discover_mod.HINT}）。"
+    )
     reg.close()
 
 
@@ -312,12 +315,14 @@ def publish() -> None:
         a = reg.availability(r["id"])
         r["avail"] = f"{a:.0f}%" if a is not None else "-"
 
-    # 镜像发布：把订阅内源的最后快照写进 output/mirrors/<id>.json
+    # 镜像发布：把订阅内源（配置 + 直播）的最后快照写进 output/mirrors/<id>.json
     mirror_base = (pub.get("mirror_base") or "").strip()
     mirrored: dict[str, str] = {}
     mirror_dir = root / "output" / "mirrors"
+    config_pick = publish_mod.pick_sources(rows, pub["min_health"])
+    live_pick = publish_mod.pick_live_sources(rows, pub["min_health"])
     if mirror_base:
-        for r in publish_mod.pick_sources(rows, pub["min_health"]):
+        for r in config_pick + live_pick:
             snap = reg.latest_snapshot(r["id"])
             if snap:
                 content, ts = snap
@@ -338,7 +343,7 @@ def publish() -> None:
                 json.dumps(manifest, ensure_ascii=False, indent=2),
                 encoding="utf-8")
         mirror_note = (
-            f"镜像已启用：{len(mirrored)}/{len(publish_mod.pick_sources(rows, pub['min_health']))} "
+            f"镜像已启用：{len(mirrored)}/{len(config_pick) + len(live_pick)} "
             f"个源使用本仓库快照镜像（{mirror_base}），原站失效不影响订阅。"
             if mirrored else "镜像基址已配置，但订阅内源暂无可用快照。"
         )
@@ -353,10 +358,23 @@ def publish() -> None:
     publish_mod.write_duocang(duo_path, data)
     cur = {e["sourceUrl"] for e in data["storeHouse"]}
     added, removed = cur - prev, prev - cur
+
+    # 直播合集配置
+    live_data = publish_mod.build_live_config(
+        rows, pub["min_health"], mirror_base=mirror_base,
+        mirrored_sids=set(mirrored))
+    live_path = root / pub["live"]
+    live_path.parent.mkdir(parents=True, exist_ok=True)
+    live_path.write_text(
+        json.dumps(live_data, ensure_ascii=False, indent=2), encoding="utf-8")
+
     report = publish_mod.build_report(
         rows, added, removed, pub["duocang"], len(data["storeHouse"]),
         pub["min_health"], failure_stats=reg.failure_reasons(days=30),
         mirror_note=mirror_note,
+        live_info=(f"直播合集：`{pub['live']}`（{len(live_data['lives'])} 个源），"
+                   "同样可作配置地址导入，只含直播。"
+                   if live_data["lives"] else ""),
     )
     report_path = root / pub["report"]
     report_path.parent.mkdir(parents=True, exist_ok=True)
@@ -386,7 +404,8 @@ def publish() -> None:
 
     typer.echo(
         f"已发布：{pub['duocang']}（{len(data['storeHouse'])} 个源，"
-        f"其中 {len(mirrored)} 个走镜像）、{pub['report']}、{pub['site']}"
+        f"其中 {len(mirrored)} 个走镜像）、{pub['live']}"
+        f"（{len(live_data['lives'])} 个直播源）、{pub['report']}、{pub['site']}"
         f"（diff: +{len(added)} / -{len(removed)}，归并 {len(merged)} 组）"
     )
     reg.close()

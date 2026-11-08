@@ -34,6 +34,8 @@ CREATE TABLE IF NOT EXISTS source (
   sub_total        INTEGER DEFAULT 0,
   l3_tested        INTEGER DEFAULT 0,
   l3_ok            INTEGER DEFAULT 0,
+  live_channels    INTEGER DEFAULT 0,
+  live_groups      INTEGER DEFAULT 0,
   compat           TEXT DEFAULT '',
   content_md5      TEXT DEFAULT '',
   dup_of           TEXT DEFAULT '',
@@ -110,6 +112,8 @@ class Registry:
         for col, ddl in (
             ("l3_tested", "INTEGER DEFAULT 0"),
             ("l3_ok", "INTEGER DEFAULT 0"),
+            ("live_channels", "INTEGER DEFAULT 0"),
+            ("live_groups", "INTEGER DEFAULT 0"),
             ("compat", "TEXT DEFAULT ''"),
             ("content_md5", "TEXT DEFAULT ''"),
             ("dup_of", "TEXT DEFAULT ''"),
@@ -315,7 +319,8 @@ class Registry:
             "last_ok=CASE WHEN ? THEN ? ELSE last_ok END, "
             "streak_ok=?, streak_fail=?, latency_ms=?, sites_count=?, "
             "parses_count=?, lives_count=?, storehouse_count=?, sub_ok=?, "
-            "sub_total=?, l3_tested=?, l3_ok=?, compat=?, "
+            "sub_total=?, l3_tested=?, l3_ok=?, live_channels=?, "
+            "live_groups=?, compat=?, "
             "content_md5=CASE WHEN ? THEN ? ELSE content_md5 END, "
             "dup_of='', health_score=? WHERE id=?",
             (schema_type, status, now, 1 if ok else 0, now,
@@ -325,6 +330,8 @@ class Registry:
              schema.lives_count if schema else 0,
              schema.storehouse_count if schema else 0,
              sub_ok, sub_total, outcome.l3_tested, outcome.l3_ok,
+             schema.live_channels if schema else 0,
+             schema.live_groups if schema else 0,
              schema.compat if schema else "",
              1 if ok else 0, content_md5, score, sid),
         )
@@ -356,6 +363,8 @@ class Registry:
         sub_ratio = (sub_ok / sub_total) if sub_total else 1.0
         if schema is None or schema.schema_type in ("storehouse", "mixed"):
             richness = min(1.0, (schema.storehouse_count if schema else 0) / 10)
+        elif schema.schema_type == "live":
+            richness = min(1.0, schema.live_channels / 300)
         else:
             richness = min(1.0, schema.sites_count / 40 * 0.7 + schema.lives_count / 5 * 0.3)
         score = 100 * (w["success"] * rate + w["subs"] * sub_ratio + w["richness"] * richness)

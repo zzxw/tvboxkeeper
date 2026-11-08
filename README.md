@@ -23,7 +23,7 @@ tvboxkeeper check       # 全量体检（默认 L2：可达 + 解析 + 子资源
 tvboxkeeper check --level L3   # 深度抽测：真实请求站点 CMS 接口
 tvboxkeeper discover    # 展开库中多仓（storeHouse/urls）的子仓
 tvboxkeeper hunt        # GitHub 挖源：搜仓库/代码，探测常见配置文件名
-tvboxkeeper publish     # 生成 多仓.json / 报告.md / site看板 / mirrors 镜像
+tvboxkeeper publish     # 生成 多仓.json / 直播.json / 报告.md / site看板 / mirrors 镜像
 tvboxkeeper notify      # 推送最近发布的变化（Actions Summary / Telegram 可选）
 tvboxkeeper history <url或id>   # 单源体检历史 + 30 天可用率
 tvboxkeeper stats       # 整体统计：状态分布、失败原因、低可用源
@@ -82,6 +82,13 @@ git push -u origin main
 `publish` 会把每个订阅源最后一次成功的内容快照写入 `output/mirrors/<id>.json`，
 多仓条目改用镜像地址——**原站失效时订阅依然可用**（内容为最后一次成功快照）。
 镜像与源 ID 的对应关系见 `output/mirrors/index.json`。
+
+## 直播源维护
+
+直播文件（`#genre#` txt / m3u）是一等源：`discover` 会从活跃配置的
+`lives[].url` 自动登记直播源，体检时统计频道/分组数并抽样测流（L2），
+同样参与健康分、镜像、归并。`publish` 额外生成 `output/直播.json`
+（只含直播的合集配置），可作为配置地址单独导入。
 
 ## 安全与合规边界
 

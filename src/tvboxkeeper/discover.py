@@ -19,8 +19,8 @@ async def expand(
     client: httpx.AsyncClient,
     sem: asyncio.Semaphore,
     settings: dict,
-) -> int:
-    """把所有 storehouse/mixed 源的子仓登记进库，返回新建数。"""
+) -> tuple[int, int]:
+    """登记 storehouse 子仓 + 从活跃配置快照提取直播源，返回 (新子仓数, 新直播数)。"""
     cfg = settings["discover"]
     net = settings["network"]
     parents = [
@@ -55,4 +55,33 @@ async def expand(
             )
             if created:
                 created_total += 1
-    return created_total
+
+    # 直播源：读活跃配置的最后快照，把 lives[].url 登记为一等源（免重复抓取）
+    created_live = 0
+    max_live = cfg.get("max_live_per_run", 50)
+    for r in registry.sources():
+        if created_live >= max_live:
+            break
+        if (r["schema_type"] not in ("tvbox", "mixed")
+                or r["status"] not in ("active", "flaky")):
+            continue
+        snap = registry.latest_snapshot(r["id"])
+        if not snap:
+            continue
+        info = classify.parse_config(r["url"],
+                                     classify.decode_content(snap[0]))
+        for kind, live_url in info.probes:
+            if created_live >= max_live:
+                break
+            if kind != "live":
+                continue
+            _, created = registry.upsert(
+                normalize_url(live_url),
+                name=f"{r['name']}·直播",
+                gen=r["gen"] + 1,
+                origin="lives",
+                ref=r["url"],
+            )
+            if created:
+                created_live += 1
+    return created_total, created_live

@@ -1,8 +1,8 @@
 import json
 
-from tvboxkeeper.publish import (build_duocang, build_report, build_site,
-                                 format_diff_text, previous_urls,
-                                 webhook_payload)
+from tvboxkeeper.publish import (build_duocang, build_live_config, build_report,
+                                 build_site, format_diff_text, pick_live_sources,
+                                 pick_sources, previous_urls, webhook_payload)
 
 
 def make_row(name, url, status="active", health=80.0, starred=0,
@@ -103,6 +103,25 @@ def test_format_diff_text():
     text = format_diff_text({"ts": "2026-11-08 12:00:00", "count": 3,
                              "added": ["http://a/c.json"], "removed": []})
     assert "新增 **1**" in text and "➕" in text and "http://a/c.json" in text
+
+
+def test_live_pick_and_duocang_exclusion():
+    rows = [
+        dict(make_row("配置", "http://b/c.json", health=90),
+             id="c1", schema_type="tvbox", dup_of=""),
+        dict(make_row("直播A", "http://l/a.txt", health=90),
+             id="l1", schema_type="live", dup_of="", live_channels=100),
+        dict(make_row("直播B", "http://l/b.txt", health=70),
+             id="l2", schema_type="live", dup_of="", live_channels=200),
+    ]
+    # 直播源不进多仓
+    assert [r["url"] for r in pick_sources(rows, 60)] == ["http://b/c.json"]
+    # 直播合集按频道数优先
+    assert ([r["url"] for r in pick_live_sources(rows, 60)]
+            == ["http://l/b.txt", "http://l/a.txt"])
+    data = build_live_config(rows, 60)
+    assert data["lives"][0] == {"name": "直播B", "type": 0,
+                                "url": "http://l/b.txt"}
 
 
 def test_webhook_payload_platforms():

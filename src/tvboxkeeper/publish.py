@@ -12,15 +12,31 @@ from .normalize import guess_name
 
 
 def pick_sources(rows: list[dict], min_health: float) -> list[dict]:
-    """筛出可进入订阅的源：active + 健康分达标 + 未封禁 + 非重复镜像。"""
+    """筛出可进入多仓订阅的配置源：active + 达标 + 未封禁 + 非重复 + 非直播。"""
     picked = [
         r for r in rows
         if r.get("status") == "active"
         and r.get("health_score", 0) >= min_health
         and not r.get("banned")
         and not r.get("dup_of")
+        and r.get("schema_type") != "live"
     ]
     picked.sort(key=lambda r: (-r.get("starred", 0), -r.get("health_score", 0)))
+    return picked
+
+
+def pick_live_sources(rows: list[dict], min_health: float) -> list[dict]:
+    """筛出可进入直播合集的直播源（schema_type=live）。"""
+    picked = [
+        r for r in rows
+        if r.get("schema_type") == "live"
+        and r.get("status") == "active"
+        and r.get("health_score", 0) >= min_health
+        and not r.get("banned")
+        and not r.get("dup_of")
+    ]
+    picked.sort(key=lambda r: (-r.get("starred", 0),
+                               -r.get("live_channels", 0)))
     return picked
 
 
@@ -45,6 +61,26 @@ def build_duocang(
     return {"storeHouse": entries}
 
 
+def build_live_config(
+    rows: list[dict],
+    min_health: float,
+    mirror_base: str = "",
+    mirrored_sids: "set[str] | frozenset[str]" = frozenset(),
+) -> dict:
+    """生成直播合集配置：lives 数组收录健康直播源，可直接作为配置地址导入。"""
+    entries = []
+    for r in pick_live_sources(rows, min_health):
+        url = r["url"]
+        if mirror_base and r.get("id") in mirrored_sids:
+            url = f"{mirror_base.rstrip('/')}/{r['id']}.json"
+        entries.append({
+            "name": r.get("name") or guess_name(r["url"]),
+            "type": 0,
+            "url": url,
+        })
+    return {"lives": entries}
+
+
 def previous_urls(path: Path) -> set[str]:
     """读取上次发布的多仓，用于 diff。"""
     try:
@@ -64,6 +100,7 @@ def build_report(
     failure_stats: list[dict] | None = None,
     mirror_note: str = "",
     dedupe_groups: list[dict] | None = None,
+    live_info: str = "",
 ) -> str:
     now = time.strftime("%Y-%m-%d %H:%M:%S")
     by_status = Counter(r["status"] for r in rows)
@@ -100,6 +137,8 @@ def build_report(
     ]
     if mirror_note:
         lines.append(f"- {mirror_note}")
+    if live_info:
+        lines.append(f"- {live_info}")
     lines.append("")
 
     if failure_stats:
@@ -134,6 +173,9 @@ def build_report(
                     key=lambda x: (-x.get("starred", 0), -x.get("health_score", 0))):
         name = (r.get("name") or "").replace("|", "\\|")[:28]
         compat = (r.get("compat") or "-").replace("|", "\\|")
+        # 直播源在「直播」列显示频道数，配置源显示 lives 数
+        live_disp = (r["live_channels"] if r.get("schema_type") == "live"
+                     else r["lives_count"])
         probe = (f"{r['sub_ok']}/{r['sub_total']}"
                  if r.get("sub_total") else "-")
         l3 = (f"{r['l3_ok']}/{r['l3_tested']}"
@@ -141,7 +183,7 @@ def build_report(
         avail = r.get("avail") or "-"
         dup = f" →#{str(r['dup_of'])[:8]}" if r.get("dup_of") else ""
         lines.append(
-            f"| {r['status']}{dup} | {name} | {compat} | {r['sites_count']} | {r['lives_count']} "
+            f"| {r['status']}{dup} | {name} | {compat} | {r['sites_count']} | {live_disp} "
             f"| {r['storehouse_count']} | {probe} | {l3} | {r['health_score']} "
             f"| {avail} | {r['latency_ms']} | {r.get('last_checked') or '-'} "
             f"| `{r['url'].replace('|', '\\|')}` |"
@@ -244,6 +286,8 @@ def build_site(
         cls = _STATUS_CLASS.get(r["status"], "off")
         l3 = f"{r['l3_ok']}/{r['l3_tested']}" if r.get("l3_tested") else "—"
         avail = r.get("avail") or "—"
+        live_disp = (r["live_channels"] if r.get("schema_type") == "live"
+                     else r["lives_count"])
         dup = (f' <span class="dup">归并#{esc(str(r["dup_of"])[:8])}</span>'
                if r.get("dup_of") else "")
         trs.append(
@@ -252,7 +296,7 @@ def build_site(
             f'<td class="name">{esc(r.get("name") or "")}</td>'
             f'<td>{esc(r.get("compat") or "—")}</td>'
             f'<td class="num">{r["sites_count"]}</td>'
-            f'<td class="num">{r["lives_count"]}</td>'
+            f'<td class="num">{live_disp}</td>'
             f'<td class="num">{r["health_score"]}</td>'
             f'<td class="num">{avail}</td>'
             f'<td class="num">{l3}</td>'

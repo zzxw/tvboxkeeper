@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import re
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 # 发布跟踪类参数，去掉后视为同一 URL
@@ -11,11 +12,15 @@ DROP_PARAMS = {
     "spm", "from", "share_token",
 }
 
+# 源配置里常见的坏写法：https://https://xxx → 压缩成单个协议头
+_DUP_SCHEME_RE = re.compile(r"^(https?://)+", re.IGNORECASE)
+
 
 def normalize_url(url: str) -> str:
     url = (url or "").strip()
     if not url:
         return url
+    url = _DUP_SCHEME_RE.sub(lambda m: m.group(1), url)
     parts = urlsplit(url)
     scheme = parts.scheme.lower() or "http"
     query = urlencode(

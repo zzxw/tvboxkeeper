@@ -33,6 +33,7 @@ publish:
   report: output/报告.md
   site: output/site/index.html   # 静态看板（GitHub Pages 用）
   diff: output/last_diff.json    # 本轮变化记录，notify 命令读取
+  live: output/直播.json         # 直播合集配置（可作配置地址导入）
   mirror_base: "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors"
   # ↑ 镜像基址：有快照的源在多仓里改用本仓库镜像地址（需仓库为 Public）；
   #   若仓库是 Private 或不想启用镜像，改回 ""
@@ -48,6 +49,7 @@ cleanup:
 discover:
   max_depth: 2          # 多仓递归展开深度
   max_new_per_run: 100  # 单轮 discover 最多登记的新源数
+  max_live_per_run: 50  # 单轮最多登记的直播源数
 
 github:
   token_env: GITHUB_TOKEN   # 从哪个环境变量读 token（可选，但强烈建议）

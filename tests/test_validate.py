@@ -11,6 +11,13 @@ API_URL = "http://s.example/api.php"
 SETTINGS = load_settings(None)
 
 
+def test_content_ok_channel():
+    assert _content_ok("channel", b"#EXTM3U\nhttp://x/1.ts", 200)
+    assert _content_ok("channel", b"\x00\x00\x00\x18ftypisom", 200)  # 二进制流
+    assert not _content_ok("channel", b"<html>err</html>", 200)  # 200 但非流
+    assert not _content_ok("channel", b"", 200)
+
+
 def test_content_ok_jar_magic():
     assert _content_ok("jar", b"PK\x03\x04rest-of-zip", 200)
     assert not _content_ok("jar", b"<html>error page</html>", 200)  # 200 但不是 jar

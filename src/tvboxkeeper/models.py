@@ -25,11 +25,14 @@ class ProbeResult:
 class SchemaInfo:
     """配置文件解析结果。"""
 
-    schema_type: str = "invalid"  # tvbox | storehouse | mixed | anti_crawl | invalid
+    schema_type: str = "invalid"  # tvbox | storehouse | mixed | live | anti_crawl | empty | invalid
     sites_count: int = 0
     parses_count: int = 0
     lives_count: int = 0
     storehouse_count: int = 0
+    # 直播文件（schema_type=live）：频道数 / 分组数
+    live_channels: int = 0
+    live_groups: int = 0
     # L3 抽测候选：type 0/1 站点的 http(s) CMS api（最多收集 10 个）
     site_apis: list[str] = field(default_factory=list)
     # 分支适配标注：通用 / 偏影视仓 / 需特定分支（多仓为空）

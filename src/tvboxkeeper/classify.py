@@ -109,6 +109,37 @@ def _live_urls(lives) -> list[str]:
     return urls
 
 
+def _is_live_list(text: str) -> bool:
+    """TVBox 直播 txt（含 #genre#）或 m3u 播放列表。"""
+    return "#genre#" in text or text.lstrip().startswith("#EXTM3U")
+
+
+def parse_live(text: str) -> SchemaInfo:
+    """解析直播列表：统计频道/分组，并抽几条频道地址供 L2 测流。"""
+    info = SchemaInfo(schema_type="live")
+    is_m3u = text.lstrip().startswith("#EXTM3U")
+    sample: list[str] = []
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.endswith("#genre#"):
+            info.live_groups += 1
+            continue
+        if "," in line:
+            url = line.split(",", 1)[1].strip()
+        elif is_m3u:
+            url = line
+        else:
+            continue
+        if url.startswith(("http://", "https://", "rtmp://", "rtsp://")):
+            info.live_channels += 1
+            if len(sample) < 5:
+                sample.append(url)
+    info.probes = [("channel", u) for u in sample]
+    return info
+
+
 def parse_config(url: str, text: str) -> SchemaInfo:
     """把抓到的文本解析为 SchemaInfo，解析失败返回 schema_type=invalid。"""
     try:
@@ -116,6 +147,8 @@ def parse_config(url: str, text: str) -> SchemaInfo:
     except ValueError:
         if looks_like_html(text):
             return SchemaInfo(schema_type="anti_crawl")
+        if _is_live_list(text):
+            return parse_live(text)
         if not text.strip():
             return SchemaInfo(schema_type="empty")
         return SchemaInfo(schema_type="invalid")

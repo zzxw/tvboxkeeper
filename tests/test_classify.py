@@ -64,6 +64,31 @@ def test_invalid():
     assert parse_config(BASE, '{"foo": 1}').schema_type == "invalid"
 
 
+LIVE_TXT = """央视频道,#genre#
+CCTV1,http://live.example/cctv1.m3u8
+CCTV5,http://live.example/cctv5.m3u8
+
+卫视频道,#genre#
+东方卫视,http://live.example/dongfang.m3u8
+"""
+
+
+def test_live_txt_parse():
+    info = parse_config(BASE, LIVE_TXT)
+    assert info.schema_type == "live"
+    assert info.live_channels == 3
+    assert info.live_groups == 2
+    assert ("channel", "http://live.example/cctv1.m3u8") in info.probes
+
+
+def test_live_m3u_parse():
+    info = parse_config(BASE, "#EXTM3U\n#EXTINF:-1,CCTV1\nhttp://a/1.m3u8\n"
+                              "#EXTINF:-1,CCTV2\nhttp://a/2.ts")
+    assert info.schema_type == "live"
+    assert info.live_channels == 2
+    assert info.live_groups == 0
+
+
 def test_compat_tags():
     # csp_ 占比高 → 偏影视仓
     info = parse_config(BASE, '{"sites": ['

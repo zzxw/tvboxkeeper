@@ -190,6 +190,17 @@ def test_compat_persisted(tmp_path):
     assert reg.get_by_url("http://e.com/comp.json")["compat"] == "偏影视仓"
 
 
+def test_live_source_record(tmp_path):
+    reg = make_registry(tmp_path)
+    reg.upsert("http://e.com/live.txt", name="L")
+    out = make_outcome(url="http://e.com/live.txt", ok=True, content=b"#EXTM3U")
+    out.schema = SchemaInfo(schema_type="live", live_channels=120, live_groups=5)
+    reg.record(out, SETTINGS)
+    row = reg.get_by_url("http://e.com/live.txt")
+    assert row["status"] == "active" and row["schema_type"] == "live"
+    assert row["live_channels"] == 120 and row["live_groups"] == 5
+
+
 def test_reason_of_variants():
     from tvboxkeeper.registry import reason_of
     assert reason_of({"error": "响应为空（疑似反爬或接口异常）"}) == "空响应/疑似反爬"

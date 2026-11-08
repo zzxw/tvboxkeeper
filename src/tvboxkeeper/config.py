@@ -35,6 +35,7 @@ DEFAULTS: dict[str, Any] = {
         "report": "output/报告.md",
         "site": "output/site/index.html",
         "diff": "output/last_diff.json",
+        "live": "output/直播.json",  # 直播合集配置（lives 数组，可作配置地址导入）
         # 镜像基址（指向本仓库 output/mirrors/ 的 raw 地址，可带加速前缀）。
         # 配置后，有快照的源在多仓里用镜像地址，原站失效不影响订阅；留空则不启用
         "mirror_base": "",
@@ -45,7 +46,8 @@ DEFAULTS: dict[str, Any] = {
         "snapshot_days": 90,   # 内容快照保留天数
         "origin_days": 90,     # GitHub 挖源记录保留天数
     },
-    "discover": {"max_depth": 2, "max_new_per_run": 100},
+    "discover": {"max_depth": 2, "max_new_per_run": 100,
+                 "max_live_per_run": 50},
     "github": {
         "token_env": "GITHUB_TOKEN",
         "repo_queries": [
