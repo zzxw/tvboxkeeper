@@ -183,6 +183,15 @@ def format_diff_text(diff: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
+def webhook_payload(platform: str, text: str) -> dict:
+    """按平台构造 webhook 消息体（都是纯文本，国内直连可用）。"""
+    plain = text.replace("**", "").replace("`", "").replace("## ", "【").replace("\n## ", "\n【")
+    if platform == "feishu":
+        return {"msg_type": "text", "content": {"text": plain}}
+    # 企业微信 / 钉钉同为 {"msgtype": "text", ...}
+    return {"msgtype": "text", "text": {"content": plain}}
+
+
 _STATUS_CLASS = {
     "active": "ok", "anti_crawl": "warn", "flaky": "warn",
     "invalid": "bad", "dead": "bad", "banned": "off", "new": "off",

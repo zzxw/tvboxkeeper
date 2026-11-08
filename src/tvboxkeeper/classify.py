@@ -99,6 +99,8 @@ def parse_config(url: str, text: str) -> SchemaInfo:
     except ValueError:
         if looks_like_html(text):
             return SchemaInfo(schema_type="anti_crawl")
+        if not text.strip():
+            return SchemaInfo(schema_type="empty")
         return SchemaInfo(schema_type="invalid")
     if not isinstance(data, dict):
         return SchemaInfo(schema_type="invalid")

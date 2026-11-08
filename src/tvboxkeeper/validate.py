@@ -11,6 +11,19 @@ from .fetch import fetch
 from .models import CheckOutcome, ProbeResult
 
 
+def _content_ok(kind: str, body: bytes, status: int) -> bool:
+    """子资源内容特征校验：防止 200 状态但实际是 HTML 错误页的误判。"""
+    if not (200 <= status < 400):
+        return False
+    if kind == "jar":
+        return body[:2] == b"PK"  # jar = zip
+    if kind == "live":
+        low = body.lower()
+        return bool(body) and (b"#genre#" in low or b"#extm3u" in low
+                               or b"http" in low or b"rtsp" in low)
+    return True  # wallpaper 等只看状态
+
+
 async def _probe(
     client: httpx.AsyncClient,
     sem: asyncio.Semaphore,
@@ -27,7 +40,8 @@ async def _probe(
         probe_bytes=4096,
     )
     return ProbeResult(url=url, kind=kind, status=fr.status,
-                       latency_ms=fr.latency_ms, error=fr.error)
+                       latency_ms=fr.latency_ms, error=fr.error,
+                       content_ok=_content_ok(kind, fr.content, fr.status))
 
 
 async def _probe_site_api(
@@ -71,10 +85,11 @@ async def check_source(
     info = classify.parse_config(url, text)
     out.schema = info
     out.content = fr.content
-    if info.schema_type in ("invalid", "anti_crawl"):
-        out.error = ("HTML 反爬页，疑似仍存活，已放宽观察"
-                     if info.schema_type == "anti_crawl"
-                     else "可达但解析不出 TVBox 配置结构")
+    if info.schema_type in ("invalid", "anti_crawl", "empty"):
+        out.error = {
+            "anti_crawl": "HTML 反爬页，疑似仍存活，已放宽观察",
+            "empty": "响应为空（疑似反爬或接口异常）",
+        }.get(info.schema_type, "可达但解析不出 TVBox 配置结构")
         return out
 
     out.ok = True

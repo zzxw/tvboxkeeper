@@ -40,6 +40,11 @@ DEFAULTS: dict[str, Any] = {
         "mirror_base": "",
     },
     "snapshot": {"keep": 10},
+    "cleanup": {
+        "check_log_days": 90,  # 体检日志保留天数
+        "snapshot_days": 90,   # 内容快照保留天数
+        "origin_days": 90,     # GitHub 挖源记录保留天数
+    },
     "discover": {"max_depth": 2, "max_new_per_run": 100},
     "github": {
         "token_env": "GITHUB_TOKEN",

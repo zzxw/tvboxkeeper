@@ -178,3 +178,27 @@ def test_dedupe_resets_when_content_diverges(tmp_path):
     assert merged == []
     rows = {r["url"]: r for r in reg.sources()}
     assert rows["http://e.com/d2.json"]["dup_of"] == ""
+
+
+def test_reason_of_variants():
+    from tvboxkeeper.registry import reason_of
+    assert reason_of({"error": "响应为空（疑似反爬或接口异常）"}) == "空响应/疑似反爬"
+    assert reason_of({"error": "HTTP 404 Not Found"}) == "HTTP 404 Not"
+    assert reason_of({}) == "未知"
+
+
+def test_cleanup_purges_old_data(tmp_path):
+    reg = make_registry(tmp_path)
+    reg.upsert("http://e.com/c1.json")
+    reg.record(make_outcome(url="http://e.com/c1.json"), SETTINGS)
+    reg.note_hunt_batch(["o/old"])
+    reg.conn.execute("UPDATE check_log SET ts='2020-01-01 00:00:00'")
+    reg.conn.execute("UPDATE origin SET ts='2020-01-01 00:00:00'")
+    reg.conn.commit()
+    stats = reg.cleanup(SETTINGS)
+    assert stats["check_log"] >= 1 and stats["origin"] >= 1
+    assert reg.conn.execute(
+        "SELECT COUNT(*) AS n FROM check_log").fetchone()["n"] == 0
+    # 清理后再 VACUUM 不报错，库仍可用
+    reg.record(make_outcome(url="http://e.com/c1.json"), SETTINGS)
+    assert reg.get_by_url("http://e.com/c1.json")["status"] == "active"

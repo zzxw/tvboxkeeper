@@ -3,12 +3,25 @@ import asyncio
 import httpx
 
 from tvboxkeeper.config import load_settings
-from tvboxkeeper.validate import check_source
+from tvboxkeeper.validate import _content_ok, check_source
 
 CONFIG_URL = "http://e.com/c.json"
 API_URL = "http://s.example/api.php"
 
 SETTINGS = load_settings(None)
+
+
+def test_content_ok_jar_magic():
+    assert _content_ok("jar", b"PK\x03\x04rest-of-zip", 200)
+    assert not _content_ok("jar", b"<html>error page</html>", 200)  # 200 但不是 jar
+    assert not _content_ok("jar", b"PK\x03\x04", 500)
+
+
+def test_content_ok_live_features():
+    assert _content_ok("live", "央视频道,#genre#\nCCTV1,http://x".encode("utf-8"), 200)
+    assert _content_ok("live", b"#EXTM3U\nhttp://x/live.m3u8", 200)
+    assert not _content_ok("live", b"<html></html>", 200)  # 200 但不是直播列表
+    assert not _content_ok("live", b"", 200)
 
 
 def _handler(request) -> httpx.Response:

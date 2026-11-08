@@ -65,12 +65,16 @@ git push -u origin main
 - **静态看板**：Actions 自动部署到 GitHub Pages（首次需在仓库
   Settings → Pages → Source 选 **GitHub Actions**），地址形如
   `https://zzxw.github.io/tvboxkeeper/`；
-- **变化通知**：默认写入 Actions 运行摘要；配好 Secrets
-  `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` 后自动推送到 Telegram；
+- **变化通知**：默认写入 Actions 运行摘要；配 Secrets 后可推送到
+  Telegram（`TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID`）或国内直连的
+  飞书 / 钉钉 / 企业微信机器人（`FEISHU_WEBHOOK_URL` /
+  `DINGTALK_WEBHOOK_URL` / `WECOM_WEBHOOK_URL`，填机器人 webhook 完整地址）；
 - **本地兜底**：`powershell -ExecutionPolicy Bypass -File scripts\install-task.ps1`
   注册 Windows 计划任务（每天 06:10，错过开机补跑），与 Actions 互为备份，
   日志在 `data/local-run.log`，卸载见脚本注释；
-- **同内容归并**：内容完全相同的源只保留最优一个进订阅（报告里列出归并关系）。
+- **同内容归并**：内容完全相同的源只保留最优一个进订阅（报告里列出归并关系）；
+- **数据生命周期**：体检日志/快照/挖源记录默认保留 90 天（settings.yaml
+  `cleanup` 可调），publish 时自动清理并 VACUUM 瘦身。
 
 ## 镜像发布（订阅抗失效）
 

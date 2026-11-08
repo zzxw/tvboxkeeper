@@ -40,6 +40,11 @@ publish:
 snapshot:
   keep: 10   # 每个源保留的快照份数
 
+cleanup:
+  check_log_days: 90  # 体检日志保留天数（过期自动清理 + VACUUM）
+  snapshot_days: 90
+  origin_days: 90
+
 discover:
   max_depth: 2          # 多仓递归展开深度
   max_new_per_run: 100  # 单轮 discover 最多登记的新源数

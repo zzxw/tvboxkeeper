@@ -78,6 +78,11 @@ def test_anti_crawl_html_detected():
     assert parse_config(BASE, "<html><body>请完成验证</body></html>").schema_type == "anti_crawl"
 
 
+def test_empty_response_detected():
+    assert parse_config(BASE, "").schema_type == "empty"
+    assert parse_config(BASE, "   \n\t ").schema_type == "empty"
+
+
 def test_jsonp_and_bom():
     wrapped = "callback(" + TVBOX + ");"
     assert parse_config(BASE, wrapped).schema_type == "tvbox"

@@ -76,6 +76,8 @@ def reason_of(detail: dict) -> str:
     err = str(detail.get("error") or "")
     if err.startswith("HTTP "):
         return err[:12]
+    if err.startswith("响应为空"):
+        return "空响应/疑似反爬"
     if "getaddrinfo" in err:
         return "DNS 解析失败"
     if "Timeout" in err or "timed out" in err:
@@ -274,7 +276,7 @@ class Registry:
             status = "banned"
         elif ok:
             status = "active"
-        elif schema_type == "invalid" and outcome.status > 0:
+        elif schema_type in ("invalid", "empty") and outcome.status > 0:
             status = "invalid"
         elif schema_type == "anti_crawl":
             # 反爬页可能是活的：放宽判死时限（grace 倍数 × 判死线）
@@ -357,6 +359,39 @@ class Registry:
         if not ok_now:
             score = min(score, 20)
         return round(score, 1)
+
+    # ---------- 生命周期 ----------
+
+    def cleanup(self, settings: dict) -> dict:
+        """按保留期清理 check_log / origin / snapshot，并 VACUUM 瘦身。"""
+        cfg = settings.get("cleanup") or {}
+        now = time.time()
+
+        def cutoff(days: int) -> str:
+            return time.strftime("%Y-%m-%d %H:%M:%S",
+                                 time.localtime(now - days * 86400))
+
+        stats = {}
+        stats["check_log"] = self.conn.execute(
+            "DELETE FROM check_log WHERE ts < ?",
+            (cutoff(cfg.get("check_log_days", 90)),)).rowcount
+        stats["origin"] = self.conn.execute(
+            "DELETE FROM origin WHERE channel='github_repo' AND ts < ?",
+            (cutoff(cfg.get("origin_days", 90)),)).rowcount
+        old = self.conn.execute(
+            "SELECT gzip_path FROM snapshot WHERE ts < ?",
+            (cutoff(cfg.get("snapshot_days", 90)),)).fetchall()
+        for r in old:
+            try:
+                Path(r["gzip_path"]).unlink(missing_ok=True)
+            except OSError:
+                pass
+        stats["snapshot"] = len(old)
+        self.conn.execute("DELETE FROM snapshot WHERE ts < ?",
+                          (cutoff(cfg.get("snapshot_days", 90)),))
+        self.conn.commit()
+        self.conn.execute("VACUUM")
+        return stats
 
     # ---------- 快照 ----------
 

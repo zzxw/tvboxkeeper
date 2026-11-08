@@ -1,7 +1,8 @@
 import json
 
 from tvboxkeeper.publish import (build_duocang, build_report, build_site,
-                                 format_diff_text, previous_urls)
+                                 format_diff_text, previous_urls,
+                                 webhook_payload)
 
 
 def make_row(name, url, status="active", health=80.0, starred=0,
@@ -93,6 +94,18 @@ def test_format_diff_text():
     text = format_diff_text({"ts": "2026-11-08 12:00:00", "count": 3,
                              "added": ["http://a/c.json"], "removed": []})
     assert "新增 **1**" in text and "➕" in text and "http://a/c.json" in text
+
+
+def test_webhook_payload_platforms():
+    text = "## TVBox 源更新\n- 新增 **2**"
+    feishu = webhook_payload("feishu", text)
+    assert feishu["msg_type"] == "text"
+    assert "**" not in feishu["content"]["text"]  # webhook 走纯文本
+    assert "TVBox 源更新" in feishu["content"]["text"]
+    ding = webhook_payload("dingtalk", text)
+    assert ding["msgtype"] == "text" and "**" not in ding["text"]["content"]
+    wecom = webhook_payload("wecom", text)
+    assert wecom["msgtype"] == "text"
 
 
 def test_build_site_html():

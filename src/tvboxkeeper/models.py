@@ -14,10 +14,11 @@ class ProbeResult:
     status: int = 0
     latency_ms: int = 0
     error: str = ""
+    content_ok: bool = True  # 内容特征校验（jar 魔数/直播列表特征）
 
     @property
     def ok(self) -> bool:
-        return 200 <= self.status < 400
+        return 200 <= self.status < 400 and self.content_ok
 
 
 @dataclass

@@ -378,6 +378,11 @@ def publish() -> None:
         len(data["storeHouse"]), pub["min_health"])
     site_path.write_text(site_html, encoding="utf-8")
 
+    # 过期数据清理（日志/快照/挖源记录 + VACUUM）
+    cleaned = reg.cleanup(settings)
+    if any(cleaned.values()):
+        typer.echo(f"已清理过期记录：{cleaned}")
+
     typer.echo(
         f"已发布：{pub['duocang']}（{len(data['storeHouse'])} 个源，"
         f"其中 {len(mirrored)} 个走镜像）、{pub['report']}、{pub['site']}"
@@ -406,6 +411,7 @@ def notify() -> None:
 
     token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
     chat = os.environ.get("TELEGRAM_CHAT_ID", "")
+    delivered = False
     if token and chat:
         try:
             resp = httpx.post(
@@ -414,7 +420,26 @@ def notify() -> None:
             typer.echo(f"Telegram 推送：HTTP {resp.status_code}")
         except httpx.HTTPError as exc:
             typer.echo(f"Telegram 推送失败：{exc}")
-    elif not gh:
+        delivered = True
+
+    # 国内直连可用的 webhook 渠道（配哪个发哪个）
+    for name, env_key, platform in (
+            ("飞书", "FEISHU_WEBHOOK_URL", "feishu"),
+            ("钉钉", "DINGTALK_WEBHOOK_URL", "dingtalk"),
+            ("企业微信", "WECOM_WEBHOOK_URL", "wecom")):
+        url = os.environ.get(env_key, "")
+        if not url:
+            continue
+        try:
+            resp = httpx.post(
+                url, json=publish_mod.webhook_payload(platform, text),
+                timeout=15)
+            typer.echo(f"{name} 推送：HTTP {resp.status_code}")
+        except httpx.HTTPError as exc:
+            typer.echo(f"{name} 推送失败：{exc}")
+        delivered = True
+
+    if not gh and not delivered:
         typer.echo(text)
     if not diff:
         typer.echo("提示：还没有发布记录，先运行 `tvboxkeeper publish`。")

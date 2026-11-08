@@ -50,6 +50,7 @@ async def fetch(
     last_error = "unknown"
 
     for attempt in range(1, retries + 2):
+        attempt_start = time.monotonic()  # 延迟只统计本次请求，不含重试等待
         try:
             async with sem:
                 async with client.stream(
@@ -60,7 +61,7 @@ async def fetch(
                         buf.extend(chunk)
                         if len(buf) >= max_bytes:
                             break
-                    latency = int((time.monotonic() - start) * 1000)
+                    latency = int((time.monotonic() - attempt_start) * 1000)
                     status = resp.status_code
                     return FetchResult(
                         url=url,

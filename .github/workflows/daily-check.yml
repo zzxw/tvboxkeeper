@@ -30,6 +30,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}   # 可选：配了才推送 TG
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}     # 可选：飞书机器人
+          DINGTALK_WEBHOOK_URL: ${{ secrets.DINGTALK_WEBHOOK_URL }} # 可选：钉钉机器人
+          WECOM_WEBHOOK_URL: ${{ secrets.WECOM_WEBHOOK_URL }}       # 可选：企业微信机器人
         run: |
           tvboxkeeper import
           tvboxkeeper discover
