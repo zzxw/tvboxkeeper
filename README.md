@@ -20,9 +20,11 @@ tvboxkeeper init        # 初始化 data/ 与数据库
 tvboxkeeper import      # 把 config/sources.yaml 的种子源登记进库
 tvboxkeeper add https://example.com/config.json --name 示例源   # 手工添加
 tvboxkeeper check       # 全量体检（默认 L2：可达 + 解析 + 子资源探测）
+tvboxkeeper check --level L3   # 深度抽测：真实请求站点 CMS 接口
 tvboxkeeper discover    # 展开库中多仓（storeHouse/urls）的子仓
 tvboxkeeper hunt        # GitHub 挖源：搜仓库/代码，探测常见配置文件名
-tvboxkeeper publish     # 生成 output/多仓.json 与 output/报告.md
+tvboxkeeper publish     # 生成 多仓.json / 报告.md / site看板 / mirrors 镜像
+tvboxkeeper notify      # 推送最近发布的变化（Actions Summary / Telegram 可选）
 tvboxkeeper history <url或id>   # 单源体检历史 + 30 天可用率
 tvboxkeeper stats       # 整体统计：状态分布、失败原因、低可用源
 tvboxkeeper list        # 查看源库
@@ -58,9 +60,17 @@ git push -u origin main
 ```
 
 `.github/workflows/daily-check.yml` 会在每天北京时间 05:30 自动跑
-`import → discover → hunt → check → publish` 并把产物提交回仓库，
-之后可用 `https://raw.githubusercontent.com/<用户名>/tvboxkeeper/main/output/多仓.json`
-作为 TVBox 订阅地址（国内可加 gh-proxy 前缀）。
+`import → discover → hunt → check → publish → notify` 并把产物提交回仓库。
+
+- **静态看板**：Actions 自动部署到 GitHub Pages（首次需在仓库
+  Settings → Pages → Source 选 **GitHub Actions**），地址形如
+  `https://zzxw.github.io/tvboxkeeper/`；
+- **变化通知**：默认写入 Actions 运行摘要；配好 Secrets
+  `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` 后自动推送到 Telegram；
+- **本地兜底**：`powershell -ExecutionPolicy Bypass -File scripts\install-task.ps1`
+  注册 Windows 计划任务（每天 06:10，错过开机补跑），与 Actions 互为备份，
+  日志在 `data/local-run.log`，卸载见脚本注释；
+- **同内容归并**：内容完全相同的源只保留最优一个进订阅（报告里列出归并关系）。
 
 ## 镜像发布（订阅抗失效）
 

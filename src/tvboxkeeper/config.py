@@ -26,12 +26,15 @@ DEFAULTS: dict[str, Any] = {
         "anti_crawl_grace": 3,
         "max_probes": 12,
         "probe_timeout": 8,
+        "l3": {"sample_sites": 3, "timeout": 8},
     },
     "score": {"weights": {"success": 0.5, "subs": 0.3, "richness": 0.2}},
     "publish": {
         "min_health": 60,
         "duocang": "output/多仓.json",
         "report": "output/报告.md",
+        "site": "output/site/index.html",
+        "diff": "output/last_diff.json",
         # 镜像基址（指向本仓库 output/mirrors/ 的 raw 地址，可带加速前缀）。
         # 配置后，有快照的源在多仓里用镜像地址，原站失效不影响订阅；留空则不启用
         "mirror_base": "",

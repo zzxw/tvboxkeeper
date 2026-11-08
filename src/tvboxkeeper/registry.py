@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import gzip
+import hashlib
 import json
 import sqlite3
 import time
@@ -31,6 +32,10 @@ CREATE TABLE IF NOT EXISTS source (
   storehouse_count INTEGER DEFAULT 0,
   sub_ok           INTEGER DEFAULT 0,
   sub_total        INTEGER DEFAULT 0,
+  l3_tested        INTEGER DEFAULT 0,
+  l3_ok            INTEGER DEFAULT 0,
+  content_md5      TEXT DEFAULT '',
+  dup_of           TEXT DEFAULT '',
   health_score     REAL DEFAULT 0,
   starred          INTEGER DEFAULT 0,
   banned           INTEGER DEFAULT 0,
@@ -92,8 +97,21 @@ class Registry:
         self.conn = sqlite3.connect(str(db_path))
         self.conn.row_factory = sqlite3.Row
         self.conn.executescript(_SCHEMA)
+        self._migrate()
         self.conn.commit()
         self.snap_root = Path(snap_root) if snap_root else db_path.parent / "snapshots"
+
+    def _migrate(self) -> None:
+        """为旧库补齐新增列。"""
+        cols = {r["name"] for r in self.conn.execute("PRAGMA table_info(source)")}
+        for col, ddl in (
+            ("l3_tested", "INTEGER DEFAULT 0"),
+            ("l3_ok", "INTEGER DEFAULT 0"),
+            ("content_md5", "TEXT DEFAULT ''"),
+            ("dup_of", "TEXT DEFAULT ''"),
+        ):
+            if col not in cols:
+                self.conn.execute(f"ALTER TABLE source ADD COLUMN {col} {ddl}")
 
     # ---------- 登记 ----------
 
@@ -277,6 +295,7 @@ class Registry:
                 "schema": schema_type,
                 "error": outcome.error,
                 "subs": [f"{p.kind}:{p.status}" for p in outcome.probes],
+                "l3": [outcome.l3_tested, outcome.l3_ok],
             },
             ensure_ascii=False,
         )
@@ -286,19 +305,23 @@ class Registry:
             (sid, now, level, 1 if ok else 0, outcome.latency_ms, detail),
         )
         score = self._score(sid, ok, sub_ok, sub_total, schema, settings)
+        content_md5 = hashlib.md5(outcome.content).hexdigest() if ok and outcome.content else ""
         self.conn.execute(
             "UPDATE source SET schema_type=?, status=?, last_checked=?, "
             "last_ok=CASE WHEN ? THEN ? ELSE last_ok END, "
             "streak_ok=?, streak_fail=?, latency_ms=?, sites_count=?, "
             "parses_count=?, lives_count=?, storehouse_count=?, sub_ok=?, "
-            "sub_total=?, health_score=? WHERE id=?",
+            "sub_total=?, l3_tested=?, l3_ok=?, "
+            "content_md5=CASE WHEN ? THEN ? ELSE content_md5 END, "
+            "dup_of='', health_score=? WHERE id=?",
             (schema_type, status, now, 1 if ok else 0, now,
              streak_ok, streak_fail, outcome.latency_ms,
              schema.sites_count if schema else 0,
              schema.parses_count if schema else 0,
              schema.lives_count if schema else 0,
              schema.storehouse_count if schema else 0,
-             sub_ok, sub_total, score, sid),
+             sub_ok, sub_total, outcome.l3_tested, outcome.l3_ok,
+             1 if ok else 0, content_md5, score, sid),
         )
         self.conn.commit()
         if ok and outcome.content:
@@ -352,6 +375,40 @@ class Registry:
         self.conn.commit()
         for old in sorted(d.glob("*.json.gz"))[:-keep] if keep else []:
             old.unlink()
+
+    # ---------- 同内容去重 ----------
+
+    def dedupe(self) -> list[dict]:
+        """按最近内容 md5 归并同内容源：保留最优，其余标记 dup_of。
+
+        每次全量重算（内容变化会自动解除归并）。返回归并组信息。
+        """
+        self.conn.execute("UPDATE source SET dup_of=''")
+        rows = [dict(r) for r in self.conn.execute(
+            "SELECT id, url, name, starred, health_score, content_md5 "
+            "FROM source WHERE banned=0 AND status='active' "
+            "AND content_md5 IS NOT NULL AND content_md5!=''")]
+        groups: dict[str, list[dict]] = {}
+        for r in rows:
+            groups.setdefault(r["content_md5"], []).append(r)
+        merged: list[dict] = []
+        for grp in groups.values():
+            if len(grp) < 2:
+                continue
+            grp.sort(key=lambda r: (-r["starred"], -r["health_score"]))
+            primary, rest = grp[0], grp[1:]
+            for r in rest:
+                self.conn.execute(
+                    "UPDATE source SET dup_of=? WHERE id=?",
+                    (primary["id"], r["id"]))
+                merged.append({
+                    "primary_name": primary["name"] or primary["url"],
+                    "primary": primary["url"],
+                    "merged_name": r["name"] or r["url"],
+                    "merged": r["url"],
+                })
+        self.conn.commit()
+        return merged
 
     def latest_snapshot(self, sid: str) -> tuple[bytes, str] | None:
         """取最近一次内容快照，返回 (内容, 时间戳)；没有则 None。"""

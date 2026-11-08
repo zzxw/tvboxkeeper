@@ -299,14 +299,17 @@ def stats() -> None:
 
 @app.command()
 def publish() -> None:
-    """生成多仓订阅 JSON 与 Markdown 体检报告（可含快照镜像）。"""
+    """生成多仓订阅 JSON、Markdown 报告、静态看板（可含快照镜像）。"""
     import json
     root, settings, reg = _open()
+    pub = settings["publish"]
+
+    # 同内容归并先于取数：dup_of 写库后 rows 才带标记
+    merged = reg.dedupe()
     rows = reg.sources(include_banned=True)
     for r in rows:
         a = reg.availability(r["id"])
         r["avail"] = f"{a:.0f}%" if a is not None else "-"
-    pub = settings["publish"]
 
     # 镜像发布：把订阅内源的最后快照写进 output/mirrors/<id>.json
     mirror_base = (pub.get("mirror_base") or "").strip()
@@ -357,11 +360,64 @@ def publish() -> None:
     report_path = root / pub["report"]
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text(report, encoding="utf-8")
+
+    # 本轮变化落盘，notify 命令读取
+    diff_path = root / pub["diff"]
+    diff_path.write_text(json.dumps({
+        "ts": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "count": len(data["storeHouse"]),
+        "added": sorted(added), "removed": sorted(removed),
+    }, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    # 静态看板
+    site_path = root / pub["site"]
+    site_path.parent.mkdir(parents=True, exist_ok=True)
+    histories = {r["id"]: reg.history(r["id"], limit=20) for r in rows}
+    site_html = publish_mod.build_site(
+        rows, histories, reg.failure_reasons(days=30),
+        len(data["storeHouse"]), pub["min_health"])
+    site_path.write_text(site_html, encoding="utf-8")
+
     typer.echo(
         f"已发布：{pub['duocang']}（{len(data['storeHouse'])} 个源，"
-        f"其中 {len(mirrored)} 个走镜像）、"
-        f"{pub['report']}（diff: +{len(added)} / -{len(removed)}）"
+        f"其中 {len(mirrored)} 个走镜像）、{pub['report']}、{pub['site']}"
+        f"（diff: +{len(added)} / -{len(removed)}，归并 {len(merged)} 组）"
     )
+    reg.close()
+
+
+@app.command()
+def notify() -> None:
+    """推送最近一次发布的变化：写 GITHUB_STEP_SUMMARY，可选发 Telegram。"""
+    import json
+    root, settings, reg = _open()
+    try:
+        diff = json.loads((root / settings["publish"]["diff"])
+                          .read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        diff = {}
+    text = publish_mod.format_diff_text(diff)
+
+    gh = os.environ.get("GITHUB_STEP_SUMMARY")
+    if gh:
+        with open(gh, "a", encoding="utf-8") as fh:
+            fh.write(text + "\n")
+        typer.echo("已写入 GitHub Step Summary。")
+
+    token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+    chat = os.environ.get("TELEGRAM_CHAT_ID", "")
+    if token and chat:
+        try:
+            resp = httpx.post(
+                f"https://api.telegram.org/bot{token}/sendMessage",
+                json={"chat_id": chat, "text": text}, timeout=15)
+            typer.echo(f"Telegram 推送：HTTP {resp.status_code}")
+        except httpx.HTTPError as exc:
+            typer.echo(f"Telegram 推送失败：{exc}")
+    elif not gh:
+        typer.echo(text)
+    if not diff:
+        typer.echo("提示：还没有发布记录，先运行 `tvboxkeeper publish`。")
     reg.close()
 
 

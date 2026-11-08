@@ -24,11 +24,13 @@ class ProbeResult:
 class SchemaInfo:
     """配置文件解析结果。"""
 
-    schema_type: str = "invalid"  # tvbox | storehouse | mixed | invalid
+    schema_type: str = "invalid"  # tvbox | storehouse | mixed | anti_crawl | invalid
     sites_count: int = 0
     parses_count: int = 0
     lives_count: int = 0
     storehouse_count: int = 0
+    # L3 抽测候选：type 0/1 站点的 http(s) CMS api（最多收集 10 个）
+    site_apis: list[str] = field(default_factory=list)
     # L2 待探测的子资源 (kind, url)，顺序即优先级
     probes: list[tuple[str, str]] = field(default_factory=list)
     # 多仓的子仓条目 [{"sourceName": ..., "sourceUrl": ...}]
@@ -46,4 +48,6 @@ class CheckOutcome:
     error: str = ""
     schema: SchemaInfo | None = None
     probes: list[ProbeResult] = field(default_factory=list)
+    l3_tested: int = 0  # L3 抽测的站点接口数
+    l3_ok: int = 0      # L3 抽测通过的站点接口数
     content: bytes = b""  # 原始内容，供快照

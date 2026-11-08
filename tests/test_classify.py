@@ -64,6 +64,15 @@ def test_invalid():
     assert parse_config(BASE, '{"foo": 1}').schema_type == "invalid"
 
 
+def test_site_apis_collected():
+    info = parse_config(BASE, '{"sites": ['
+                              '{"type": 0, "api": "http://s1.example/api.php"}, '
+                              '{"type": 3, "api": "csp_XYQ"}, '
+                              '{"type": 1, "api": "relative/path"}]}')
+    # 只收集 type 0/1 且为 http(s) 的 api，供 L3 抽测
+    assert info.site_apis == ["http://s1.example/api.php"]
+
+
 def test_anti_crawl_html_detected():
     assert parse_config(BASE, "<!DOCTYPE html><html>Just a moment...</html>").schema_type == "anti_crawl"
     assert parse_config(BASE, "<html><body>请完成验证</body></html>").schema_type == "anti_crawl"

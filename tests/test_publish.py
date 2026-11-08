@@ -1,6 +1,7 @@
 import json
 
-from tvboxkeeper.publish import build_duocang, build_report, previous_urls
+from tvboxkeeper.publish import (build_duocang, build_report, build_site,
+                                 format_diff_text, previous_urls)
 
 
 def make_row(name, url, status="active", health=80.0, starred=0,
@@ -79,3 +80,20 @@ def test_previous_urls(tmp_path):
         ensure_ascii=False), encoding="utf-8")
     assert previous_urls(p) == {"http://b/c.json"}
     assert previous_urls(tmp_path / "missing.json") == set()
+
+
+def test_format_diff_text():
+    text = format_diff_text({"ts": "2026-11-08 12:00:00", "count": 3,
+                             "added": ["http://a/c.json"], "removed": []})
+    assert "新增 **1**" in text and "➕" in text and "http://a/c.json" in text
+
+
+def test_build_site_html():
+    rows = [dict(make_row("站点A", "http://b/c.json"),
+                 id="aaa111", l3_tested=0, l3_ok=0, dup_of="")]
+    out = build_site(rows, {"aaa111": [{"ok": 1}, {"ok": 0}]},
+                     [{"reason": "超时", "count": 2, "sources": 1}],
+                     duocang_count=1, min_health=60)
+    assert "站点A" in out and "近 30 天失败原因" in out
+    assert "<svg" in out and "站点A".replace("站点A", "站点A") in out
+    assert out.strip().endswith("</html>")

@@ -30,6 +30,23 @@ async def _probe(
                        latency_ms=fr.latency_ms, error=fr.error)
 
 
+async def _probe_site_api(
+    client: httpx.AsyncClient,
+    sem: asyncio.Semaphore,
+    api: str,
+    settings: dict,
+) -> tuple[int, str]:
+    """L3：请求 CMS 列表接口 ?ac=list，按返回内容宽松判定可用。"""
+    l3 = settings["validate"].get("l3") or {}
+    url = api + ("&" if "?" in api else "?") + "ac=list"
+    fr = await fetch(client, sem, url, max_bytes=65536,
+                     timeout=l3.get("timeout", 8), retries=0)
+    body = fr.content
+    ok = (200 <= fr.status < 400
+          and (b'"list"' in body or b'"code"' in body or b"<list" in body.lower()))
+    return (1 if ok else 0), url
+
+
 async def check_source(
     client: httpx.AsyncClient,
     sem: asyncio.Semaphore,
@@ -61,10 +78,19 @@ async def check_source(
         return out
 
     out.ok = True
-    if settings["validate"]["level"].upper() == "L2":
+    level = settings["validate"]["level"].upper()
+    if level in ("L2", "L3"):
         probes = info.probes[: settings["validate"]["max_probes"]]
         if probes:
             out.probes = list(await asyncio.gather(
                 *(_probe(client, sem, u, kind, settings) for kind, u in probes)
             ))
+    if level == "L3":
+        l3 = settings["validate"].get("l3") or {}
+        apis = info.site_apis[: l3.get("sample_sites", 3)]
+        if apis:
+            results = await asyncio.gather(
+                *(_probe_site_api(client, sem, a, settings) for a in apis))
+            out.l3_tested = len(results)
+            out.l3_ok = sum(ok for ok, _ in results)
     return out

@@ -25,15 +25,18 @@ jobs:
       - name: 安装
         run: pip install -e .
 
-      - name: 发现 + 体检 + 发布
+      - name: 发现 + 体检 + 发布 + 通知
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}   # 可选：配了才推送 TG
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           tvboxkeeper import
           tvboxkeeper discover
           tvboxkeeper hunt
           tvboxkeeper check
           tvboxkeeper publish
+          tvboxkeeper notify
 
       - name: 提交产物与源库
         run: |
@@ -42,3 +45,21 @@ jobs:
           git add -A
           git diff --cached --quiet || git commit -m "chore: 每日源体检更新 [skip ci]"
           git push
+
+  pages:
+    runs-on: ubuntu-latest
+    needs: run
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: output/site
+      - id: deployment
+        uses: actions/deploy-pages@v4

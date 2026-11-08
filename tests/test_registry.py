@@ -146,3 +146,35 @@ def test_latest_snapshot_roundtrip(tmp_path):
     reg.record(make_outcome(url=url, content=payload), SETTINGS)
     got = reg.latest_snapshot(reg.get_by_url(url)["id"])
     assert got is not None and got[0] == payload and got[1]
+
+
+def test_dedupe_groups_same_content(tmp_path):
+    from tvboxkeeper.publish import pick_sources
+    reg = make_registry(tmp_path)
+    reg.upsert("http://e.com/d1.json", name="D1")
+    reg.upsert("http://e.com/d2.json", name="D2")
+    for u in ("http://e.com/d1.json", "http://e.com/d2.json"):
+        reg.record(make_outcome(url=u, ok=True, content=b'{"same": 1}'), SETTINGS)
+    merged = reg.dedupe()
+    assert len(merged) == 1
+    rows = {r["url"]: r for r in reg.sources()}
+    d1, d2 = rows["http://e.com/d1.json"], rows["http://e.com/d2.json"]
+    assert (d1["dup_of"] == d2["id"]) or (d2["dup_of"] == d1["id"])
+    picked = [r["url"] for r in pick_sources(list(rows.values()), 0)]
+    assert len(picked) == 1  # 重复源不进订阅
+
+
+def test_dedupe_resets_when_content_diverges(tmp_path):
+    reg = make_registry(tmp_path)
+    reg.upsert("http://e.com/d1.json", name="D1")
+    reg.upsert("http://e.com/d2.json", name="D2")
+    for u in ("http://e.com/d1.json", "http://e.com/d2.json"):
+        reg.record(make_outcome(url=u, ok=True, content=b'{"same": 1}'), SETTINGS)
+    reg.dedupe()
+    # 内容分叉后应自动解除归并
+    reg.record(make_outcome(url="http://e.com/d2.json", ok=True,
+                            content=b'{"different": 2}'), SETTINGS)
+    merged = reg.dedupe()
+    assert merged == []
+    rows = {r["url"]: r for r in reg.sources()}
+    assert rows["http://e.com/d2.json"]["dup_of"] == ""

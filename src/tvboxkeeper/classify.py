@@ -146,6 +146,14 @@ def parse_config(url: str, text: str) -> SchemaInfo:
     else:
         info.schema_type = "tvbox"
 
+    # L3 抽测候选：type 0/1 站点的 http(s) CMS api
+    for site in data.get("sites") or []:
+        if (isinstance(site, dict) and site.get("type") in (0, 1)
+                and isinstance(site.get("api"), str)
+                and _SCHEME_RE.match(site["api"])):
+            info.site_apis.append(site["api"])
+    info.site_apis = info.site_apis[:10]
+
     # 子资源探测清单：jar 优先，其次直播、壁纸
     for sp in _spider_urls(data.get("spider"), url):
         info.probes.append(("jar", sp))
