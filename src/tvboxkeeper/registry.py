@@ -66,6 +66,7 @@ CREATE TABLE IF NOT EXISTS origin (
   ts        TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_check_log_source ON check_log(source_id);
+CREATE INDEX IF NOT EXISTS idx_check_log_ts ON check_log(ts);
 CREATE INDEX IF NOT EXISTS idx_snapshot_source ON snapshot(source_id);
 """
 

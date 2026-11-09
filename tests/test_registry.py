@@ -247,3 +247,17 @@ def test_check_log_level_falls_back_to_probes(tmp_path):
     row = reg.conn.execute(
         "SELECT level FROM check_log ORDER BY rowid DESC LIMIT 1").fetchone()
     assert row["level"] == "L2"
+
+
+def test_check_log_has_ts_index(tmp_path):
+    """失败原因按 ts 过滤，必须有索引，否则数据量上来后全表扫。"""
+    reg = make_registry(tmp_path)
+    indexes = {r["name"] for r in
+               reg.conn.execute("PRAGMA index_list(check_log)")}
+    assert "idx_check_log_ts" in indexes
+
+    plan = " ".join(
+        r["detail"] for r in reg.conn.execute(
+            "EXPLAIN QUERY PLAN SELECT source_id, detail FROM check_log "
+            "WHERE ok=0 AND ts>=?", ("2020-01-01 00:00:00",)))
+    assert "idx_check_log_ts" in plan
