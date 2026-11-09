@@ -79,7 +79,7 @@ async def check_source(
         timeout=net["timeout"],
         retries=net["retries"],
     )
-    out = CheckOutcome(url=url, status=fr.status,
+    out = CheckOutcome(url=url, status=fr.status, level="L1",
                        latency_ms=fr.latency_ms, error=fr.error)
     if fr.status == 0 or fr.status >= 400:
         out.error = fr.error or f"HTTP {fr.status}"
@@ -104,6 +104,7 @@ async def check_source(
             out.probes = list(await asyncio.gather(
                 *(_probe(client, sem, u, kind, settings) for kind, u in probes)
             ))
+            out.level = "L2"
     if level == "L3":
         l3 = settings["validate"].get("l3") or {}
         apis = info.site_apis[: l3.get("sample_sites", 3)]
@@ -112,4 +113,5 @@ async def check_source(
                 *(_probe_site_api(client, sem, a, settings) for a in apis))
             out.l3_tested = len(results)
             out.l3_ok = sum(ok for ok, _ in results)
+            out.level = "L3"
     return out

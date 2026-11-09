@@ -82,3 +82,26 @@ def test_l3_site_fail_counted():
 
     out = asyncio.run(inner())
     assert out.l3_tested == 1 and out.l3_ok == 0
+    assert out.level == "L3"  # 实际做了 L3 抽测，不能被降级记成 L2
+
+
+def test_level_reflects_executed_depth():
+    """配置无子资源时 L2 也只剩 L1 的实际动作；有子资源才记 L2。"""
+    assert _run_check(SETTINGS).level == "L1"  # 样例配置无 jar/直播
+
+    live_url = "http://l.example/live.txt"
+
+    def handler(request) -> httpx.Response:
+        if str(request.url) == CONFIG_URL:
+            return httpx.Response(200, json={
+                "sites": [], "lives": [{"url": live_url}]})
+        return httpx.Response(200, text="央视,#genre#\nCCTV1,http://l/1.ts")
+
+    async def inner():
+        async with httpx.AsyncClient(
+                transport=httpx.MockTransport(handler)) as client:
+            return await check_source(
+                client, asyncio.Semaphore(4), CONFIG_URL, SETTINGS)
+
+    out = asyncio.run(inner())
+    assert out.probes and out.level == "L2"

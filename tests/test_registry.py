@@ -223,3 +223,27 @@ def test_cleanup_purges_old_data(tmp_path):
     # 清理后再 VACUUM 不报错，库仍可用
     reg.record(make_outcome(url="http://e.com/c1.json"), SETTINGS)
     assert reg.get_by_url("http://e.com/c1.json")["status"] == "active"
+
+
+def test_check_log_records_actual_level(tmp_path):
+    """outcome.level 应原样落库，L3 不再被推断成 L2。"""
+    reg = make_registry(tmp_path)
+    reg.upsert("http://e.com/lv.json")
+    out = make_outcome(url="http://e.com/lv.json")
+    out.level = "L3"
+    reg.record(out, SETTINGS)
+    row = reg.conn.execute(
+        "SELECT level FROM check_log ORDER BY rowid DESC LIMIT 1").fetchone()
+    assert row["level"] == "L3"
+
+
+def test_check_log_level_falls_back_to_probes(tmp_path):
+    """旧调用方未填 level 时，按探测结果回退推断，保持兼容。"""
+    reg = make_registry(tmp_path)
+    reg.upsert("http://e.com/lv2.json")
+    probes = [ProbeResult("http://e.com/jar.jar", "jar", 200, 50)]
+    reg.record(make_outcome(url="http://e.com/lv2.json", probes=probes),
+               SETTINGS)
+    row = reg.conn.execute(
+        "SELECT level FROM check_log ORDER BY rowid DESC LIMIT 1").fetchone()
+    assert row["level"] == "L2"

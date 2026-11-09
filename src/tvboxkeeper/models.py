@@ -52,6 +52,8 @@ class CheckOutcome:
     status: int = 0  # HTTP 状态码，0 表示网络层失败
     latency_ms: int = 0
     error: str = ""
+    # 实际执行的最高档位 L1/L2/L3（按真实完成的探测动作判定，而非配置档位）
+    level: str = ""
     schema: SchemaInfo | None = None
     probes: list[ProbeResult] = field(default_factory=list)
     l3_tested: int = 0  # L3 抽测的站点接口数

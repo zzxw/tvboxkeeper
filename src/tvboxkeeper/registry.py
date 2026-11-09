@@ -296,7 +296,8 @@ class Registry:
 
         sub_total = len(outcome.probes)
         sub_ok = sum(1 for p in outcome.probes if p.ok)
-        level = "L2" if sub_total else "L1"
+        # 优先用体检实际执行的档位；旧调用方未填时按探测结果回退推断
+        level = outcome.level or ("L2" if sub_total else "L1")
         detail = json.dumps(
             {
                 "http": outcome.status,
