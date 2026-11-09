@@ -15,7 +15,7 @@ from . import discover as discover_mod
 from . import publish as publish_mod
 from . import validate as validate_mod
 from .config import load_seeds, load_settings
-from .fetch import make_headers
+from .fetch import is_cert_error, make_headers
 from .normalize import normalize_url
 from .registry import Registry
 
@@ -128,15 +128,44 @@ async def _run_checks(reg: Registry, settings: dict, rows: list[dict]) -> list:
     net = settings["network"]
     headers = make_headers(random.choice(net["user_agents"]))
     verify = net.get("verify_ssl", True)
-    async with httpx.AsyncClient(
-        timeout=net["timeout"], follow_redirects=True, headers=headers,
-        verify=verify,
-    ) as client:
-        sem = asyncio.Semaphore(net["concurrency"])
-        outcomes = await asyncio.gather(*[
-            validate_mod.check_source(client, sem, r["url"], settings)
-            for r in rows
+    fallback = net.get("verify_ssl_fallback", True)
+    sem = asyncio.Semaphore(net["concurrency"])
+
+    def _client(verify_tls: bool) -> httpx.AsyncClient:
+        return httpx.AsyncClient(
+            timeout=net["timeout"], follow_redirects=True, headers=headers,
+            verify=verify_tls,
+        )
+
+    async def _batch(client: httpx.AsyncClient, urls: list[str]) -> list:
+        return await asyncio.gather(*[
+            validate_mod.check_source(client, sem, url, settings)
+            for url in urls
         ])
+
+    async with _client(verify) as client:
+        outcomes = await _batch(client, [r["url"] for r in rows])
+
+    # 先按校验证书抓取；只有证书链失败才对该源降级复检一次。
+    # 超时/DNS/握手失败不降级——关掉校验也连不上，降级只会掩盖真实原因。
+    retry = [o for o in outcomes if is_cert_error(o.error)]
+    if verify and fallback and retry:
+        async with _client(False) as insecure:
+            retried = await _batch(insecure, [o.url for o in retry])
+        fixed = {o.url: o for o in retried}
+        merged = []
+        for outcome in outcomes:
+            new = fixed.get(outcome.url)
+            if new is not None:
+                new.tls_insecure = True
+                outcome = new
+            merged.append(outcome)
+        outcomes = merged
+        typer.echo(
+            f"TLS 降级复检：{len(retry)} 个源证书链校验失败，"
+            f"已按不校验证书重试（{sum(1 for o in retried if o.ok)} 个恢复可用）。"
+        )
+
     for outcome in outcomes:
         reg.record(outcome, settings)
     return list(outcomes)

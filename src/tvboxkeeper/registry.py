@@ -306,6 +306,8 @@ class Registry:
                 "error": outcome.error,
                 "subs": [f"{p.kind}:{p.status}" for p in outcome.probes],
                 "l3": [outcome.l3_tested, outcome.l3_ok],
+                # 该源本次是按非校验证书模式抓的（证书链不完整），便于事后审计
+                "tls": 1 if outcome.tls_insecure else 0,
             },
             ensure_ascii=False,
         )

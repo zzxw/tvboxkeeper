@@ -15,6 +15,8 @@ DEFAULTS: dict[str, Any] = {
         "concurrency": 8,
         "max_bytes": 5_242_880,
         "verify_ssl": True,
+        # 证书链校验失败时才对该源降级复检；设为 False 表示一律不校验证书
+        "verify_ssl_fallback": True,
         "user_agents": [
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
             "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",

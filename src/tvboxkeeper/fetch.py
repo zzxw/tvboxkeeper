@@ -22,6 +22,28 @@ class FetchResult:
     error: str = ""
 
 
+# 只匹配「证书链校验失败」这一类可降级错误。
+# 刻意不含 handshake failure / 协议版本不符：那是服务端 TLS 栈过旧，
+# 关掉校验也照样连不上，降级只会掩盖真实原因。
+CERT_VERIFY_HINTS = (
+    "certificate_verify_failed",
+    "certificate verify failed",
+    "unable to get local issuer certificate",
+    "self-signed certificate",
+    "self signed certificate",
+    "certificate has expired",
+    "hostname mismatch",
+    "ip address mismatch",
+    "doesn't match",
+)
+
+
+def is_cert_error(error: str) -> bool:
+    """判断错误信息是否为证书校验失败（可安全降级复检的那一类）。"""
+    low = (error or "").lower()
+    return any(hint in low for hint in CERT_VERIFY_HINTS)
+
+
 def make_headers(user_agent: str) -> dict[str, str]:
     return {
         "User-Agent": user_agent,

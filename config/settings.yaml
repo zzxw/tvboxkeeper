@@ -6,7 +6,10 @@ network:
   retries: 2           # 失败重试次数
   concurrency: 8       # 全局并发上限
   max_bytes: 5242880   # 配置文件大小上限（5MB）
-  verify_ssl: false    # 社区站点证书链常不完整（TVBox 客户端也不校验）；仅解析 JSON 不执行代码，风险可控
+  verify_ssl: true     # 默认校验证书（比全局关掉更安全）
+  # ↓ 若某个源因证书链不完整失败，仅对该源降级为不校验并重试一次（不掩盖超时/握手失败）；
+  #   设为 false 则一律不校验证书（等同旧行为）
+  verify_ssl_fallback: true
   user_agents:
     - "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
     - "okhttp/4.10.0"

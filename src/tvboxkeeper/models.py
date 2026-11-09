@@ -58,4 +58,6 @@ class CheckOutcome:
     probes: list[ProbeResult] = field(default_factory=list)
     l3_tested: int = 0  # L3 抽测的站点接口数
     l3_ok: int = 0      # L3 抽测通过的站点接口数
+    # 该源因证书链校验失败而按非校验模式复检（结果可用，但连接未验签）
+    tls_insecure: bool = False
     content: bytes = b""  # 原始内容，供快照
