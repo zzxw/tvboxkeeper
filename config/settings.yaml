@@ -23,6 +23,14 @@ validate:
   l3:
     sample_sites: 3          # L3 抽测的站点接口数
     timeout: 8               # L3 单次请求超时（秒）
+    enabled: true            # 开启每日抽样：真实验证 CMS 接口可用（原先从未触发）
+    daily_quota: 5           # 每天抽测几个源（按健康分从高到低）
+    min_health: 85           # 只抽测健康分达标的源
+  # 增量体检：内容 md5 未变、且离上次真实探测不足 N 天时跳过 L2 子资源探测。
+  # jar/直播地址写在配置里，配置没变说明地址没变；但目标仍可能挂掉，故设窗口强制重探。
+  incremental:
+    enabled: true
+    probe_every_days: 3
 
 score:
   weights:
@@ -37,6 +45,13 @@ publish:
   site: output/site/index.html   # 静态看板（GitHub Pages 用）
   diff: output/last_diff.json    # 本轮变化记录，notify 命令读取
   live: output/直播.json         # 直播合集配置（可作配置地址导入）
+  # 精简订阅：门槛更高、条数更少，给低配盒子/长辈用，与全量版互不影响
+  lite:
+    duocang: output/多仓-lite.json
+    live: output/直播-lite.json
+    min_health: 80
+    max_sources: 8
+    max_live: 5
   mirror_base: "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors"
   # ↑ 镜像基址：有快照的源在多仓里改用本仓库镜像地址（需仓库为 Public）；
   #   若仓库是 Private 或不想启用镜像，改回 ""

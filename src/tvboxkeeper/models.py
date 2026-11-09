@@ -60,4 +60,6 @@ class CheckOutcome:
     l3_ok: int = 0      # L3 抽测通过的站点接口数
     # 该源因证书链校验失败而按非校验模式复检（结果可用，但连接未验签）
     tls_insecure: bool = False
+    # 增量体检：内容未变且离上次探测不足阈值，本次跳过 L2 子资源探测
+    skipped_probes: bool = False
     content: bytes = b""  # 原始内容，供快照

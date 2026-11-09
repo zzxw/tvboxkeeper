@@ -3,12 +3,36 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
+import time
 
 import httpx
 
 from . import classify
 from .fetch import fetch
 from .models import CheckOutcome, ProbeResult
+
+
+def should_skip_probes(prev: dict | None, content: bytes, settings: dict) -> bool:
+    """增量体检：内容与上次一致、且离上次真实探测不足阈值时，跳过子资源探测。
+
+    jar/直播地址都写在配置里，配置没变说明地址没变——但目标仍可能挂掉，
+    所以只在 probe_every_days 窗口内跳过，超过窗口强制重探一次。
+    """
+    inc = settings["validate"].get("incremental") or {}
+    if not inc.get("enabled"):
+        return False
+    if not prev or not prev.get("content_md5"):
+        return False
+    if prev["content_md5"] != hashlib.md5(content).hexdigest():
+        return False
+    ts = str(prev.get("probe_ts") or "")
+    days = float(inc.get("probe_every_days", 3))
+    if not ts or days <= 0:
+        return False
+    limit = time.strftime("%Y-%m-%d %H:%M:%S",
+                          time.localtime(time.time() - days * 86400))
+    return ts >= limit
 
 
 def _content_ok(kind: str, body: bytes, status: int) -> bool:
@@ -70,8 +94,14 @@ async def check_source(
     sem: asyncio.Semaphore,
     url: str,
     settings: dict,
+    level: str = "",
+    prev: dict | None = None,
 ) -> CheckOutcome:
-    """体检单个源：L1 必做，L2 按档位开关。"""
+    """体检单个源：L1 必做，L2 按档位开关。
+
+    level 可按源覆盖全局档位（L3 抽样用）；prev 提供上次的 content_md5/probe_ts
+    供增量体检判断是否可跳过后台探测。
+    """
     net = settings["network"]
     fr = await fetch(
         client, sem, url,
@@ -97,7 +127,11 @@ async def check_source(
         return out
 
     out.ok = True
-    level = settings["validate"]["level"].upper()
+    level = (level or settings["validate"]["level"]).upper()
+    # 增量体检只跳过常规 L2；L3 是抽样验证播放链路，必须真跑
+    if level == "L2" and should_skip_probes(prev, fr.content, settings):
+        out.skipped_probes = True
+        return out
     if level in ("L2", "L3"):
         probes = info.probes[: settings["validate"]["max_probes"]]
         if probes:

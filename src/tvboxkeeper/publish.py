@@ -8,6 +8,7 @@ import time
 from collections import Counter
 from pathlib import Path
 
+from . import diffing
 from .normalize import guess_name
 
 # 状态展示顺序：存活 → 观察中 → 结构/网络异常 → 人工处置
@@ -57,10 +58,17 @@ def build_duocang(
     min_health: float,
     mirror_base: str = "",
     mirrored_sids: "set[str] | frozenset[str]" = frozenset(),
+    limit: int = 0,
 ) -> dict:
-    """生成 storeHouse 多仓；有镜像的源用镜像地址替代原始 URL。"""
+    """生成 storeHouse 多仓；有镜像的源用镜像地址替代原始 URL。
+
+    limit > 0 时只取健康分最高的前 N 个（精简订阅用）。
+    """
     entries = []
-    for r in pick_sources(rows, min_health):
+    picked = pick_sources(rows, min_health)
+    if limit:
+        picked = picked[:limit]
+    for r in picked:
         url = r["url"]
         if mirror_base and r.get("id") in mirrored_sids:
             url = f"{mirror_base.rstrip('/')}/{r['id']}.json"
@@ -78,10 +86,14 @@ def build_live_config(
     min_health: float,
     mirror_base: str = "",
     mirrored_sids: "set[str] | frozenset[str]" = frozenset(),
+    limit: int = 0,
 ) -> dict:
     """生成直播合集配置：lives 数组收录健康直播源，可直接作为配置地址导入。"""
     entries = []
-    for r in pick_live_sources(rows, min_health):
+    picked = pick_live_sources(rows, min_health)
+    if limit:
+        picked = picked[:limit]
+    for r in picked:
         url = r["url"]
         if mirror_base and r.get("id") in mirrored_sids:
             url = f"{mirror_base.rstrip('/')}/{r['id']}.json"
@@ -113,6 +125,10 @@ def build_report(
     mirror_note: str = "",
     dedupe_groups: list[dict] | None = None,
     live_info: str = "",
+    changes: list[dict] | None = None,
+    hosts: list[dict] | None = None,
+    incremental: str = "",
+    lite_info: str = "",
 ) -> str:
     now = time.strftime("%Y-%m-%d %H:%M:%S")
     lines = [
@@ -121,6 +137,10 @@ def build_report(
         f"- 生成时间：{now}",
         f"- 源总数：{len(rows)}（{status_breakdown(rows)}）",
         f"- 订阅门槛：健康分 ≥ {min_health}",
+    ]
+    if incremental:
+        lines.append(f"- 本轮体检口径：{incremental}")
+    lines += [
         "",
         "## 本轮变化（相对上次发布的多仓）",
         "",
@@ -134,6 +154,18 @@ def build_report(
     if not added and not removed:
         lines.append("- 无变化")
 
+    if changes:
+        lines += [
+            "",
+            "## 内容变化（站点级）",
+            "",
+            "以下源的配置文件内容本轮有变动，明细为站点增删（同 key 视为同一站点）：",
+            "",
+        ]
+        for c in changes[:10]:
+            detail = diffing.describe(c.get("change") or {})
+            lines.append(f"- `{c['name']}`：{detail or '内容有变动'}")
+
     lines += [
         "",
         "## 推荐订阅",
@@ -145,6 +177,8 @@ def build_report(
         lines.append(f"- {mirror_note}")
     if live_info:
         lines.append(f"- {live_info}")
+    if lite_info:
+        lines.append(f"- {lite_info}")
     lines.append("")
 
     if failure_stats:
@@ -156,6 +190,20 @@ def build_report(
         ]
         for f in failure_stats[:10]:
             lines.append(f"| {f['reason']} | {f['count']} | {f['sources']} |")
+        lines.append("")
+
+    if hosts:
+        lines += [
+            "## 失败主机分布（近 30 天）",
+            "",
+            "同一主机反复失败通常意味着整站不可用（被墙/换域名），",
+            "而非单个源失效——可据此决定是否整批剔除。",
+            "",
+            "| 主机 | 失败次数 | 涉及源数 |",
+            "|---|---|---|",
+        ]
+        for h in hosts[:8]:
+            lines.append(f"| `{h['host']}` | {h['fails']} | {h['sources']} |")
         lines.append("")
 
     if dedupe_groups:
@@ -263,12 +311,47 @@ def _sparkline(marks: list[int], width: int = 120, height: int = 22) -> str:
             f'points="{pts}"/></svg>')
 
 
+def _trend_chart(points: list[dict], width: int = 660, height: int = 150) -> str:
+    """整体可用率趋势（内联 SVG，无外部依赖）。points: [{date, rate}]"""
+    if len(points) < 2:
+        return ""
+    pad_l, pad_r, pad_t, pad_b = 36, 10, 10, 22
+    iw, ih = width - pad_l - pad_r, height - pad_t - pad_b
+    step = iw / (len(points) - 1)
+
+    def y(rate: float) -> float:
+        return pad_t + ih - (max(0.0, min(100.0, rate)) / 100) * ih
+
+    pts = " ".join(f"{pad_l + i * step:.1f},{y(p['rate']):.1f}"
+                   for i, p in enumerate(points))
+    avg = sum(p["rate"] for p in points) / len(points)
+    color = "#4ade80" if avg >= 80 else ("#fbbf24" if avg >= 50 else "#f87171")
+    grid = "".join(
+        f'<line x1="{pad_l}" y1="{y(v):.1f}" x2="{width - pad_r}" y2="{y(v):.1f}" '
+        f'stroke="#1e293b"/>'
+        f'<text x="4" y="{y(v) + 4:.1f}" fill="#64748b" font-size="10">{v}</text>'
+        for v in (0, 50, 100))
+    labels = (
+        f'<text x="{pad_l}" y="{height - 6}" fill="#64748b" font-size="10">'
+        f'{points[0]["date"][5:]}</text>'
+        f'<text x="{width - pad_r}" y="{height - 6}" fill="#64748b" '
+        f'font-size="10" text-anchor="end">{points[-1]["date"][5:]}</text>')
+    return (f'<svg viewBox="0 0 {width} {height}" width="100%" height="{height}" '
+            f'role="img" aria-label="近 {len(points)} 天可用率趋势">{grid}'
+            f'<polyline fill="none" stroke="{color}" stroke-width="2" points="{pts}"/>'
+            f'{labels}</svg>')
+
+
 def build_site(
     rows: list[dict],
     histories: dict[str, list[dict]],
     failure_stats: list[dict] | None,
     duocang_count: int,
     min_health: float,
+    trend: list[dict] | None = None,
+    hosts: list[dict] | None = None,
+    changes: list[dict] | None = None,
+    lite_count: int = 0,
 ) -> str:
     """生成自包含的静态目录页（无外部依赖，可直接挂 GitHub Pages）。"""
     now = time.strftime("%Y-%m-%d %H:%M")
@@ -315,6 +398,28 @@ def build_site(
                     f'<th>原因</th><th>次数</th><th>涉及源</th></tr>{fail_rows}</table>'
                     if fail_rows else "")
 
+    trend_points = trend or []
+    trend_block = (f'<h2>整体可用率趋势 · 近 {len(trend_points)} 天</h2>'
+                   f'<div class="chart">{_trend_chart(trend_points)}</div>'
+                   if len(trend_points) > 1 else "")
+
+    host_rows = "".join(
+        f"<tr><td class='mono'>{esc(h['host'])}</td>"
+        f"<td class='num'>{h['fails']}</td><td class='num'>{h['sources']}</td></tr>"
+        for h in (hosts or [])[:8])
+    host_block = (f'<h2>失败主机分布 · 近 30 天</h2><table id="hosts"><tr>'
+                  f'<th>主机</th><th>失败次数</th><th>涉及源</th></tr>'
+                  f'{host_rows}</table>' if host_rows else "")
+
+    chg_rows = "".join(
+        f"<tr><td class='name'>{esc(c['name'])}</td>"
+        f"<td>{esc(diffing.describe(c.get('change') or {}))}</td></tr>"
+        for c in (changes or [])[:6])
+    chg_block = (f'<h2>本轮内容变化 · 站点级</h2><table id="changes"><tr>'
+                 f'<th>源</th><th>变化</th></tr>{chg_rows}</table>'
+                 if chg_rows else "")
+    lite_note = f" · 精简版 {lite_count} 个源" if lite_count else ""
+
     return f"""<!DOCTYPE html>
 <html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -348,17 +453,23 @@ tr:hover {{ background: #1e293b; }}
 .url {{ color: #64748b; font-family: ui-monospace, monospace; font-size: 12px;
         max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }}
 .spark svg {{ display: block; }}
+h2 {{ font-size: 15px; margin: 26px 0 8px; color: #94a3b8; font-weight: 600; }}
+.chart {{ background: #111c30; border-radius: 10px; padding: 10px 6px 0; }}
+.mono {{ font-family: ui-monospace, monospace; font-size: 12px; color: #cbd5e1; }}
 footer {{ color: #475569; font-size: 12px; }}
 </style></head><body>
 <h1>TVBoxKeeper · 源体检看板</h1>
-<div class="meta">生成于 {now} · 订阅门槛：健康分 ≥ {min_health} · 订阅源 {duocang_count} 个</div>
+<div class="meta">生成于 {now} · 订阅门槛：健康分 ≥ {min_health} · 订阅源 {duocang_count} 个{lite_note}</div>
 <div class="cards">{cards}</div>
+{trend_block}
 <input id="q" placeholder="筛选名称 / 状态 / URL…">
 <table id="tbl">
 <tr><th>状态</th><th>名称</th><th>适配</th><th>站点</th><th>直播</th><th>健康分</th>
 <th>30天可用</th><th>L3</th><th>近期体检</th><th>URL</th></tr>
 {''.join(trs)}
 </table>
+{chg_block}
+{host_block}
 {fail_section}
 <footer>TVBoxKeeper 自动生成 · 内容仅为配置可达性元数据，不含任何音视频</footer>
 <script>

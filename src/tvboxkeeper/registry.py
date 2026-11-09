@@ -8,7 +8,9 @@ import json
 import sqlite3
 import time
 from pathlib import Path
+from urllib.parse import urlsplit
 
+from . import diffing
 from .models import CheckOutcome, SchemaInfo
 from .normalize import guess_name, normalize_url, source_id
 
@@ -73,6 +75,12 @@ CREATE INDEX IF NOT EXISTS idx_snapshot_source ON snapshot(source_id);
 
 def _now() -> str:
     return time.strftime("%Y-%m-%d %H:%M:%S")
+
+
+def _days_ago(days: float) -> str:
+    """N 天前的时间戳字符串（与 check_log.ts 同格式，便于直接比较）。"""
+    return time.strftime("%Y-%m-%d %H:%M:%S",
+                         time.localtime(time.time() - days * 86400))
 
 
 def reason_of(detail: dict) -> str:
@@ -157,6 +165,8 @@ class Registry:
             ("compat", "TEXT DEFAULT ''"),
             ("content_md5", "TEXT DEFAULT ''"),
             ("dup_of", "TEXT DEFAULT ''"),
+            # 最近一次真正执行 L2/L3 探测的时间（增量体检判定依据）
+            ("probe_ts", "TEXT DEFAULT ''"),
         ):
             if col not in cols:
                 self.conn.execute(f"ALTER TABLE source ADD COLUMN {col} {ddl}")
@@ -277,6 +287,66 @@ class Registry:
             return None
         return (row["ok_n"] or 0) / n * 100
 
+    def daily_stats(self, days: int = 30) -> list[dict]:
+        """按天聚合整体成功率，供看板趋势折线使用。"""
+        since = _days_ago(days)
+        rows = self.conn.execute(
+            "SELECT substr(ts, 1, 10) AS d, COUNT(*) AS n, SUM(ok) AS ok_n "
+            "FROM check_log WHERE ts >= ? GROUP BY d ORDER BY d",
+            (since,),
+        ).fetchall()
+        return [{"date": r["d"], "total": r["n"], "ok": r["ok_n"] or 0,
+                 "rate": round((r["ok_n"] or 0) * 100 / r["n"]) if r["n"] else 0}
+                for r in rows]
+
+    def host_failures(self, days: int = 30, min_fails: int = 3,
+                      limit: int = 8) -> list[dict]:
+        """近 N 天失败按主机聚合：区分「整站不可用」与「单源失效」。"""
+        rows = self.conn.execute(
+            "SELECT s.url AS u, c.source_id AS sid FROM check_log c "
+            "JOIN source s ON s.id = c.source_id "
+            "WHERE c.ok = 0 AND c.ts >= ?", (_days_ago(days),),
+        ).fetchall()
+        agg: dict[str, dict] = {}
+        for r in rows:
+            host = urlsplit(r["u"]).hostname or "?"
+            entry = agg.setdefault(host, {"host": host, "fails": 0, "sids": set()})
+            entry["fails"] += 1
+            entry["sids"].add(r["sid"])
+        out = [{"host": e["host"], "fails": e["fails"],
+                "sources": len(e["sids"])}
+               for e in agg.values() if e["fails"] >= min_fails]
+        out.sort(key=lambda x: (-x["fails"], x["host"]))
+        return out[:limit]
+
+    def recent_changes(self, hours: int = 30, limit: int = 12) -> list[dict]:
+        """最近 N 小时内内容发生站点级变化的源（每源只取最新一条）。"""
+        since = time.strftime(
+            "%Y-%m-%d %H:%M:%S", time.localtime(time.time() - hours * 3600))
+        rows = self.conn.execute(
+            "SELECT c.detail AS detail, s.name AS name, s.url AS url, s.id AS id "
+            "FROM check_log c JOIN source s ON s.id = c.source_id "
+            "WHERE c.ts >= ? AND c.detail LIKE '%\"chg\"%' ORDER BY c.ts DESC",
+            (since,),
+        ).fetchall()
+        out: list[dict] = []
+        seen: set[str] = set()
+        for r in rows:
+            if r["id"] in seen:
+                continue
+            try:
+                change = (json.loads(r["detail"] or "{}") or {}).get("chg")
+            except ValueError:
+                continue
+            if not change:
+                continue
+            seen.add(r["id"])
+            out.append({"name": r["name"] or r["url"], "url": r["url"],
+                        "change": change})
+            if len(out) >= limit:
+                break
+        return out
+
     def failure_reasons(self, days: int = 30) -> list[dict]:
         """聚合近 N 天失败原因：[{reason, count, sources}]。"""
         cutoff = time.strftime(
@@ -338,25 +408,34 @@ class Registry:
         sub_ok = sum(1 for p in outcome.probes if p.ok)
         # 优先用体检实际执行的档位；旧调用方未填时按探测结果回退推断
         level = outcome.level or ("L2" if sub_total else "L1")
-        detail = json.dumps(
-            {
-                "http": outcome.status,
-                "schema": schema_type,
-                "error": outcome.error,
-                "subs": [f"{p.kind}:{p.status}" for p in outcome.probes],
-                "l3": [outcome.l3_tested, outcome.l3_ok],
-                # 该源本次是按非校验证书模式抓的（证书链不完整），便于事后审计
-                "tls": 1 if outcome.tls_insecure else 0,
-            },
-            ensure_ascii=False,
-        )
+        content_md5 = hashlib.md5(outcome.content).hexdigest() if ok and outcome.content else ""
+        # 内容级变更：与上一份快照比较站点构成（新快照稍后才写，这里读到的还是旧的）
+        change: dict = {}
+        if content_md5 and row["content_md5"] and content_md5 != row["content_md5"]:
+            prev_snap = self.latest_snapshot(sid)
+            if prev_snap:
+                change = diffing.content_change(prev_snap[0], outcome.content)
+        detail_data = {
+            "http": outcome.status,
+            "schema": schema_type,
+            "error": outcome.error,
+            "subs": [f"{p.kind}:{p.status}" for p in outcome.probes],
+            "l3": [outcome.l3_tested, outcome.l3_ok],
+            # 该源本次是按非校验证书模式抓的（证书链不完整），便于事后审计
+            "tls": 1 if outcome.tls_insecure else 0,
+        }
+        if outcome.skipped_probes:
+            detail_data["skip"] = 1
+        if change:
+            detail_data["chg"] = change
+        detail = json.dumps(detail_data, ensure_ascii=False)
         self.conn.execute(
             "INSERT INTO check_log(source_id, ts, level, ok, latency_ms, detail) "
             "VALUES(?,?,?,?,?,?)",
             (sid, now, level, 1 if ok else 0, outcome.latency_ms, detail),
         )
         score = self._score(sid, ok, sub_ok, sub_total, schema, settings)
-        content_md5 = hashlib.md5(outcome.content).hexdigest() if ok and outcome.content else ""
+        probed = 1 if (sub_total or outcome.l3_tested) else 0
         self.conn.execute(
             "UPDATE source SET schema_type=?, status=?, last_checked=?, "
             "last_ok=CASE WHEN ? THEN ? ELSE last_ok END, "
@@ -364,6 +443,7 @@ class Registry:
             "parses_count=?, lives_count=?, storehouse_count=?, sub_ok=?, "
             "sub_total=?, l3_tested=?, l3_ok=?, live_channels=?, "
             "live_groups=?, compat=?, "
+            "probe_ts=CASE WHEN ? THEN ? ELSE probe_ts END, "
             "content_md5=CASE WHEN ? THEN ? ELSE content_md5 END, "
             "dup_of='', health_score=? WHERE id=?",
             (schema_type, status, now, 1 if ok else 0, now,
@@ -376,6 +456,7 @@ class Registry:
              schema.live_channels if schema else 0,
              schema.live_groups if schema else 0,
              schema.compat if schema else "",
+             probed, now,
              1 if ok else 0, content_md5, score, sid),
         )
         self.conn.commit()

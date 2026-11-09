@@ -140,6 +140,28 @@ def parse_live(text: str) -> SchemaInfo:
     return info
 
 
+def site_labels(text: str) -> list[str]:
+    """提取配置里的站点标识（key 优先，退化到 name/api）。
+
+    只用于内容级对比（新增/移除了哪些站点），不参与健康分计算。
+    """
+    try:
+        data = _extract_json(text)
+    except ValueError:
+        return []
+    if not isinstance(data, dict):
+        return []
+    labels: list[str] = []
+    for site in data.get("sites") or []:
+        if not isinstance(site, dict):
+            continue
+        label = str(site.get("key") or site.get("name")
+                    or site.get("api") or "").strip()
+        if label:
+            labels.append(label)
+    return labels
+
+
 def parse_config(url: str, text: str) -> SchemaInfo:
     """把抓到的文本解析为 SchemaInfo，解析失败返回 schema_type=invalid。"""
     try:

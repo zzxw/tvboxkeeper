@@ -165,3 +165,48 @@ def test_site_cards_cover_banned():
     rows = [make_row("封", "http://c/1", status="banned", banned=1)]
     out = build_site(rows, {}, [], duocang_count=0, min_health=60)
     assert "<span>banned</span>" in out
+
+
+def test_duocang_limit_for_lite():
+    data = build_duocang(ROWS, min_health=60, limit=1)
+    assert len(data["storeHouse"]) == 1
+    # 置顶优先（starred 排序在健康分之前）
+    assert data["storeHouse"][0]["sourceName"] == "置顶"
+
+
+def test_report_renders_change_hosts_and_lite():
+    rows = ROWS + [dict(make_row("站点甲", "http://f/c.json"),
+                        id="f" * 16, dup_of="", l3_tested=0, l3_ok=0)]
+    report = build_report(
+        rows, set(), set(), "output/多仓.json", 3, 60,
+        failure_stats=[{"reason": "超时", "count": 5, "sources": 2}],
+        changes=[{"name": "站点甲", "url": "http://f/c.json",
+                  "change": {"a": 1, "r": 1, "add": ["新站"], "del": ["旧站"]}}],
+        hosts=[{"host": "gh-proxy.com", "fails": 24, "sources": 5}],
+        incremental="增量体检，30 个源内容未变跳过子资源探测",
+        lite_info="精简版：`output/多仓-lite.json`（8 个源）",
+    )
+    assert "## 内容变化（站点级）" in report
+    assert "新增 1 个（新站）" in report and "移除 1 个（旧站）" in report
+    assert "## 失败主机分布（近 30 天）" in report
+    assert "`gh-proxy.com` | 24 | 5" in report
+    assert "本轮体检口径：增量体检" in report
+    assert "精简版：`output/多仓-lite.json`" in report
+
+
+def test_site_includes_trend_and_hosts():
+    rows = [dict(make_row("站点A", "http://b/c.json"),
+                 id="aaa111", dup_of="", l3_tested=0, l3_ok=0)]
+    trend = [{"date": "2026-11-07", "total": 10, "ok": 8, "rate": 80},
+             {"date": "2026-11-08", "total": 10, "ok": 9, "rate": 90},
+             {"date": "2026-11-09", "total": 12, "ok": 6, "rate": 50}]
+    html = build_site(rows, {}, None, 1, 60, trend=trend,
+                      hosts=[{"host": "gh-proxy.com", "fails": 24, "sources": 5}],
+                      lite_count=1)
+    assert "整体可用率趋势 · 近 3 天" in html
+    assert 'viewBox="0 0 660 150"' in html and "polyline" in html
+    assert "失败主机分布" in html and "gh-proxy.com" in html
+    assert "精简版 1 个源" in html
+    # 单点无法成线时不渲染图表
+    short = build_site(rows, {}, None, 1, 60, trend=trend[:1])
+    assert "整体可用率趋势" not in short

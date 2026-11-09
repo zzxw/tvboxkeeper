@@ -124,12 +124,39 @@ def ban(
     reg.close()
 
 
+def l3_targets(rows: list[dict], settings: dict) -> set[str]:
+    """L3 抽样名单：每日按健康分取前 N 个配置源做 CMS 接口抽测。
+
+    L3 每个源要打 3 个真实接口，全量跑成本高且无必要，故定量抽测。
+    """
+    l3 = settings["validate"].get("l3") or {}
+    if not l3.get("enabled"):
+        return set()
+    quota = int(l3.get("daily_quota", 5))
+    floor = float(l3.get("min_health", 85))
+    cand = [
+        r for r in rows
+        if r.get("status") == "active" and not r.get("banned")
+        and not r.get("dup_of") and r.get("schema_type") != "live"
+        and float(r.get("health_score") or 0) >= floor
+    ]
+    cand.sort(key=lambda r: -float(r.get("health_score") or 0))
+    return {r["url"] for r in cand[:quota]}
+
+
 async def _run_checks(reg: Registry, settings: dict, rows: list[dict]) -> list:
     net = settings["network"]
     headers = make_headers(random.choice(net["user_agents"]))
     verify = net.get("verify_ssl", True)
     fallback = net.get("verify_ssl_fallback", True)
     sem = asyncio.Semaphore(net["concurrency"])
+    # 增量体检所需的上一轮状态：内容 md5 + 上次真实探测时间
+    prev_map = {
+        r["url"]: {"content_md5": r.get("content_md5") or "",
+                   "probe_ts": r.get("probe_ts") or ""}
+        for r in rows
+    }
+    l3_urls = l3_targets(rows, settings)
 
     def _client(verify_tls: bool) -> httpx.AsyncClient:
         return httpx.AsyncClient(
@@ -137,21 +164,24 @@ async def _run_checks(reg: Registry, settings: dict, rows: list[dict]) -> list:
             verify=verify_tls,
         )
 
-    async def _batch(client: httpx.AsyncClient, urls: list[str]) -> list:
+    async def _batch(client: httpx.AsyncClient, items: list[dict]) -> list:
         return await asyncio.gather(*[
-            validate_mod.check_source(client, sem, url, settings)
-            for url in urls
+            validate_mod.check_source(
+                client, sem, item["url"], settings,
+                level="L3" if item["url"] in l3_urls else "",
+                prev=prev_map.get(item["url"]))
+            for item in items
         ])
 
     async with _client(verify) as client:
-        outcomes = await _batch(client, [r["url"] for r in rows])
+        outcomes = await _batch(client, [{"url": r["url"]} for r in rows])
 
     # 先按校验证书抓取；只有证书链失败才对该源降级复检一次。
     # 超时/DNS/握手失败不降级——关掉校验也连不上，降级只会掩盖真实原因。
     retry = [o for o in outcomes if is_cert_error(o.error)]
     if verify and fallback and retry:
         async with _client(False) as insecure:
-            retried = await _batch(insecure, [o.url for o in retry])
+            retried = await _batch(insecure, [{"url": o.url} for o in retry])
         fixed = {o.url: o for o in retried}
         merged = []
         for outcome in outcomes:
@@ -165,6 +195,13 @@ async def _run_checks(reg: Registry, settings: dict, rows: list[dict]) -> list:
             f"TLS 降级复检：{len(retry)} 个源证书链校验失败，"
             f"已按不校验证书重试（{sum(1 for o in retried if o.ok)} 个恢复可用）。"
         )
+
+    skipped = sum(1 for o in outcomes if o.skipped_probes)
+    l3_done = sum(1 for o in outcomes if o.l3_tested)
+    if skipped or l3_done:
+        typer.echo(
+            f"增量体检：跳过 {skipped} 个源的子资源探测（内容未变）；"
+            f"L3 抽测 {l3_done} 个源。")
 
     for outcome in outcomes:
         reg.record(outcome, settings)
@@ -422,6 +459,39 @@ def publish() -> None:
     live_path.write_text(
         json.dumps(live_data, ensure_ascii=False, indent=2), encoding="utf-8")
 
+    # 精简订阅（门槛更高、条数更少）：给低配盒子/长辈用，不影响全量版
+    lite = pub.get("lite") or {}
+    lite_data = publish_mod.build_duocang(
+        rows, lite.get("min_health", pub["min_health"]),
+        mirror_base=mirror_base, mirrored_sids=set(mirrored),
+        limit=int(lite.get("max_sources", 0)))
+    lite_live = publish_mod.build_live_config(
+        rows, lite.get("min_health", pub["min_health"]),
+        mirror_base=mirror_base, mirrored_sids=set(mirrored),
+        limit=int(lite.get("max_live", 0)))
+    lite_info = ""
+    if lite.get("duocang"):
+        publish_mod.write_duocang(root / lite["duocang"], lite_data)
+        publish_mod.write_duocang(root / lite["live"], lite_live)
+        lite_info = (
+            f"精简版：`{lite['duocang']}`（{len(lite_data['storeHouse'])} 个源，"
+            f"门槛健康分 ≥ {lite.get('min_health')} 且取最高分前 "
+            f"{lite.get('max_sources')}）与 `{lite['live']}`"
+            f"（{len(lite_live['lives'])} 个直播源），适合低配盒子。")
+
+    changes = reg.recent_changes(hours=30)
+    hosts = reg.host_failures(days=30)
+    trend = reg.daily_stats(days=30)
+    # 体检口径：本轮有多少源因内容未变而跳过子资源探测
+    skipped = reg.conn.execute(
+        "SELECT COUNT(DISTINCT source_id) AS n FROM check_log "
+        "WHERE ts >= ? AND detail LIKE '%\"skip\"%'",
+        (time.strftime("%Y-%m-%d %H:%M:%S",
+                       time.localtime(time.time() - 86400)),),
+    ).fetchone()["n"] or 0
+    incremental = (f"增量体检，{skipped} 个源内容未变跳过子资源探测"
+                   if skipped else "")
+
     report = publish_mod.build_report(
         rows, added, removed, pub["duocang"], len(data["storeHouse"]),
         pub["min_health"], failure_stats=reg.failure_reasons(days=30),
@@ -430,6 +500,8 @@ def publish() -> None:
         live_info=(f"直播合集：`{pub['live']}`（{len(live_data['lives'])} 个源），"
                    "同样可作配置地址导入，只含直播。"
                    if live_data["lives"] else ""),
+        changes=changes, hosts=hosts, incremental=incremental,
+        lite_info=lite_info,
     )
     report_path = root / pub["report"]
     report_path.parent.mkdir(parents=True, exist_ok=True)
@@ -449,7 +521,9 @@ def publish() -> None:
     histories = {r["id"]: reg.history(r["id"], limit=20) for r in rows}
     site_html = publish_mod.build_site(
         rows, histories, reg.failure_reasons(days=30),
-        len(data["storeHouse"]), pub["min_health"])
+        len(data["storeHouse"]), pub["min_health"],
+        trend=trend, hosts=hosts, changes=changes,
+        lite_count=len(lite_data["storeHouse"]))
     site_path.write_text(site_html, encoding="utf-8")
 
     # 过期数据清理（日志/快照/挖源记录 + VACUUM）
@@ -460,7 +534,10 @@ def publish() -> None:
     typer.echo(
         f"已发布：{pub['duocang']}（{len(data['storeHouse'])} 个源，"
         f"其中 {len(mirrored)} 个走镜像）、{pub['live']}"
-        f"（{len(live_data['lives'])} 个直播源）、{pub['report']}、{pub['site']}"
+        f"（{len(live_data['lives'])} 个直播源）"
+        + (f"、{lite['duocang']}（{len(lite_data['storeHouse'])} 个源）"
+           if lite_info else "")
+        + f"、{pub['report']}、{pub['site']}"
         f"（diff: +{len(added)} / -{len(removed)}，归并 {len(merged)} 组）"
     )
     reg.close()

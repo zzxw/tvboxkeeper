@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from tvboxkeeper.config import load_settings
@@ -309,47 +310,72 @@ def test_legacy_absolute_snapshot_path_is_migrated(tmp_path):
         reg2.get_by_url("http://e.com/legacy.json")["id"]) is not None
 
 
-def test_snapshot_path_is_relative_and_portable(tmp_path):
-    """库要能跟着仓库走：快照路径不能存绝对路径。"""
+def test_probe_ts_only_advances_when_probes_ran(tmp_path):
+    """增量体检依赖 probe_ts：跳过探测的那一轮不能覆盖它。"""
     reg = make_registry(tmp_path)
-    reg.upsert("http://e.com/port.json")
-    content = b'{"sites": [{"key": "p"}]}'
-    reg.record(make_outcome(url="http://e.com/port.json", content=content),
-               SETTINGS)
-    raw = reg.conn.execute(
-        "SELECT gzip_path FROM snapshot ORDER BY rowid DESC LIMIT 1"
-    ).fetchone()["gzip_path"]
-    assert not Path(raw).is_absolute()
+    url = "http://e.com/pt.json"
+    reg.upsert(url)
+    probes = [ProbeResult("http://e.com/a.jar", "jar", 200, 30)]
+    reg.record(make_outcome(url=url, probes=probes), SETTINGS)
+    assert reg.get_by_url(url)["probe_ts"]
 
-    # 模拟换机器：整个目录搬到别处，DB 里的相对路径仍然能解析
-    import shutil
-    moved = tmp_path / "moved"
-    shutil.copytree(tmp_path / "snapshots", moved / "snapshots")
-    shutil.copy(tmp_path / "t.sqlite", moved / "t.sqlite")
-    reg2 = Registry(moved / "t.sqlite", moved / "snapshots")
-    snap = reg2.latest_snapshot(reg.get_by_url("http://e.com/port.json")["id"])
-    assert snap is not None and snap[0] == content
-
-
-def test_legacy_absolute_snapshot_path_is_migrated(tmp_path):
-    """旧库存的是绝对路径（Actions 跑在 /home/runner/...），打开时应收敛为相对路径。"""
-    reg = make_registry(tmp_path)
-    reg.upsert("http://e.com/legacy.json")
-    reg.record(make_outcome(url="http://e.com/legacy.json",
-                            content=b'{"sites": []}'), SETTINGS)
-    rel = reg.conn.execute(
-        "SELECT gzip_path FROM snapshot ORDER BY rowid DESC LIMIT 1"
-    ).fetchone()["gzip_path"]
     reg.conn.execute(
-        "UPDATE snapshot SET gzip_path=?",
-        (f"/home/runner/work/tvboxkeeper/tvboxkeeper/data/snapshots/{rel}",))
+        "UPDATE source SET probe_ts='2020-01-01 00:00:00' WHERE url=?", (url,))
     reg.conn.commit()
-    reg.close()
+    reg.record(make_outcome(url=url), SETTINGS)  # 无探测
+    assert reg.get_by_url(url)["probe_ts"] == "2020-01-01 00:00:00"
 
-    reg2 = Registry(tmp_path / "t.sqlite", tmp_path / "snapshots")
-    raw = reg2.conn.execute(
-        "SELECT gzip_path FROM snapshot ORDER BY rowid DESC LIMIT 1"
-    ).fetchone()["gzip_path"]
-    assert raw == rel
-    assert reg2.latest_snapshot(
-        reg2.get_by_url("http://e.com/legacy.json")["id"]) is not None
+
+def test_record_stores_site_level_change(tmp_path):
+    reg = make_registry(tmp_path)
+    url = "http://e.com/chg.json"
+    reg.record(make_outcome(
+        url=url, content=b'{"sites": [{"key": "a"}, {"key": "b"}]}'), SETTINGS)
+    first = json.loads(reg.conn.execute(
+        "SELECT detail FROM check_log ORDER BY rowid DESC LIMIT 1"
+    ).fetchone()["detail"])
+    assert "chg" not in first, "首次记录没有上一份快照，不应产生变更"
+
+    reg.record(make_outcome(
+        url=url, content=b'{"sites": [{"key": "b"}, {"key": "c"}]}'), SETTINGS)
+    detail = json.loads(reg.conn.execute(
+        "SELECT detail FROM check_log ORDER BY rowid DESC LIMIT 1"
+    ).fetchone()["detail"])
+    assert detail["chg"]["a"] == 1 and detail["chg"]["r"] == 1
+    assert detail["chg"]["add"] == ["c"] and detail["chg"]["del"] == ["a"]
+
+    changes = reg.recent_changes(hours=1)
+    assert len(changes) == 1 and changes[0]["change"]["add"] == ["c"]
+
+
+def test_skipped_probes_marked_in_detail(tmp_path):
+    reg = make_registry(tmp_path)
+    url = "http://e.com/skip.json"
+    reg.upsert(url)
+    out = make_outcome(url=url)
+    out.skipped_probes = True
+    out.level = "L1"
+    reg.record(out, SETTINGS)
+    detail = json.loads(reg.conn.execute(
+        "SELECT detail FROM check_log ORDER BY rowid DESC LIMIT 1"
+    ).fetchone()["detail"])
+    assert detail["skip"] == 1
+    # 跳过探测不扣健康分（子资源项按满分计）
+    assert reg.get_by_url(url)["health_score"] > 60
+
+
+def test_daily_stats_and_host_failures(tmp_path):
+    reg = make_registry(tmp_path)
+    for url in ("http://bad.example/a.json", "http://bad.example/b.json"):
+        reg.upsert(url)
+        reg.record(make_outcome(url=url, ok=False), SETTINGS)
+    reg.upsert("http://ok.example/c.json")
+    reg.record(make_outcome(url="http://ok.example/c.json"), SETTINGS)
+
+    stats = reg.daily_stats(days=1)
+    assert stats and stats[-1]["total"] == 3 and stats[-1]["ok"] == 1
+    assert stats[-1]["rate"] == 33
+
+    hosts = reg.host_failures(days=1, min_fails=2)
+    assert hosts[0]["host"] == "bad.example"
+    assert hosts[0]["fails"] == 2 and hosts[0]["sources"] == 2

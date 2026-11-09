@@ -29,7 +29,10 @@ DEFAULTS: dict[str, Any] = {
         "anti_crawl_grace": 3,
         "max_probes": 12,
         "probe_timeout": 8,
-        "l3": {"sample_sites": 3, "timeout": 8},
+        "l3": {"sample_sites": 3, "timeout": 8, "enabled": True,
+               "daily_quota": 5, "min_health": 85},
+        # 增量体检：内容 md5 未变且离上次真实探测不足 probe_every_days 时跳过 L2
+        "incremental": {"enabled": True, "probe_every_days": 3},
     },
     "score": {"weights": {"success": 0.5, "subs": 0.3, "richness": 0.2}},
     "publish": {
@@ -39,6 +42,14 @@ DEFAULTS: dict[str, Any] = {
         "site": "output/site/index.html",
         "diff": "output/last_diff.json",
         "live": "output/直播.json",  # 直播合集配置（lives 数组，可作配置地址导入）
+        # 精简订阅：门槛更高、条数更少，给低配盒子/长辈用，与全量版互不影响
+        "lite": {
+            "duocang": "output/多仓-lite.json",
+            "live": "output/直播-lite.json",
+            "min_health": 80,
+            "max_sources": 8,
+            "max_live": 5,
+        },
         # 镜像基址（指向本仓库 output/mirrors/ 的 raw 地址，可带加速前缀）。
         # 配置后，有快照的源在多仓里用镜像地址，原站失效不影响订阅；留空则不启用
         "mirror_base": "",

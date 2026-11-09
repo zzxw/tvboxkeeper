@@ -1,9 +1,11 @@
 import asyncio
+import hashlib
+import time
 
 import httpx
 
 from tvboxkeeper.config import load_settings
-from tvboxkeeper.validate import _content_ok, check_source
+from tvboxkeeper.validate import _content_ok, check_source, should_skip_probes
 
 CONFIG_URL = "http://e.com/c.json"
 API_URL = "http://s.example/api.php"
@@ -105,3 +107,82 @@ def test_level_reflects_executed_depth():
 
     out = asyncio.run(inner())
     assert out.probes and out.level == "L2"
+
+
+BODY = ('{"spider": "http://e.com/spider.jar", '
+        '"sites": [{"type": 0, "api": "http://s.example/api.php"}]}').encode()
+JAR = "http://e.com/spider.jar"
+
+
+def _jar_handler(request) -> httpx.Response:
+    url = str(request.url)
+    if url == CONFIG_URL:
+        return httpx.Response(200, content=BODY)
+    if url == JAR:
+        return httpx.Response(200, content=b"PK\x03\x04jar")
+    return httpx.Response(200, json={"code": 1, "list": []})
+
+
+def _check(settings, handler=_jar_handler, **kwargs):
+    async def inner():
+        async with httpx.AsyncClient(
+                transport=httpx.MockTransport(handler)) as client:
+            return await check_source(client, asyncio.Semaphore(4), CONFIG_URL,
+                                      settings, **kwargs)
+    return asyncio.run(inner())
+
+
+def test_should_skip_probes_window():
+    settings = load_settings(None)
+    md5 = hashlib.md5(BODY).hexdigest()
+    fresh = time.strftime("%Y-%m-%d %H:%M:%S")
+    assert should_skip_probes({"content_md5": md5, "probe_ts": fresh},
+                              BODY, settings)
+    old = time.strftime("%Y-%m-%d %H:%M:%S",
+                        time.localtime(time.time() - 10 * 86400))
+    assert not should_skip_probes({"content_md5": md5, "probe_ts": old},
+                                  BODY, settings)
+    assert not should_skip_probes({"content_md5": "deadbeef",
+                                   "probe_ts": fresh}, BODY, settings)
+    assert not should_skip_probes(None, BODY, settings)
+    off = load_settings(None)
+    off["validate"]["incremental"]["enabled"] = False
+    assert not should_skip_probes({"content_md5": md5, "probe_ts": fresh},
+                                  BODY, off)
+
+
+def test_incremental_skips_probe_when_content_unchanged():
+    settings = load_settings(None)
+    md5 = hashlib.md5(BODY).hexdigest()
+    prev = {"content_md5": md5,
+            "probe_ts": time.strftime("%Y-%m-%d %H:%M:%S")}
+    out = _check(settings, prev=prev)
+    assert out.ok and out.skipped_probes and not out.probes
+    assert out.level == "L1"  # 没有真正探测，不应记为 L2
+
+
+def test_incremental_does_not_skip_l3():
+    settings = load_settings(None)
+    md5 = hashlib.md5(BODY).hexdigest()
+    prev = {"content_md5": md5,
+            "probe_ts": time.strftime("%Y-%m-%d %H:%M:%S")}
+    out = _check(settings, level="L3", prev=prev)
+    assert not out.skipped_probes and out.l3_tested >= 1
+
+
+def test_l3_targets_respects_quota_and_health():
+    from tvboxkeeper.cli import l3_targets
+
+    settings = load_settings(None)
+    rows = [
+        {"url": f"http://s{i}.com/c.json", "status": "active", "banned": 0,
+         "dup_of": "", "schema_type": "tvbox", "health_score": 90 + i}
+        for i in range(8)
+    ] + [{"url": "http://low.com/c.json", "status": "active", "banned": 0,
+          "dup_of": "", "schema_type": "tvbox", "health_score": 50}]
+    picked = l3_targets(rows, settings)
+    assert len(picked) == settings["validate"]["l3"]["daily_quota"] == 5
+    assert "http://low.com/c.json" not in picked
+    # 关闭后不再抽样
+    settings["validate"]["l3"]["enabled"] = False
+    assert l3_targets(rows, settings) == set()
