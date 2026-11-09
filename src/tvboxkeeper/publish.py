@@ -10,6 +10,18 @@ from pathlib import Path
 
 from .normalize import guess_name
 
+# 状态展示顺序：存活 → 观察中 → 结构/网络异常 → 人工处置
+STATUS_ORDER = ("active", "flaky", "anti_crawl", "invalid", "dead", "new", "banned")
+
+
+def status_breakdown(rows: list[dict]) -> str:
+    """完整状态分布：按固定顺序列出非零项，未知状态追加在后，避免统计口径漏项。"""
+    counts = Counter(r["status"] for r in rows)
+    parts = [f"{s} {counts[s]}" for s in STATUS_ORDER if counts.get(s)]
+    parts += [f"{s} {n}" for s, n in sorted(counts.items())
+              if s not in STATUS_ORDER and n]
+    return " / ".join(parts) or "—"
+
 
 def pick_sources(rows: list[dict], min_health: float) -> list[dict]:
     """筛出可进入多仓订阅的配置源：active + 达标 + 未封禁 + 非重复 + 非直播。"""
@@ -103,17 +115,11 @@ def build_report(
     live_info: str = "",
 ) -> str:
     now = time.strftime("%Y-%m-%d %H:%M:%S")
-    by_status = Counter(r["status"] for r in rows)
     lines = [
         "# TVBox 源体检报告",
         "",
         f"- 生成时间：{now}",
-        f"- 源总数：{len(rows)}"
-        f"（active {by_status.get('active', 0)}"
-        f" / flaky {by_status.get('flaky', 0)}"
-        f" / dead {by_status.get('dead', 0)}"
-        f" / invalid {by_status.get('invalid', 0)}"
-        f" / new {by_status.get('new', 0)}）",
+        f"- 源总数：{len(rows)}（{status_breakdown(rows)}）",
         f"- 订阅门槛：健康分 ≥ {min_health}",
         "",
         "## 本轮变化（相对上次发布的多仓）",
@@ -268,16 +274,13 @@ def build_site(
     now = time.strftime("%Y-%m-%d %H:%M")
     esc = html.escape
     by_status = Counter(r["status"] for r in rows)
+    card_specs = [("总数", len(rows), "off")] + [
+        (status, by_status[status], _STATUS_CLASS.get(status, "off"))
+        for status in STATUS_ORDER if by_status.get(status)
+    ]
     cards = "".join(
-        f'<div class="card {cls}"><b>{n}</b><span>{label}</span></div>'
-        for label, n, cls in [
-            ("总数", len(rows), "off"),
-            ("active", by_status.get("active", 0), "ok"),
-            ("anti_crawl", by_status.get("anti_crawl", 0), "warn"),
-            ("flaky", by_status.get("flaky", 0), "warn"),
-            ("invalid", by_status.get("invalid", 0), "bad"),
-            ("dead", by_status.get("dead", 0), "bad"),
-        ])
+        f'<div class="card {cls}"><b>{n}</b><span>{esc(label)}</span></div>'
+        for label, n, cls in card_specs)
 
     trs = []
     for r in sorted((x for x in rows if not x.get("banned")),

@@ -145,3 +145,23 @@ def test_build_site_html():
     assert "站点A" in out and "近 30 天失败原因" in out
     assert "<svg" in out and "站点A".replace("站点A", "站点A") in out
     assert out.strip().endswith("</html>")
+
+
+def test_report_status_breakdown_complete():
+    """状态分布必须覆盖 anti_crawl / banned，否则总数对不上。"""
+    rows = [
+        make_row("活", "http://a/1", status="active"),
+        make_row("反爬", "http://b/1", status="anti_crawl"),
+        make_row("封禁", "http://c/1", status="banned", banned=1),
+    ]
+    report = build_report(rows, set(), set(), "output/多仓.json", 1, 60)
+    header = next(line for line in report.splitlines()
+                  if line.startswith("- 源总数"))
+    assert "总数：3" in header
+    assert "anti_crawl 1" in header and "banned 1" in header
+
+
+def test_site_cards_cover_banned():
+    rows = [make_row("封", "http://c/1", status="banned", banned=1)]
+    out = build_site(rows, {}, [], duocang_count=0, min_health=60)
+    assert "<span>banned</span>" in out
