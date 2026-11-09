@@ -342,9 +342,17 @@ def publish() -> None:
             (mirror_dir / "index.json").write_text(
                 json.dumps(manifest, ensure_ascii=False, indent=2),
                 encoding="utf-8")
+        # 镜像比例按配置/直播分开统计：两者是不同的发布产物，混算会与多仓条数对不上
+        scope = []
+        if config_pick:
+            hit = sum(1 for r in config_pick if r["id"] in mirrored)
+            scope.append(f"配置 {hit}/{len(config_pick)}")
+        if live_pick:
+            hit = sum(1 for r in live_pick if r["id"] in mirrored)
+            scope.append(f"直播 {hit}/{len(live_pick)}")
         mirror_note = (
-            f"镜像已启用：{len(mirrored)}/{len(config_pick) + len(live_pick)} "
-            f"个源使用本仓库快照镜像（{mirror_base}），原站失效不影响订阅。"
+            f"镜像已启用：{'、'.join(scope) or '0'} 个源使用本仓库快照镜像"
+            f"（{mirror_base}），原站失效不影响订阅。"
             if mirrored else "镜像基址已配置，但订阅内源暂无可用快照。"
         )
     else:
