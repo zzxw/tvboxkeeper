@@ -372,6 +372,7 @@ def publish() -> None:
         rows, added, removed, pub["duocang"], len(data["storeHouse"]),
         pub["min_health"], failure_stats=reg.failure_reasons(days=30),
         mirror_note=mirror_note,
+        dedupe_groups=merged,
         live_info=(f"直播合集：`{pub['live']}`（{len(live_data['lives'])} 个源），"
                    "同样可作配置地址导入，只含直播。"
                    if live_data["lives"] else ""),
