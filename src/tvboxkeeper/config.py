@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 from pathlib import Path
 from typing import Any
 
@@ -69,12 +70,13 @@ DEFAULTS: dict[str, Any] = {
 
 
 def _deep_merge(base: dict, extra: dict) -> dict:
-    out = dict(base)
+    """递归合并，并深拷贝 base，避免调用方修改返回值时污染 DEFAULTS。"""
+    out = copy.deepcopy(base)
     for key, value in (extra or {}).items():
         if isinstance(value, dict) and isinstance(out.get(key), dict):
             out[key] = _deep_merge(out[key], value)
         else:
-            out[key] = value
+            out[key] = copy.deepcopy(value)
     return out
 
 
