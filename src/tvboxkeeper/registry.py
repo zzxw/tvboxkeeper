@@ -106,6 +106,45 @@ class Registry:
         self._migrate()
         self.conn.commit()
         self.snap_root = Path(snap_root) if snap_root else db_path.parent / "snapshots"
+        self._normalize_snapshot_paths()
+
+    def _rel_snapshot_path(self, raw: str) -> str | None:
+        """把路径收敛为相对 snap_root 的形式；无法识别时返回 None。
+
+        只按 snapshots 段切分——不能用 is_absolute() 判断：
+        POSIX 风格路径（/home/runner/...）在 Windows 上 is_absolute() 是 False。
+        """
+        if not raw:
+            return None
+        parts = Path(raw).parts
+        if "snapshots" in parts:
+            return Path(*parts[parts.index("snapshots") + 1:]).as_posix()
+        if Path(raw).is_absolute():
+            return None
+        return Path(raw).as_posix()
+
+    def _normalize_snapshot_paths(self) -> None:
+        """把历史绝对路径收敛为相对 snap_root 的路径，保证库可跨机器使用。"""
+        rows = self.conn.execute(
+            "SELECT rowid, gzip_path FROM snapshot").fetchall()
+        fixed = 0
+        for r in rows:
+            raw = r["gzip_path"] or ""
+            rel = self._rel_snapshot_path(raw)
+            if rel is None or rel == raw:
+                continue
+            self.conn.execute(
+                "UPDATE snapshot SET gzip_path=? WHERE rowid=?", (rel, r["rowid"]))
+            fixed += 1
+        if fixed:
+            self.conn.commit()
+
+    def _snapshot_path(self, raw: str) -> Path:
+        """把库里的快照路径解析为本机路径。"""
+        rel = self._rel_snapshot_path(raw)
+        if rel is None:
+            return Path(raw)
+        return self.snap_root / rel
 
     def _migrate(self) -> None:
         """为旧库补齐新增列。"""
@@ -399,7 +438,7 @@ class Registry:
             (cutoff(cfg.get("snapshot_days", 90)),)).fetchall()
         for r in old:
             try:
-                Path(r["gzip_path"]).unlink(missing_ok=True)
+                self._snapshot_path(r["gzip_path"]).unlink(missing_ok=True)
             except OSError:
                 pass
         stats["snapshot"] = len(old)
@@ -419,9 +458,11 @@ class Registry:
         with gzip.open(path, "wb") as fh:
             fh.write(content)
         import hashlib
+        # 只存相对 snap_root 的路径：绝对路径会让库在换机器/换工作目录后失效
+        rel = path.relative_to(self.snap_root).as_posix()
         self.conn.execute(
             "INSERT INTO snapshot(source_id, ts, content_md5, gzip_path) VALUES(?,?,?,?)",
-            (sid, _now(), hashlib.md5(content).hexdigest(), str(path)),
+            (sid, _now(), hashlib.md5(content).hexdigest(), rel),
         )
         self.conn.commit()
         for old in sorted(d.glob("*.json.gz"))[:-keep] if keep else []:
@@ -471,7 +512,7 @@ class Registry:
         if not row:
             return None
         try:
-            with gzip.open(row["gzip_path"], "rb") as fh:
+            with gzip.open(self._snapshot_path(row["gzip_path"]), "rb") as fh:
                 return fh.read(), row["ts"]
         except OSError:
             return None

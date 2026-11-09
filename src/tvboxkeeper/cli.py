@@ -351,13 +351,28 @@ def publish() -> None:
     config_pick = publish_mod.pick_sources(rows, pub["min_health"])
     live_pick = publish_mod.pick_live_sources(rows, pub["min_health"])
     if mirror_base:
+        # 既有镜像清单：快照读不到时（换机器、快照目录未随库同步）沿用线上文件，
+        # 避免一次读取失败就把可用的镜像全删掉、订阅地址被迫回退到原站
+        prev_manifest: dict = {}
+        index_path = mirror_dir / "index.json"
+        if index_path.exists():
+            try:
+                prev_manifest = json.loads(index_path.read_text(encoding="utf-8"))
+            except ValueError:
+                prev_manifest = {}
+        kept = 0
         for r in config_pick + live_pick:
             snap = reg.latest_snapshot(r["id"])
+            target = mirror_dir / f"{r['id']}.json"
             if snap:
                 content, ts = snap
-                publish_mod.write_mirror(mirror_dir / f"{r['id']}.json", content)
+                publish_mod.write_mirror(target, content)
                 mirrored[r["id"]] = ts
-        if mirror_dir.exists():
+            elif target.exists() and r["id"] in prev_manifest:
+                mirrored[r["id"]] = prev_manifest[r["id"]].get("updated", "")
+                kept += 1
+        # 只有确认本轮产出了完整清单（至少镜像到 1 个源）才清理陈旧镜像
+        if mirrored and mirror_dir.exists():
             for f in mirror_dir.glob("*.json"):
                 if f.stem not in mirrored and f.name != "index.json":
                     f.unlink()
@@ -384,6 +399,8 @@ def publish() -> None:
             f"（{mirror_base}），原站失效不影响订阅。"
             if mirrored else "镜像基址已配置，但订阅内源暂无可用快照。"
         )
+        if kept:
+            mirror_note += f"其中 {kept} 个沿用既有镜像（本次读不到本地快照）。"
     else:
         mirror_note = "镜像未启用（settings.yaml publish.mirror_base 为空）。"
 

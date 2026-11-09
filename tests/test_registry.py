@@ -261,3 +261,95 @@ def test_check_log_has_ts_index(tmp_path):
             "EXPLAIN QUERY PLAN SELECT source_id, detail FROM check_log "
             "WHERE ok=0 AND ts>=?", ("2020-01-01 00:00:00",)))
     assert "idx_check_log_ts" in plan
+
+
+def test_snapshot_path_is_relative_and_portable(tmp_path):
+    """库要能跟着仓库走：快照路径不能存绝对路径。"""
+    reg = make_registry(tmp_path)
+    reg.upsert("http://e.com/port.json")
+    content = b'{"sites": [{"key": "p"}]}'
+    reg.record(make_outcome(url="http://e.com/port.json", content=content),
+               SETTINGS)
+    raw = reg.conn.execute(
+        "SELECT gzip_path FROM snapshot ORDER BY rowid DESC LIMIT 1"
+    ).fetchone()["gzip_path"]
+    assert not Path(raw).is_absolute()
+
+    # 模拟换机器：整个目录搬到别处，DB 里的相对路径仍然能解析
+    import shutil
+    moved = tmp_path / "moved"
+    shutil.copytree(tmp_path / "snapshots", moved / "snapshots")
+    shutil.copy(tmp_path / "t.sqlite", moved / "t.sqlite")
+    reg2 = Registry(moved / "t.sqlite", moved / "snapshots")
+    snap = reg2.latest_snapshot(reg.get_by_url("http://e.com/port.json")["id"])
+    assert snap is not None and snap[0] == content
+
+
+def test_legacy_absolute_snapshot_path_is_migrated(tmp_path):
+    """旧库存的是绝对路径（Actions 跑在 /home/runner/...），打开时应收敛为相对路径。"""
+    reg = make_registry(tmp_path)
+    reg.upsert("http://e.com/legacy.json")
+    reg.record(make_outcome(url="http://e.com/legacy.json",
+                            content=b'{"sites": []}'), SETTINGS)
+    rel = reg.conn.execute(
+        "SELECT gzip_path FROM snapshot ORDER BY rowid DESC LIMIT 1"
+    ).fetchone()["gzip_path"]
+    reg.conn.execute(
+        "UPDATE snapshot SET gzip_path=?",
+        (f"/home/runner/work/tvboxkeeper/tvboxkeeper/data/snapshots/{rel}",))
+    reg.conn.commit()
+    reg.close()
+
+    reg2 = Registry(tmp_path / "t.sqlite", tmp_path / "snapshots")
+    raw = reg2.conn.execute(
+        "SELECT gzip_path FROM snapshot ORDER BY rowid DESC LIMIT 1"
+    ).fetchone()["gzip_path"]
+    assert raw == rel
+    assert reg2.latest_snapshot(
+        reg2.get_by_url("http://e.com/legacy.json")["id"]) is not None
+
+
+def test_snapshot_path_is_relative_and_portable(tmp_path):
+    """库要能跟着仓库走：快照路径不能存绝对路径。"""
+    reg = make_registry(tmp_path)
+    reg.upsert("http://e.com/port.json")
+    content = b'{"sites": [{"key": "p"}]}'
+    reg.record(make_outcome(url="http://e.com/port.json", content=content),
+               SETTINGS)
+    raw = reg.conn.execute(
+        "SELECT gzip_path FROM snapshot ORDER BY rowid DESC LIMIT 1"
+    ).fetchone()["gzip_path"]
+    assert not Path(raw).is_absolute()
+
+    # 模拟换机器：整个目录搬到别处，DB 里的相对路径仍然能解析
+    import shutil
+    moved = tmp_path / "moved"
+    shutil.copytree(tmp_path / "snapshots", moved / "snapshots")
+    shutil.copy(tmp_path / "t.sqlite", moved / "t.sqlite")
+    reg2 = Registry(moved / "t.sqlite", moved / "snapshots")
+    snap = reg2.latest_snapshot(reg.get_by_url("http://e.com/port.json")["id"])
+    assert snap is not None and snap[0] == content
+
+
+def test_legacy_absolute_snapshot_path_is_migrated(tmp_path):
+    """旧库存的是绝对路径（Actions 跑在 /home/runner/...），打开时应收敛为相对路径。"""
+    reg = make_registry(tmp_path)
+    reg.upsert("http://e.com/legacy.json")
+    reg.record(make_outcome(url="http://e.com/legacy.json",
+                            content=b'{"sites": []}'), SETTINGS)
+    rel = reg.conn.execute(
+        "SELECT gzip_path FROM snapshot ORDER BY rowid DESC LIMIT 1"
+    ).fetchone()["gzip_path"]
+    reg.conn.execute(
+        "UPDATE snapshot SET gzip_path=?",
+        (f"/home/runner/work/tvboxkeeper/tvboxkeeper/data/snapshots/{rel}",))
+    reg.conn.commit()
+    reg.close()
+
+    reg2 = Registry(tmp_path / "t.sqlite", tmp_path / "snapshots")
+    raw = reg2.conn.execute(
+        "SELECT gzip_path FROM snapshot ORDER BY rowid DESC LIMIT 1"
+    ).fetchone()["gzip_path"]
+    assert raw == rel
+    assert reg2.latest_snapshot(
+        reg2.get_by_url("http://e.com/legacy.json")["id"]) is not None

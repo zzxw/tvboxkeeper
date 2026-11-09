@@ -60,3 +60,65 @@ def test_publish_mirror_note_splits_config_and_live(tmp_path, monkeypatch):
         (tmp_path / "output" / "多仓.json").read_text(encoding="utf-8"))
     assert duo["storeHouse"][0]["sourceUrl"].startswith(
         "https://mirror.example/mirrors/")
+
+
+def test_publish_keeps_mirrors_when_snapshot_unreadable(tmp_path, monkeypatch):
+    """快照读不到（换机器/快照目录未同步）时，不得删掉线上可用的镜像文件。"""
+    monkeypatch.setenv("TVBOX_ROOT", str(tmp_path))
+    (tmp_path / "config").mkdir()
+    (tmp_path / "config" / "settings.yaml").write_text(
+        'publish:/n  mirror_base: "https://mirror.example/mirrors"\n',
+        encoding="utf-8")
+    _seed(tmp_path)
+
+    assert CliRunner().invoke(app, ["publish"]).exit_code == 0
+    mirror_dir = tmp_path / "output" / "mirrors"
+    before = sorted(p.name for p in mirror_dir.glob("*.json")
+                    if p.name != "index.json")
+    assert before, "首次发布应产出镜像"
+
+    # 快照目录被清空 = 库里 gzip_path 全部指向不存在的文件
+    for f in (tmp_path / "data" / "snapshots").rglob("*.gz"):
+        f.unlink()
+
+    assert CliRunner().invoke(app, ["publish"]).exit_code == 0
+    after = sorted(p.name for p in mirror_dir.glob("*.json")
+                   if p.name != "index.json")
+    assert after == before, "镜像文件不应因读不到快照被删除"
+
+    duo = json.loads(
+        (tmp_path / "output" / "多仓.json").read_text(encoding="utf-8"))
+    assert duo["storeHouse"]
+    assert all(e["sourceUrl"].startswith("https://mirror.example/mirrors/")
+               for e in duo["storeHouse"]), "订阅仍应指向镜像而非回退原站"
+
+
+def test_publish_keeps_mirrors_when_snapshot_unreadable(tmp_path, monkeypatch):
+    """快照读不到（换机器/快照目录未同步）时，不得删掉线上可用的镜像文件。"""
+    monkeypatch.setenv("TVBOX_ROOT", str(tmp_path))
+    (tmp_path / "config").mkdir()
+    (tmp_path / "config" / "settings.yaml").write_text(
+        'publish:\n  mirror_base: "https://mirror.example/mirrors"\n',
+        encoding="utf-8")
+    _seed(tmp_path)
+
+    assert CliRunner().invoke(app, ["publish"]).exit_code == 0
+    mirror_dir = tmp_path / "output" / "mirrors"
+    before = sorted(p.name for p in mirror_dir.glob("*.json")
+                    if p.name != "index.json")
+    assert before, "首次发布应产出镜像"
+
+    # 快照目录被清空 = 库里 gzip_path 全部指向不存在的文件
+    for f in (tmp_path / "data" / "snapshots").rglob("*.gz"):
+        f.unlink()
+
+    assert CliRunner().invoke(app, ["publish"]).exit_code == 0
+    after = sorted(p.name for p in mirror_dir.glob("*.json")
+                   if p.name != "index.json")
+    assert after == before, "镜像文件不应因读不到快照被删除"
+
+    duo = json.loads(
+        (tmp_path / "output" / "多仓.json").read_text(encoding="utf-8"))
+    assert duo["storeHouse"]
+    assert all(e["sourceUrl"].startswith("https://mirror.example/mirrors/")
+               for e in duo["storeHouse"]), "订阅仍应指向镜像而非回退原站"
