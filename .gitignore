@@ -7,3 +7,4 @@ data/snapshots/
 data/local-run.log
 build/
 dist/
+.workbuddy/
