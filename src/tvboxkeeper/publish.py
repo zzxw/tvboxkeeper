@@ -295,6 +295,27 @@ _STATUS_CLASS = {
     "invalid": "bad", "dead": "bad", "banned": "off", "new": "off",
 }
 
+# 按「可用程度」而非字母序排序：active 优先，死源沉底；未知状态排最后
+_STATUS_RANK = {
+    "active": 0, "new": 1, "flaky": 2, "anti_crawl": 3,
+    "invalid": 4, "dead": 5, "banned": 6,
+}
+
+
+def _th(key: str, label: str, kind: str = "n", cls: str = "") -> str:
+    """可排序表头。整格是一个按钮，方向只由 ``aria-sort`` 表达（箭头由 CSS 画）。
+
+    用真按钮而不是给 ``th`` 挂 click：键盘可聚焦、读屏可播报，且不必手工模拟
+    Enter/Space。``data-type`` 让前端知道首点该从升序还是降序起（文本 A→Z、
+    数值大→小）。
+    """
+    attr_cls = f' class="{cls}"' if cls else ""
+    return (f'<th{attr_cls} data-sort="{key}" data-type="{kind}" '
+            f'data-label="{label}" aria-sort="none">'
+            f'<button type="button" class="thb">{label}'
+            f'<span class="arw" aria-hidden="true"></span>'
+            f'<span class="ord" aria-hidden="true"></span></button></th>')
+
 
 def site_kind(row: dict) -> str:
     """看板筛选口径：纯直播配置源记 ``live``，其余记 ``vod``。
@@ -794,11 +815,36 @@ table{border-collapse:collapse;width:100%}
         font-size:11.5px;font-weight:600;color:var(--text-3);
         letter-spacing:.05em;white-space:nowrap}
 #tbl td{font-size:13px;color:#cbd5e1}
+/* `#tbl th,#tbl td{text-align:left}` 特异性高于 `.num`，数字列要带 id 再声明一次
+   才真正右对齐；th 的右内边距归零，让「文字 + 箭头」里的文字右缘正好落在
+   数字右缘（td 有 12px 内边距，箭头 8px + 间隙 4px 抵掉它）。 */
+#tbl .num{text-align:right}
+#tbl th.num{padding-right:0}
 #tbl td.name{font-size:13.5px;font-weight:500;color:var(--text)}
 #tbl tbody tr:hover td{background:#1c2840}
 #tbl tbody tr:hover td.url{color:var(--text-2)}
 #tbl tr.bad td:first-child{box-shadow:inset 3px 0 0 var(--bad)}
 #tbl tr.warn td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
+/* ---------- 表头排序：整格可点，箭头固定 8px，不挤压列宽 ---------- */
+#tbl th.sorted{color:var(--text)}
+.thb{display:inline-flex;align-items:center;gap:4px;margin:-2px 0;padding:2px 0;
+     border:0;background:none;color:inherit;font:inherit;letter-spacing:inherit;
+     cursor:pointer;white-space:nowrap}
+.thb:hover{color:var(--text)}
+.thb:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
+.arw{display:inline-block;width:8px;font-size:9px;line-height:1;text-align:center;
+     color:var(--text-3);opacity:.6}
+.thb:hover .arw{opacity:1}
+th[aria-sort="none"] .arw::before{content:"\\2195"}      /* ↕ */
+th[aria-sort="ascending"] .arw::before{content:"\\25B2"}  /* ▲ */
+th[aria-sort="descending"] .arw::before{content:"\\25BC"} /* ▼ */
+th[aria-sort="ascending"] .arw,th[aria-sort="descending"] .arw{
+  color:var(--accent);opacity:1}
+/* 组合排序的优先级序号：只有叠了第二列才出现，单列排序不打扰视线 */
+.ord{display:none;min-width:13px;height:13px;padding:0 3px;border-radius:99px;
+     background:var(--accent-solid);color:#fff;font-size:9px;font-weight:700;
+     line-height:13px;text-align:center;font-variant-numeric:tabular-nums}
+.ord.on{display:inline-block}
 .num{text-align:right;font-variant-numeric:tabular-nums}
 .spark{text-align:center} .spark svg{display:block;margin:0 auto}
 .chip{display:inline-flex;align-items:center;gap:5px;padding:2px 9px 2px 7px;
@@ -817,7 +863,40 @@ table{border-collapse:collapse;width:100%}
 .avail.a-hi{color:var(--ok)} .avail.a-lo{color:var(--bad)}
 .url{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
      font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;
-     color:#64748b}#empty td{text-align:center;padding:32px;font-size:12.5px;color:var(--text-3)}
+     color:#64748b}
+#empty td{text-align:center;padding:32px;font-size:12.5px;color:var(--text-3)}
+/* ---------- 表尾：排序摘要 + 分页 ---------- */
+.tfoot{display:flex;align-items:center;justify-content:space-between;gap:10px 14px;
+       flex-wrap:wrap;margin:0;padding:12px 0 0;border-top:1px solid var(--line)}
+.sortrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sortinfo{display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+          font-size:11.5px;color:var(--text-3)}
+.sortinfo b{font-weight:600;color:var(--text-2);font-variant-numeric:tabular-nums}
+.clr{margin-left:2px;padding:2px 9px;border-radius:6px;border:1px solid var(--border);
+     background:var(--card);color:var(--text-2);font:inherit;font-size:11px;
+     cursor:pointer;transition:border-color 120ms linear,color 120ms linear}
+.clr:hover{border-color:var(--border-2);color:var(--text)}
+.clr:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#multi[aria-pressed="true"]{background:var(--accent-solid);
+                            border-color:var(--accent-solid);color:#fff}
+.pager{display:flex;align-items:center;gap:8px 10px;margin-left:auto;flex-wrap:wrap}
+.psize{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-3)}
+.psize select{padding:4px 6px;border-radius:7px;border:1px solid var(--border);
+              background:var(--card);color:var(--text);font:inherit;font-size:12px;
+              cursor:pointer}
+.psize select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.pinfo{font-size:11.5px;color:var(--text-3);font-variant-numeric:tabular-nums}
+.pnums,.pnumlist{display:flex;align-items:center;gap:4px}
+.pbtn{min-width:26px;height:26px;padding:0 7px;border-radius:7px;
+      border:1px solid var(--border);background:var(--card);color:#cbd5e1;
+      font:inherit;font-size:12px;font-variant-numeric:tabular-nums;cursor:pointer;
+      transition:background-color 120ms linear,border-color 120ms linear}
+.pbtn:hover:not(:disabled){border-color:var(--border-2);color:var(--text)}
+.pbtn[aria-current="page"]{background:var(--accent-solid);
+                           border-color:var(--accent-solid);color:#fff}
+.pbtn:disabled{opacity:.4;cursor:default}
+.pbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.pgap{padding:0 1px;font-size:12px;color:var(--text-4)}
 /* ---------- 次级表格 ---------- */
 table.sub{margin:0;width:100%}
 table.sub th{padding:8px 12px;text-align:left;font-size:11.5px;font-weight:600;
@@ -874,6 +953,9 @@ footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);
   #tbl .name{min-width:128px}
   #tbl .c-live,#tbl .c-health{width:56px;padding-left:6px;padding-right:6px}
   .xaxis span{font-size:9.5px}
+  /* 表尾竖排：排序摘要一行、分页一行，避免与计数文字挤成 3 行 */
+  .tfoot{flex-direction:column;align-items:flex-start;gap:10px}
+  .pager{width:100%;margin-left:0;justify-content:space-between}
 }
 @media (max-width:420px){
   /* 7 个主刻度在 ≤420px 时相邻两枚会贴住（实测 320px 最近间距 -4.6px），
@@ -889,35 +971,204 @@ footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);
 """
 
 _SITE_JS = """\
-const rows = Array.from(document.querySelectorAll('#tbl tbody tr'))
-  .filter(tr => tr.id !== 'empty');
+const tbody = document.querySelector('#tbl tbody');
+const rows = Array.from(tbody.querySelectorAll('tr')).filter(tr => tr.id !== 'empty');
 const cnt = document.getElementById('cnt');
 const q = document.getElementById('q');
 const emptyRow = document.getElementById('empty');
+const psize = document.getElementById('psize');
+const pinfo = document.getElementById('pinfo');
+const pnums = document.getElementById('pnums');
+const pprev = document.getElementById('pprev');
+const pnext = document.getElementById('pnext');
+const sortinfo = document.getElementById('sortinfo');
+const heads = Array.from(document.querySelectorAll('th[data-sort]'));
+const COL = {};
+heads.forEach(th => { COL[th.dataset.sort] = th.dataset.label; });
+
 let kind = 'all';
-function apply() {
+let page = 1;
+let size = 20;
+let keys = [];                 // 组合排序：靠前的键优先，越靠后越是次级条件
+let multiMode = false;         // 触屏没有 Shift 键，用开关把「叠加」变成显式模式
+const multiBtn = document.getElementById('multi');
+
+rows.forEach((tr, i) => { tr.dataset.i = i; });   // 稳定末位比较：还原服务端默认序
+
+/* 排序值在构建期写到行上（dataset），运行时零文本解析；空串 = 无数据 */
+const SORT_COLS = ['status', 'name', 'compat', 'sites', 'live', 'health',
+                   'avail', 'l3'];
+const DATA = new Map();
+function dataOf(tr) {
+  let o = DATA.get(tr);
+  if (o) return o;
+  o = { i: +tr.dataset.i };
+  SORT_COLS.forEach(k => {
+    const raw = tr.dataset[k];
+    o[k] = (raw === undefined || raw === '') ? null
+      : (/^-?\\d+(?:\\.\\d+)?$/.test(raw) ? +raw : raw);
+  });
+  DATA.set(tr, o);
+  return o;
+}
+
+function cmpVal(a, b) {
+  if (typeof a === 'number' && typeof b === 'number') return a - b;
+  return String(a).localeCompare(String(b), 'zh-CN', { numeric: true });
+}
+
+function cmp(ta, tb) {
+  const A = dataOf(ta), B = dataOf(tb);
+  for (const { k, dir } of keys) {
+    const av = A[k], bv = B[k];
+    if (av === null && bv === null) continue;
+    if (av === null) return 1;          // 缺数据恒排队尾，不随升降序翻面
+    if (bv === null) return -1;
+    const c = cmpVal(av, bv);
+    if (c) return c > 0 ? dir : -dir;
+  }
+  return A.i - B.i;
+}
+
+function pageList(cur, pages) {
+  if (pages <= 7) {
+    return Array.from({ length: pages }, (_, i) => i + 1);
+  }
+  const out = [1];
+  const lo = Math.max(2, cur - 2), hi = Math.min(pages - 1, cur + 2);
+  if (lo > 2) out.push('…');
+  for (let i = lo; i <= hi; i++) out.push(i);
+  if (hi < pages - 1) out.push('…');
+  out.push(pages);
+  return out;
+}
+
+function syncHead() {
+  heads.forEach(th => {
+    const i = keys.findIndex(x => x.k === th.dataset.sort);
+    const on = i >= 0;
+    th.setAttribute('aria-sort',
+      on ? (keys[i].dir > 0 ? 'ascending' : 'descending') : 'none');
+    th.classList.toggle('sorted', on);
+    const b = th.querySelector('.ord');
+    b.textContent = (on && keys.length > 1) ? String(i + 1) : '';
+    b.classList.toggle('on', on && keys.length > 1);
+  });
+  if (!keys.length) {
+    sortinfo.textContent = '默认按置顶与健康分排列 · 点击表头排序';
+    return;
+  }
+  const txt = keys.map(x => COL[x.k] + (x.dir > 0 ? ' ↑' : ' ↓')).join(' › ');
+  sortinfo.innerHTML = '排序：<b>' + txt + '</b>'
+    + '<button type="button" class="clr" id="sreset">清除</button>';
+  document.getElementById('sreset').addEventListener('click', () => {
+    keys = []; page = 1; syncHead(); render();
+  });
+}
+
+function render() {
   const key = q.value.trim().toLowerCase();
-  let shown = 0;
-  rows.forEach(tr => {
+  const list = rows.filter(tr => {
     const okKind = kind === 'all' || tr.dataset.kind === kind;
     const okText = !key || tr.textContent.toLowerCase().includes(key);
-    const view = okKind && okText;
-    tr.style.display = view ? '' : 'none';
-    if (view) shown++;
+    return okKind && okText;
   });
-  emptyRow.style.display = shown ? 'none' : '';
-  cnt.textContent = '显示 ' + shown + ' / ' + rows.length + ' 个源';
+  list.sort(cmp);
+
+  const total = list.length;
+  const per = size || total || 1;
+  const pages = Math.max(1, Math.ceil(total / per));
+  page = Math.min(Math.max(1, page), pages);
+  const start = (page - 1) * per;
+  const view = size ? list.slice(start, start + size) : list;
+
+  const keep = new Set(view);
+  rows.forEach(tr => { if (!keep.has(tr)) tr.style.display = 'none'; });
+  // 依次插到空态行之前：可见行在 DOM 里连续且顺序即排序结果
+  view.forEach(tr => { tr.style.display = ''; tbody.insertBefore(tr, emptyRow); });
+  emptyRow.style.display = total ? 'none' : '';
+
+  const filtered = total !== rows.length;
+  cnt.textContent = (filtered ? '符合 ' + total + ' / ' + rows.length : '共 ' + total + ' 个源')
+    + (size && total > size ? ' · 第 ' + (start + 1) + '–' + (start + view.length) + ' 条' : '');
+
+  pinfo.textContent = pages > 1 ? page + ' / ' + pages + ' 页' : '';
+  pprev.disabled = page <= 1;
+  pnext.disabled = page >= pages;
+  pnums.innerHTML = pages > 1 ? pageList(page, pages).map(n =>
+    n === '…' ? '<span class="pgap">…</span>'
+      : '<button type="button" class="pbtn"' + (n === page ? ' aria-current="page"' : '')
+        + ' data-p="' + n + '" aria-label="第 ' + n + ' 页">' + n + '</button>').join('') : '';
 }
+
+heads.forEach(th => {
+  th.addEventListener('click', ev => {
+    const k = th.dataset.sort;
+    const i = keys.findIndex(x => x.k === k);
+    const shift = ev.shiftKey || ev.metaKey || ev.ctrlKey;
+    const multi = shift || multiMode;
+    if (i >= 0 && !multi) {
+      keys[i].dir = -keys[i].dir;                 // 同列再点 = 翻转方向
+    } else if (i >= 0) {
+      keys.splice(i, 1);                          // 叠加模式下点已参与的列 = 撤掉
+    } else if (multi) {
+      keys.push({ k: k, dir: th.dataset.type === 's' ? 1 : -1 });
+    } else {
+      // 单列：文本从升序起（A→Z），数值从降序起（大→小），符合看榜直觉
+      keys = [{ k: k, dir: th.dataset.type === 's' ? 1 : -1 }];
+    }
+    page = 1;
+    syncHead();
+    render();
+  });
+});
+
 document.querySelectorAll('.fbtn').forEach(btn => {
   btn.addEventListener('click', () => {
     kind = btn.dataset.kind;
     document.querySelectorAll('.fbtn').forEach(b =>
       b.classList.toggle('active', b === btn));
-    apply();
+    page = 1;
+    render();
   });
 });
-q.addEventListener('input', apply);
-apply();
+
+q.addEventListener('input', () => { page = 1; render(); });
+
+multiBtn.addEventListener('click', () => {
+  multiMode = !multiMode;
+  multiBtn.setAttribute('aria-pressed', String(multiMode));
+  multiBtn.classList.toggle('on', multiMode);
+});
+
+pprev.addEventListener('click', () => { page -= 1; render(); });
+pnext.addEventListener('click', () => { page += 1; render(); });
+pnums.addEventListener('click', ev => {
+  const btn = ev.target.closest('button[data-p]');
+  if (!btn) return;
+  page = +btn.dataset.p;
+  render();
+});
+
+psize.addEventListener('change', () => {
+  size = +psize.value;
+  page = 1;
+  try { localStorage.setItem('tvk.psize', String(size)); } catch (e) {}
+  render();
+});
+
+/* 每页条数记住上次选择：翻页是习惯，不该每次重新设 */
+(function () {
+  let v = null;
+  try { v = localStorage.getItem('tvk.psize'); } catch (e) {}
+  if (v !== null && Array.from(psize.options).some(o => o.value === v)) {
+    size = +v;
+    psize.value = v;
+  }
+})();
+
+syncHead();
+render();
 """
 
 
@@ -976,8 +1227,24 @@ def build_site(
             av_cls = " a-hi" if av_num >= 95 else (" a-lo" if av_num < 80 else "")
         dup = (f' <span class="dup">归并#{esc(str(r["dup_of"])[:8])}</span>'
                if r.get("dup_of") else "")
+        # 排序用的原始值一次性挂在行上：前端不必读文本猜类型，空串统一按「无数据」
+        sv_sites = int(r.get("sites_count") or 0)
+        try:
+            sv_live = "" if live_disp is None else str(int(live_disp))
+        except (TypeError, ValueError):
+            sv_live = ""
+        sv_l3 = (f"{float(r['l3_ok']) / float(r['l3_tested']):.4f}"
+                 if r.get("l3_tested") else "")
+        sv_av = "" if av_num is None else f"{av_num:.2f}"
+        sort_attrs = (
+            f' data-status="{_STATUS_RANK.get(r["status"], 9)}"'
+            f' data-name="{esc(r.get("name") or "")}"'
+            f' data-compat="{esc(r.get("compat") or "")}"'
+            f' data-sites="{sv_sites}" data-live="{sv_live}"'
+            f' data-health="{score:.2f}" data-avail="{sv_av}"'
+            f' data-l3="{sv_l3}"')
         trs.append(
-            f'<tr class="{cls}" data-kind="{kind}">'
+            f'<tr class="{cls}" data-kind="{kind}"{sort_attrs}>'
             f'<td><span class="chip {cls}">{esc(r["status"])}</span>{dup}</td>'
             f'<td class="name">{esc(r.get("name") or "")}</td>'
             f'<td class="c-compat">{esc(r.get("compat") or "—")}</td>'
@@ -1061,9 +1328,10 @@ def build_site(
 <table id="tbl">
 <caption class="sr-only">源榜单</caption>
 <thead><tr>
-<th>状态</th><th>名称</th><th class="c-compat">适配</th><th class="c-sites num">站点</th>
-<th class="c-live num">直播</th><th class="c-health num">健康分</th>
-<th class="c-avail num">30天可用</th><th class="c-l3 num">L3</th>
+{_th("status", "状态")}{_th("name", "名称", "s")}{_th("compat", "适配", "s", "c-compat")}
+{_th("sites", "站点", "n", "c-sites num")}{_th("live", "直播", "n", "c-live num")}
+{_th("health", "健康分", "n", "c-health num")}
+{_th("avail", "30天可用", "n", "c-avail num")}{_th("l3", "L3", "n", "c-l3 num")}
 <th class="c-spark">近期体检</th><th class="c-url">URL</th>
 </tr></thead>
 <tbody>
@@ -1071,6 +1339,25 @@ def build_site(
 <tr id="empty" style="display:none"><td colspan="10">{empty_text}</td></tr>
 </tbody>
 </table>
+<div class="tfoot">
+<div class="sortrow">
+<div class="sortinfo" id="sortinfo" aria-live="polite">默认按置顶与健康分排列</div>
+<button type="button" class="clr" id="multi" aria-pressed="false"
+ title="开启后点击表头会追加排序条件；桌面端也可按住 Shift 直接叠加">叠加排序</button>
+</div>
+<nav class="pager" aria-label="表格分页">
+<label class="psize">每页<select id="psize" aria-label="每页显示条数">
+<option value="20" selected>20</option><option value="50">50</option>
+<option value="100">100</option><option value="0">全部</option>
+</select>条</label>
+<span class="pinfo" id="pinfo"></span>
+<div class="pnums">
+<button type="button" class="pbtn" id="pprev" aria-label="上一页">‹</button>
+<span class="pnumlist" id="pnums"></span>
+<button type="button" class="pbtn" id="pnext" aria-label="下一页">›</button>
+</div>
+</nav>
+</div>
 {chg_block}
 {host_block}
 {fail_section}

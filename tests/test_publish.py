@@ -390,3 +390,165 @@ def test_trend_panel_keeps_block_when_single_point():
     # 无数据时给空态面板，但区块仍在
     assert "暂无体检记录" in build_site(
         [dict(make_row("站点A", "http://b/c.json"), id="aaa111")], {}, None, 1, 60)
+
+
+# ---------------- 排序 / 分页 ----------------
+
+def _sort_rows():
+    return [
+        dict(make_row("高分源", "http://a/c.json", health=97.5, sites=30, lives=3),
+             id="s1", dup_of="", l3_tested=4, l3_ok=4, avail="100",
+             compat="tvbox", schema_type="tvbox"),
+        dict(make_row("无数据源", "http://b/c.json", health=51.0, sites=0, lives=0),
+             id="s2", dup_of="", l3_tested=0, l3_ok=0, avail="—",
+             compat="", schema_type="tvbox"),
+        dict(make_row("直播源", "http://c/c.json", health=88.0, sites=0, lives=0),
+             id="s3", dup_of="", l3_tested=2, l3_ok=1, avail=76,
+             compat="catvod", schema_type="live", live_channels=120),
+    ]
+
+
+def test_th_helper_marks_type_and_initial_direction():
+    from tvboxkeeper.publish import _th
+
+    text = _th("name", "名称", "s")
+    num = _th("health", "健康分", "n", "c-health num")
+    assert 'data-sort="name"' in text and 'data-type="s"' in text
+    assert 'data-sort="health"' in num and 'data-type="n"' in num
+    # 数字列的响应式隐藏类必须保留，否则窄屏会多出一列挤爆表格
+    assert 'class="c-health num"' in num
+    # 首屏未排序 + 用真按钮承载键盘操作
+    assert 'aria-sort="none"' in text and "<button type=\"button\" class=\"thb\"" in text
+
+
+def test_status_rank_orders_by_usability():
+    from tvboxkeeper.publish import _STATUS_RANK
+
+    chain = ["active", "new", "flaky", "anti_crawl", "invalid", "dead", "banned"]
+    ranks = [_STATUS_RANK[s] for s in chain]
+    assert ranks == sorted(ranks) and len(set(ranks)) == len(ranks)
+
+
+def test_site_rows_carry_sort_values():
+    """排序值挂在行 dataset 上：JS 零文本解析，缺数据用空串表达。"""
+    html = build_site(_sort_rows(), {}, None, 1, 60)
+    assert 'data-health="97.50"' in html and 'data-sites="30"' in html
+    # 30 天可用缺失 → 空串（前端按「缺数据恒排队尾」处理）；有值保留两位
+    assert 'data-avail=""' in html and 'data-avail="100.00"' in html
+    # L3 比例而不是 "4/4" 文本，否则排序会按字符串走
+    assert 'data-l3="1.0000"' in html and 'data-l3="0.5000"' in html
+    # 直播列的数字口径与展示列一致（直播源取 live_channels）
+    assert 'data-live="120"' in html
+    # 状态压成分值，active 必须排在 dead 前
+    assert 'data-status="0"' in html
+
+
+def test_site_sort_attribute_is_escaped():
+    rows = [dict(make_row('a"b<script>&', "http://d/c.json"),
+                 id="x1", dup_of="", l3_tested=0, l3_ok=0, compat='t"x')]
+    html = build_site(rows, {}, None, 1, 60)
+    # 行属性里的引号/尖括号必须转义，否则会提前闭合属性、注入标签
+    assert 'data-name="a&quot;b&lt;script&gt;&amp;"' in html
+    assert 'data-compat="t&quot;x"' in html
+    assert '<td class="name">a&quot;b&lt;script&gt;&amp;</td>' in html
+
+
+def test_site_table_has_sortable_heads_and_pager():
+    html = build_site(_sort_rows(), {}, None, 1, 60)
+    # 8 个可排序列：状态/名称/适配/站点/直播/健康分/30天可用/L3
+    # （CSS 里还有一处 th[aria-sort="none"]，故带 ">" 计数）
+    assert html.count('aria-sort="none">') == 8
+    for key in ("status", "name", "compat", "sites", "live", "health",
+                "avail", "l3"):
+        assert f'data-sort="{key}"' in html
+    # 分页控件齐备：条数可选、页码、上下页都在
+    assert 'id="psize"' in html and 'id="pnums"' in html
+    assert 'id="pprev"' in html and 'id="pnext"' in html
+    assert 'id="sortinfo"' in html and 'class="tfoot"' in html
+    for opt in ('<option value="20"', '<option value="50"',
+                '<option value="100"', '<option value="0"'):
+        assert opt in html
+    # 组合排序靠 Shift，提示与实现都要在页面上
+    assert "ev.shiftKey" in html and 'id="multi"' in html
+    assert "tr.dataset.kind === kind" in html      # 筛选与排序/分页仍需并存
+
+
+# ---------------- 排序 / 分页 ----------------
+
+def _sort_rows():
+    return [
+        dict(make_row("高分源", "http://a/c.json", health=97.5, sites=30, lives=3),
+             id="s1", dup_of="", l3_tested=4, l3_ok=4, avail="100",
+             compat="tvbox", schema_type="tvbox"),
+        dict(make_row("无数据源", "http://b/c.json", health=51.0, sites=0, lives=0),
+             id="s2", dup_of="", l3_tested=0, l3_ok=0, avail="—",
+             compat="", schema_type="tvbox"),
+        dict(make_row("直播源", "http://c/c.json", health=88.0, sites=0, lives=0),
+             id="s3", dup_of="", l3_tested=2, l3_ok=1, avail=76,
+             compat="catvod", schema_type="live", live_channels=120),
+    ]
+
+
+def test_th_helper_marks_type_and_initial_direction():
+    from tvboxkeeper.publish import _th
+
+    text = _th("name", "名称", "s")
+    num = _th("health", "健康分", "n", "c-health num")
+    assert 'data-sort="name"' in text and 'data-type="s"' in text
+    assert 'data-sort="health"' in num and 'data-type="n"' in num
+    # 数字列的响应式隐藏类必须保留，否则窄屏会多出一列挤爆表格
+    assert 'class="c-health num"' in num
+    # 首屏未排序 + 用真按钮承载键盘操作
+    assert 'aria-sort="none"' in text and "<button type=\"button\" class=\"thb\"" in text
+
+
+def test_status_rank_orders_by_usability():
+    from tvboxkeeper.publish import _STATUS_RANK
+
+    chain = ["active", "new", "flaky", "anti_crawl", "invalid", "dead", "banned"]
+    ranks = [_STATUS_RANK[s] for s in chain]
+    assert ranks == sorted(ranks) and len(set(ranks)) == len(ranks)
+
+
+def test_site_rows_carry_sort_values():
+    """排序值挂在行 dataset 上：JS 零文本解析，缺数据用空串表达。"""
+    html = build_site(_sort_rows(), {}, None, 1, 60)
+    assert 'data-health="97.50"' in html and 'data-sites="30"' in html
+    # 30 天可用缺失 → 空串（前端按「缺数据恒排队尾」处理）；有值保留两位
+    assert 'data-avail=""' in html and 'data-avail="100.00"' in html
+    # L3 比例而不是 "4/4" 文本，否则排序会按字符串走
+    assert 'data-l3="1.0000"' in html and 'data-l3="0.5000"' in html
+    # 直播列的数字口径与展示列一致（直播源取 live_channels）
+    assert 'data-live="120"' in html
+    # 状态压成分值，active 必须排在 dead 前
+    assert 'data-status="0"' in html
+
+
+def test_site_sort_attribute_is_escaped():
+    rows = [dict(make_row('a"b<script>&', "http://d/c.json"),
+                 id="x1", dup_of="", l3_tested=0, l3_ok=0, compat='t"x')]
+    html = build_site(rows, {}, None, 1, 60)
+    # 行属性里的引号/尖括号必须转义，否则会提前闭合属性、注入标签
+    assert 'data-name="a&quot;b&lt;script&gt;&amp;"' in html
+    assert 'data-compat="t&quot;x"' in html
+    assert '<td class="name">a&quot;b&lt;script&gt;&amp;</td>' in html
+
+
+def test_site_table_has_sortable_heads_and_pager():
+    html = build_site(_sort_rows(), {}, None, 1, 60)
+    # 8 个可排序列：状态/名称/适配/站点/直播/健康分/30天可用/L3
+    # （CSS 里还有一处 th[aria-sort="none"]，故带 ">" 计数）
+    assert html.count('aria-sort="none">') == 8
+    for key in ("status", "name", "compat", "sites", "live", "health",
+                "avail", "l3"):
+        assert f'data-sort="{key}"' in html
+    # 分页控件齐备：条数可选、页码、上下页都在
+    assert 'id="psize"' in html and 'id="pnums"' in html
+    assert 'id="pprev"' in html and 'id="pnext"' in html
+    assert 'id="sortinfo"' in html and 'class="tfoot"' in html
+    for opt in ('<option value="20"', '<option value="50"',
+                '<option value="100"', '<option value="0"'):
+        assert opt in html
+    # 组合排序靠 Shift，提示与实现都要在页面上
+    assert "ev.shiftKey" in html and 'id="multi"' in html
+    assert "tr.dataset.kind === kind" in html      # 筛选与排序/分页仍需并存
