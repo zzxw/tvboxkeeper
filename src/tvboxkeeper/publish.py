@@ -6,6 +6,7 @@ import html
 import json
 import time
 from collections import Counter
+from datetime import date, timedelta
 from pathlib import Path
 
 from . import diffing
@@ -322,35 +323,602 @@ def _sparkline(marks: list[int], width: int = 120, height: int = 22) -> str:
             f'points="{pts}"/></svg>')
 
 
-def _trend_chart(points: list[dict], width: int = 660, height: int = 150) -> str:
-    """整体可用率趋势（内联 SVG，无外部依赖）。points: [{date, rate}]"""
-    if len(points) < 2:
-        return ""
-    pad_l, pad_r, pad_t, pad_b = 36, 10, 10, 22
-    iw, ih = width - pad_l - pad_r, height - pad_t - pad_b
-    step = iw / (len(points) - 1)
+def _rate_color(rate: float) -> str:
+    """可用率色档（与内联 sparkline 同口径）。"""
+    return "#4ade80" if rate >= 80 else ("#fbbf24" if rate >= 50 else "#f87171")
 
-    def y(rate: float) -> float:
-        return pad_t + ih - (max(0.0, min(100.0, rate)) / 100) * ih
 
-    pts = " ".join(f"{pad_l + i * step:.1f},{y(p['rate']):.1f}"
-                   for i, p in enumerate(points))
-    avg = sum(p["rate"] for p in points) / len(points)
-    color = "#4ade80" if avg >= 80 else ("#fbbf24" if avg >= 50 else "#f87171")
-    grid = "".join(
-        f'<line x1="{pad_l}" y1="{y(v):.1f}" x2="{width - pad_r}" y2="{y(v):.1f}" '
-        f'stroke="#1e293b"/>'
-        f'<text x="4" y="{y(v) + 4:.1f}" fill="#64748b" font-size="10">{v}</text>'
-        for v in (0, 50, 100))
-    labels = (
-        f'<text x="{pad_l}" y="{height - 6}" fill="#64748b" font-size="10">'
-        f'{points[0]["date"][5:]}</text>'
-        f'<text x="{width - pad_r}" y="{height - 6}" fill="#64748b" '
-        f'font-size="10" text-anchor="end">{points[-1]["date"][5:]}</text>')
-    return (f'<svg viewBox="0 0 {width} {height}" width="100%" height="{height}" '
-            f'role="img" aria-label="近 {len(points)} 天可用率趋势">{grid}'
-            f'<polyline fill="none" stroke="{color}" stroke-width="2" points="{pts}"/>'
-            f'{labels}</svg>')
+def _rate_class(rate: float) -> str:
+    return "ok" if rate >= 80 else ("warn" if rate >= 50 else "bad")
+
+
+_TREND_EMPTY = ('<figure class="trend-panel"><div class="chart-empty">'
+                '暂无体检记录，明日开始生成趋势</div></figure>')
+
+
+def _trend_panel(points: list[dict] | None, n_total: int = 0,
+                 n_live: int = 0) -> str:
+    """整体可用率趋势面板（几何层走 SVG，文字层走 HTML）。
+
+    关键取舍：SVG 用 ``viewBox="0 0 1000 200"`` + ``preserveAspectRatio="none"``
+    把几何拉满容器，所以**任何带文字的元素都不能放进这个 SVG**（会被非等比拉糊）。
+    轴名、Y/X 刻度、数值标签、tooltip、数据点热区全部是 HTML + 百分比绝对定位，
+    px 尺寸不随容器缩放。
+
+    两个计数器不可混用：
+    - ``n_axis`` 日期跨度 —— 决定 x 坐标 / 刻度 / 热区宽度 / 「近 N 天」；
+    - ``n_data`` 有效点数 —— 决定拥挤度（dot 尺寸、标签开关）、色档、均值、空态。
+    缺日在时间轴上必须留空（线性），但不应污染统计。
+    """
+    clean = sorted((p for p in (points or []) if p.get("date")),
+                   key=lambda p: p["date"])
+    if not clean:
+        return _TREND_EMPTY
+    first = date.fromisoformat(clean[0]["date"])
+    last = date.fromisoformat(clean[-1]["date"])
+    n_axis = (last - first).days + 1
+    by_date = {p["date"]: p for p in clean}
+    seq = []
+    for i in range(n_axis):
+        d = first + timedelta(days=i)
+        seq.append((d, by_date.get(d.isoformat())))
+    valid = [(d, p) for d, p in seq if p and p.get("rate") is not None]
+    n_data = len(valid)
+    if not n_data:
+        return _TREND_EMPTY
+
+    rates = [p["rate"] for _, p in valid]
+    lo_v, hi_v = min(rates), max(rates)
+    rng = hi_v - lo_v
+    single = n_data == 1
+    flat = n_data > 1 and rng == 0
+    # zoomed 与 axis_span 是两个正交概念，不能共用一个变量：
+    # - zoomed   仅 ``10 <= rng < 20`` 为真，控制「轴已放大」徽标（语义是「我放大了比例」）
+    # - axis_span 域非 0–100 即为真，控制轴名后缀 ``· 轴 low–high``
+    # 全平只满足 axis_span：持平不是放大，徽标会让人以为有起伏
+    zoomed = False
+    if single:
+        # 单点没有起伏概念：固定 0–100，保住「45% 处于什么绝对水平」的判断力
+        low, high = 0, 100
+    elif flat:
+        # 全平是真实信息：收窄到 ±10 让平坦线离开边界；域变了靠轴名字段解释，
+        # 但不能给「轴已放大」徽标 —— 持平不是放大，徽标会让人以为有起伏
+        low, high = max(0, int(lo_v) - 10), min(100, int(hi_v) + 10)
+    elif 10 <= rng < 20:
+        # 仅此区间值得放大：<10 收益小且跨天不可比，>=20 的 0–100 域已足够
+        low = max(0, (int(lo_v) // 10) * 10 - 10)
+        high = min(100, (int(hi_v) // 10 + 1) * 10 + 10)
+        if high - low < 20:            # 域至少 20 宽，防过度放大与除零
+            mid_v = (low + high) // 2
+            low, high = max(0, mid_v - 10), min(100, mid_v + 10)
+        zoomed = True
+    else:
+        low, high = 0, 100
+    span = high - low
+    axis_span = low != 0 or high != 100
+    mid = (low + high) // 2
+
+    mean = sum(rates) / n_data
+    color = _rate_color(mean)
+    cur, start = rates[-1], rates[0]
+    diff = cur - start
+
+    def x_pct(off: int) -> float:
+        return 50.0 if n_axis <= 1 else 1 + off * 98 / (n_axis - 1)
+
+    def y_pct(v: float) -> float:
+        return (high - v) / span * 100
+
+    def cx(off: int) -> float:
+        return 10 + (off * 980 / (n_axis - 1) if n_axis > 1 else 490)
+
+    def cy(v: float) -> float:
+        return 200 * (high - v) / span
+
+    offs = [(d - first).days for d, _ in valid]
+    # 按连续段切分：只有相邻有效点相差正好 1 天才连线，缺口处断线不留色带
+    segs: list[list[int]] = []
+    for i in range(n_data):
+        if i and offs[i] - offs[i - 1] == 1:
+            segs[-1].append(i)
+        else:
+            segs.append([i])
+    islands = set()
+    if n_data > 1:      # 单点不按孤岛画（它是唯一的点，用常规 9px 空心点）
+        for i in range(n_data):
+            prev_gap = (offs[i] - offs[i - 1]) if i else None
+            next_gap = (offs[i + 1] - offs[i]) if i + 1 < n_data else None
+            if prev_gap != 1 and next_gap != 1:
+                islands.add(i)
+
+    # ---- SVG：只画几何，每条 stroke 都加 non-scaling-stroke ----
+    nss = 'vector-effect="non-scaling-stroke"'
+
+    def py(v: float) -> float:
+        """可用率 → viewBox 纵向位置（0 顶 / 200 底），用于重合判定。"""
+        return 200 * (high - v) / span
+
+    # 语义线：单点无起伏、全平时均值与数据线重合，两种情况都不画均值线；
+    # 全平也不画 50/80 阈值线 —— 持平场景阈值没有参考价值，且全平值恰在
+    # 阈值附近时会与数据线近距并行（<12px）被误读成画歪的双线
+    sem: list[tuple[str, float]] = []
+    if not single and not flat:
+        sem.append(("mean", mean))
+    if not single and not flat and low + 3 <= 80 <= high - 3:
+        sem.append(("t80", 80))
+    if (not single and not flat and n_data <= 3
+            and low + 3 <= 50 <= high - 3):
+        sem.append(("t50", 50))
+    structs = [{"k": "bottom", "v": low, "stroke": "#334155"},
+               {"k": "mid", "v": mid, "stroke": "#1f2d45"}]
+    if high < 100:      # high==100 时顶线与绘图区上边界重合，不画
+        structs.append({"k": "top", "v": high, "stroke": "#1f2d45"})
+
+    # 重合抑制一：语义线压在结构线上（<2px）→ 删语义线，实线更利读数
+    kept_sem = [s for s in sem
+                if all(abs(py(s[1]) - py(t["v"])) >= 2 for t in structs)]
+    # 语义线彼此极近 → 阈值线让位均值线（均值有自己的数值出处）
+    uniq: list[tuple[str, float]] = []
+    for name, v in kept_sem:
+        if any(abs(py(v) - py(v2)) < 2 for _, v2 in uniq):
+            continue
+        uniq.append((name, v))
+    kept_sem = uniq
+    # 重合抑制二：结构线距语义线 2–12px → 删结构线，避免读成「画歪的双线」；
+    # 结构线的 Y 刻度文字不受影响（刻度不依赖线存在）
+    kept_struct = [t for t in structs
+                   if not any(2 <= abs(py(t["v"]) - py(v)) < 12
+                              for _, v in kept_sem)]
+
+    grid = []
+    for t in kept_struct:
+        y = min(199.5, max(0.5, py(t["v"])))
+        grid.append(f'<line x1="0" y1="{y:.1f}" x2="1000" y2="{y:.1f}" '
+                    f'stroke="{t["stroke"]}" stroke-width="1" {nss}/>')
+    for name, v in kept_sem:
+        style = ('stroke="#7d8ea6" stroke-width="1" stroke-opacity="0.45" '
+                 'stroke-dasharray="4 3"' if name == "mean" else
+                 'stroke="#334155" stroke-width="1" stroke-dasharray="2 4"')
+        grid.append(f'<line x1="0" y1="{py(v):.1f}" x2="1000" y2="{py(v):.1f}" '
+                    f'{style} {nss}/>')
+
+    areas, lines = [], []
+    for seg in segs:
+        if len(seg) < 2:
+            continue
+        xy = [(cx(offs[i]), cy(valid[i][1]["rate"])) for i in seg]
+        if not flat:    # 全平不收窄域内色带（零起伏的面积没有信息量）
+            path = ("M " + " L ".join(f"{x:.1f},{y:.1f}" for x, y in xy)
+                    + f" L {xy[-1][0]:.1f},200 L {xy[0][0]:.1f},200 Z")
+            areas.append(f'<path d="{path}" fill="url(#tg-trend)" stroke="none"/>')
+        lines.append(
+            f'<polyline fill="none" stroke="{color}" stroke-width="2.5" '
+            f'stroke-linecap="round" stroke-linejoin="round" {nss} '
+            f'points="{" ".join(f"{x:.1f},{y:.1f}" for x, y in xy)}"/>')
+
+    svg = (
+        f'<svg class="geo" viewBox="0 0 1000 200" width="100%" height="100%" '
+        f'preserveAspectRatio="none" aria-hidden="true" focusable="false">'
+        f'<defs><linearGradient id="tg-trend" x1="0" y1="0" x2="0" y2="1">'
+        f'<stop offset="0" stop-color="{color}" stop-opacity="0.26"/>'
+        f'<stop offset="1" stop-color="{color}" stop-opacity="0"/>'
+        f'</linearGradient></defs>'
+        f'{"".join(grid)}{"".join(areas)}{"".join(lines)}</svg>')
+
+    # ---- HTML 层：数据点热区 + 常驻数值标签 + CSS tooltip ----
+    dot = 9 if n_data <= 2 else (7 if n_data <= 7 else 5)
+    # n_axis==1 时没有「相邻间距」，热区退化为固定宽度（避免 min(32px, inf%)）
+    hot_w = "32px" if n_axis <= 1 else f"min(32px,{98 / (n_axis - 1):.2f}%)"
+    if flat:
+        labeled = {n_data - 1}          # 全平只标最后一个点，否则一排放同一个数字
+    elif n_data <= 5:
+        labeled = set(range(n_data))
+    else:
+        labeled = {rates.index(max(rates)), rates.index(min(rates))}
+    hotspots = []
+    for i, (d, p) in enumerate(valid):
+        rate = p["rate"]
+        x, y = x_pct(offs[i]), y_pct(rate)
+        align = "l" if x < 12 else ("r" if x > 88 else "c")
+        side = "above" if y >= 22 else "below"
+        tip = (f'{d.isoformat()} · 可用率 {rate}% · '
+               f'{int(p.get("total") or 0)} 次体检')
+        lab = ""
+        if i in labeled:
+            flip = " vb" if y < 15 else ""
+            lab = f'<span class="vlab{flip}">{rate}</span>'
+        if i in islands:
+            mark, cls = '<i class="dot isl"></i>', "pt isl"
+        else:
+            mark, cls = f'<i class="dot s{dot}"></i>', "pt"
+        hotspots.append(
+            f'<button type="button" class="{cls}" '
+            f'style="left:{x:.2f}%;--y:{y:.2f}%;width:{hot_w}" '
+            f'data-tip="{tip}" data-align="{align}" data-side="{side}" '
+            f'aria-label="{d.isoformat()} 可用率 {rate}%">'
+            f'{mark}{lab}</button>')
+
+    # ---- 坐标轴 ----
+    # 域不是 0–100 时把值域写进轴名：右侧徽标离轴太远，视线不经过
+    axis_name = "可用率 %"
+    if axis_span:
+        axis_name = f"可用率 % · 轴 {low}–{high}"
+    yticks = "".join(
+        f'<span style="top:{top:.1f}%">{v}</span>'
+        for v, top in ((high, 0.0), (mid, 50.0), (low, 100.0)))
+    xticks = []
+    if n_axis > 1:                      # 单点没有时间轴可刻度
+        n_tick = min(n_axis, 15)        # 总刻度上限 15
+        if n_tick == n_axis:
+            tick_idx = list(range(n_axis))
+        else:
+            tick_idx = sorted(
+                {round(i * (n_axis - 1) / (n_tick - 1)) for i in range(n_tick)})
+        # 主刻度恒定 ≤7 个且含首尾：<900px 隐藏 .p1 后最多 7 个标签。
+        # 但 7 个主刻度在窄屏可能贴住：320px 时绘图区约 200px，日期标签 26.4px
+        # 需 ≥30px 间距，即相邻主刻度至少隔 1.4 天。n_axis 在 10–30 时按等分
+        # 取整会出现只隔 1 天的一对（实测最近间距 -4.6px ~ 1.6px），
+        # 故给主刻度再分一层 .p0b（按序号隔一取一），≤420px 时隐藏，
+        # 剩 4 个日期在 320px 下仍有 30px 以上间距。
+        n_p0 = min(len(tick_idx), 7)
+        if n_p0 > 1:
+            p0_order = sorted(
+                {tick_idx[round(i * (len(tick_idx) - 1) / (n_p0 - 1))]
+                 for i in range(n_p0)})
+        else:
+            p0_order = list(tick_idx)
+        need = 30 * (n_axis - 1) / 196       # 320px 下相邻标签所需天数间隔
+        gaps = [b - a for a, b in zip(p0_order, p0_order[1:])]
+        crowded = bool(gaps) and min(gaps) < need
+        primary = set(p0_order)
+        extra = set(p0_order[1::2]) if crowded else set()
+        for i in tick_idx:
+            cls = "p0 p0b" if i in extra else ("p0" if i in primary else "p1")
+            label = (first + timedelta(days=i)).strftime("%m-%d")
+            xticks.append(
+                f'<span class="{cls}" style="left:{x_pct(i):.2f}%">{label}</span>')
+
+    # ---- 头部统计 ----
+    cur_stat = (f'<div class="stat"><b class="{_rate_class(cur)}">{cur}%</b>'
+                f'<span>当前</span></div>')
+    if single:
+        # 单点没有均值/环比可言，整项隐藏而不是显示「—」
+        stats = cur_stat
+    else:
+        if flat:
+            delta = '<b class="flat">持平</b>'
+        elif diff > 0:
+            delta = f'<b class="ok">▲ {abs(diff):.1f}pt</b>'
+        elif diff < 0:
+            delta = f'<b class="bad">▼ {abs(diff):.1f}pt</b>'
+        else:
+            delta = '<b class="flat">＝ 0.0pt</b>'
+        stats = (cur_stat
+                 + f'<div class="stat"><b>{mean:.1f}%</b><span>均值</span></div>'
+                 + f'<div class="stat">{delta}<span>较首日</span></div>')
+    badge = (f'<em class="badge">轴已放大 {low}–{high}%</em>' if zoomed else "")
+
+    # ---- 脚注：左 = 口径，右 = 数据完整性 ----
+    lead = f"全量 {n_total} 个源" + (f"（含直播 {n_live}）" if n_live else "")
+    lead += " · 不受下方筛选影响"
+    miss = n_axis - n_data
+    if single:
+        note = "仅有 1 天数据，明日开始显示趋势"
+    elif flat:
+        note = f"可用率持平（近 {n_axis} 天均为 {rates[0]}%）"
+    else:
+        note = f"有记录 {n_data} 天" + (f" · 缺 {miss} 天" if miss > 0 else "")
+
+    # ---- 无障碍明细表（行不带 class，避免干扰主表行数统计） ----
+    rows_sr = []
+    for d, p in seq:
+        if p is None or p.get("rate") is None:
+            rows_sr.append(f'<tr><td>{d.isoformat()}</td><td>—</td><td>—</td></tr>')
+        else:
+            rows_sr.append(
+                f'<tr><td>{d.isoformat()}</td><td>{p["rate"]}%</td>'
+                f'<td>{int(p.get("total") or 0)}</td></tr>')
+
+    return (
+        f'<figure class="trend-panel" aria-labelledby="trend-h">'
+        f'<div class="trend-top">'
+        f'<figcaption><h2 id="trend-h">整体可用率趋势 · '
+        f'{clean[0]["date"][5:]} → {clean[-1]["date"][5:]}</h2>'
+        f'<ul class="legend"><li class="ok">≥80% 健康</li>'
+        f'<li class="warn">50–79% 观察</li>'
+        f'<li class="bad">&lt;50% 异常</li></ul></figcaption>'
+        f'<div class="chart-head">{stats}{badge}</div>'
+        f'</div>'
+        f'<div class="chart-plot">'
+        f'<div class="ylab">{axis_name}</div>'
+        f'<div class="yaxis">{yticks}</div>'
+        f'<div class="plot" style="color:{color}">{svg}{"".join(hotspots)}</div>'
+        f'<div class="xaxis">{"".join(xticks)}</div>'
+        f'<div class="xname">日期（MM-DD）</div>'
+        f'</div>'
+        f'<div class="pfoot"><span class="lead">{lead}</span>'
+        f'<span class="note">{note}</span></div>'
+        f'<table class="sr-only"><caption>近 {n_axis} 天可用率明细</caption>'
+        f'<tr><th>日期</th><th>可用率</th><th>体检次数</th></tr>'
+        f'{"".join(rows_sr)}</table>'
+        f'</figure>')
+
+
+_SITE_CSS = """\
+:root{
+  color-scheme:dark;
+  --bg:#0f172a; --panel:#131e33; --card:#1e293b; --card-2:#24334a;
+  --line:#1c2840; --border:#334155; --border-2:#3d4f6b;
+  --text:#e2e8f0; --text-2:#94a3b8; --text-3:#7d8ea6; --text-4:#475569;
+  --ok:#4ade80; --ok-bg:#14532d; --warn:#fbbf24; --warn-bg:#451a03;
+  --bad:#f87171; --bad-bg:#450a0a; --accent:#3b82f6; --accent-solid:#1d4ed8;
+  --tools-h:63px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+     font:14px/1.6 system-ui,"Segoe UI","Microsoft YaHei",sans-serif}
+.wrap{max-width:1320px;margin:0 auto;padding:32px 40px 64px}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+         overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+h1{font-size:22px;font-weight:700;color:#f8fafc;margin:0 0 6px;letter-spacing:-.01em}
+.meta{font-size:12.5px;color:var(--text-3);margin:0 0 24px}
+h2{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;
+   color:#cbd5e1;margin:40px 0 12px;scroll-margin-top:88px}
+h2::before{content:"";flex:none;width:3px;height:14px;border-radius:2px;
+           background:var(--border)}
+/* 状态卡片：彩色只落在数字上，不铺底色 */
+.cards{display:flex;gap:12px;flex-wrap:wrap;margin:0}
+.card{display:flex;flex-direction:column;gap:2px;min-width:104px;
+      padding:14px 18px;border-radius:12px;background:var(--card);
+      border:1px solid var(--card-2)}
+.card b{font-size:26px;font-weight:700;line-height:1.2;
+        font-variant-numeric:tabular-nums;color:var(--text)}
+.card span{font-size:11.5px;font-weight:500;color:var(--text-2)}
+.card.all{min-width:132px;border-left:3px solid var(--accent)}
+.card.all b{color:#f8fafc}
+.card.ok b{color:var(--ok)} .card.warn b{color:var(--warn)}
+.card.bad b{color:var(--bad)} .card.off b{color:var(--text-2)}
+.chg-line{font-size:12.5px;color:var(--text-3);margin:16px 0 0}
+/* ---------- 趋势面板：几何层 SVG + 文字层 HTML ---------- */
+.trend-panel{margin:0;padding:18px 20px 14px;border-radius:14px;
+             background:var(--panel);border:1px solid var(--line)}
+.cards + .trend-panel{margin-top:32px}
+.chg-line + .trend-panel{margin-top:18px}
+.trend-top{display:flex;justify-content:space-between;align-items:flex-start;
+           gap:24px;flex-wrap:wrap}
+.trend-panel h2{margin:0;font-size:14px;scroll-margin-top:0}
+.trend-panel h2::before{background:var(--accent)}
+.trend-panel .legend{margin:5px 0 0}
+.chart-head{display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap}
+.chart-head .stat{display:flex;flex-direction:column;align-items:flex-end;gap:1px}
+.chart-head .stat b{font-size:17px;font-weight:700;line-height:1.2;
+                    color:var(--text);font-variant-numeric:tabular-nums}
+.chart-head .stat b.ok{color:var(--ok)}
+.chart-head .stat b.warn{color:var(--warn)}
+.chart-head .stat b.bad{color:var(--bad)}
+.chart-head .stat b.flat{color:var(--text-2)}
+.chart-head .stat span{font-size:10.5px;color:var(--text-3)}
+.badge{align-self:center;font-style:normal;font-size:10.5px;color:var(--text-2);
+       background:var(--card);border:1px solid var(--border);border-radius:99px;
+       padding:2px 9px;white-space:nowrap}
+.chart-plot{display:grid;grid-template-columns:46px minmax(0,1fr);
+            grid-template-rows:auto auto auto auto;margin:16px 0 0}
+.ylab{grid-column:2;grid-row:1;font-size:10.5px;color:var(--text-3);margin-bottom:10px}
+.yaxis{grid-column:1;grid-row:2;position:relative}
+.yaxis span{position:absolute;right:8px;transform:translateY(-50%);white-space:nowrap;
+            font-size:11px;font-weight:500;color:var(--text-3);
+            font-variant-numeric:tabular-nums}
+.plot{grid-column:2;grid-row:2;position:relative;height:210px}
+.xaxis{grid-column:2;grid-row:3;position:relative;height:18px;margin-top:14px}
+.xaxis span{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap;
+            font-size:10.5px;color:var(--text-3);font-variant-numeric:tabular-nums}
+.xname{grid-column:2;grid-row:4;text-align:right;font-size:10.5px;
+       color:var(--text-3);margin-top:2px}
+/* 几何层拉满容器；非等比缩放靠 non-scaling-stroke 保住描边粗细 */
+.plot .geo{position:absolute;inset:0;display:block;width:100%;height:100%}
+.pt{position:absolute;top:0;bottom:0;transform:translateX(-50%);margin:0;padding:0;
+    background:none;border:0;color:inherit;cursor:pointer;
+    -webkit-appearance:none;appearance:none;transition:background-color 120ms linear}
+.pt:hover,.pt:focus-visible{
+  background:linear-gradient(90deg,transparent,#334155 45%,#334155 55%,transparent)}
+.pt:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.dot{position:absolute;left:50%;top:var(--y);display:block;border-radius:50%;
+     border:2px solid currentColor;background:var(--panel);box-sizing:border-box;
+     transform:translate(-50%,-50%);
+     transition:box-shadow 120ms linear,outline-color 120ms linear}
+.dot.s5{width:5px;height:5px} .dot.s7{width:7px;height:7px}
+.dot.s9{width:9px;height:9px}
+/* 孤岛点：5px 实心灰，与线色的空心点明确区分 */
+.dot.isl{width:5px;height:5px;background:#94a3b8;border-color:#94a3b8}
+.pt:hover .dot,.pt:focus-visible .dot{box-shadow:0 0 0 4px rgba(148,163,184,.18);
+                                      outline:1.5px solid currentColor;outline-offset:1px}
+.vlab{position:absolute;left:50%;top:var(--y);transform:translate(-50%,-100%);
+      margin-top:-10px;font-size:11px;font-weight:600;color:currentColor;
+      font-variant-numeric:tabular-nums;white-space:nowrap;pointer-events:none;
+      text-shadow:0 1px 2px #0b1424,0 0 6px #0b1424}
+.vlab.vb{transform:translate(-50%,0);margin-top:10px}
+/* tooltip 走纯 CSS，不依赖 JS */
+.pt::after{content:attr(data-tip);position:absolute;left:50%;top:var(--y);z-index:4;
+           transform:translate(-50%,-150%);padding:4px 8px;border-radius:6px;
+           background:#0b1220;border:1px solid var(--border-2);color:var(--text);
+           font-size:11px;font-weight:500;white-space:nowrap;
+           box-shadow:0 6px 16px rgba(0,0,0,.5);
+           opacity:0;pointer-events:none;transition:opacity 120ms linear}
+.pt:hover::after,.pt:focus-visible::after{opacity:1}
+.pt[data-align="l"]::after{transform:translate(-14%,-150%)}
+.pt[data-align="r"]::after{transform:translate(-86%,-150%)}
+.pt[data-side="below"]::after{transform:translate(-50%,46%)}
+.pt[data-side="below"][data-align="l"]::after{transform:translate(-14%,46%)}
+.pt[data-side="below"][data-align="r"]::after{transform:translate(-86%,46%)}
+.pfoot{display:flex;justify-content:space-between;align-items:center;gap:16px;
+       flex-wrap:wrap;margin-top:14px;padding-top:10px;
+       border-top:1px solid var(--line)}
+.lead{font-size:11.5px;color:var(--text-3)}
+.legend{display:flex;gap:14px;list-style:none;margin:0;padding:0}
+.legend li{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-3)}
+.legend li::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.legend li.ok::before{background:var(--ok)} .legend li.warn::before{background:var(--warn)}
+.legend li.bad::before{background:var(--bad)}
+.note{font-size:11.5px;color:var(--text-3);margin-left:auto}
+.chart-empty{display:flex;align-items:center;justify-content:center;height:160px;
+             border:1px dashed var(--border);border-radius:10px;
+             font-size:12.5px;color:var(--text-3)}
+/* ---------- 工具条：吸顶，表头让位 ---------- */
+.tools{position:sticky;top:0;z-index:5;display:flex;gap:10px;align-items:center;
+       flex-wrap:wrap;padding:12px 0;margin:32px 0 20px;background:var(--bg);
+       box-shadow:0 1px 0 var(--line)}
+#q{width:280px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);
+   background:var(--card);color:var(--text);font:inherit;font-size:13px}
+#q::placeholder{color:var(--text-3)}
+#q:focus-visible{outline:2px solid var(--accent);outline-offset:2px;
+                 border-color:var(--accent)}
+.filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.fbtn{padding:7px 14px;border-radius:8px;border:1px solid var(--border);
+      background:var(--card);color:#cbd5e1;font:inherit;font-size:13px;cursor:pointer;
+      transition:background-color 120ms linear,border-color 120ms linear}
+.fbtn:hover{border-color:var(--border-2);color:var(--text)}
+.fbtn.active{background:var(--accent-solid);border-color:var(--accent-solid);color:#fff}
+.fbtn b{font-variant-numeric:tabular-nums;font-weight:600;opacity:.85}
+.fbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.cnt{margin-left:auto;font-size:12px;color:var(--text-3);
+     font-variant-numeric:tabular-nums}
+/* ---------- 表格 ---------- */
+table{border-collapse:collapse;width:100%}
+#tbl{margin:0}
+#tbl th,#tbl td{padding:8px 12px;text-align:left;vertical-align:middle;
+                border-bottom:1px solid var(--line)}
+#tbl th{position:sticky;top:var(--tools-h);z-index:2;background:var(--bg);
+        border-bottom:0;box-shadow:inset 0 -1px 0 var(--border);
+        font-size:11.5px;font-weight:600;color:var(--text-3);
+        letter-spacing:.05em;white-space:nowrap}
+#tbl td{font-size:13px;color:#cbd5e1}
+#tbl td.name{font-size:13.5px;font-weight:500;color:var(--text)}
+#tbl tbody tr:hover td{background:#1c2840}
+#tbl tbody tr:hover td.url{color:var(--text-2)}
+#tbl tr.bad td:first-child{box-shadow:inset 3px 0 0 var(--bad)}
+#tbl tr.warn td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.spark{text-align:center} .spark svg{display:block;margin:0 auto}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:2px 9px 2px 7px;
+      border-radius:99px;font-size:11.5px;font-weight:600;
+      background:var(--card-2);color:var(--text-2)}
+.chip::before{content:"";flex:none;width:5px;height:5px;border-radius:50%;
+              background:currentColor}
+.chip.ok{background:var(--ok-bg);color:var(--ok)}
+.chip.warn{background:var(--warn-bg);color:var(--warn)}
+.chip.bad{background:var(--bad-bg);color:var(--bad)}
+.dup{font-size:11px;color:var(--text-3);margin-left:4px}
+.hbar{display:block;width:80px;height:3px;margin:4px 0 0 auto;border-radius:2px;
+      background:linear-gradient(90deg,currentColor var(--w),var(--card-2) var(--w))}
+.hbar.ok{color:var(--ok)} .hbar.warn{color:var(--warn)}
+.hbar.bad{color:var(--bad)} .hbar.off{color:var(--text-4)}
+.avail.a-hi{color:var(--ok)} .avail.a-lo{color:var(--bad)}
+.url{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+     font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;
+     color:#64748b}#empty td{text-align:center;padding:32px;font-size:12.5px;color:var(--text-3)}
+/* ---------- 次级表格 ---------- */
+table.sub{margin:0;width:100%}
+table.sub th{padding:8px 12px;text-align:left;font-size:11.5px;font-weight:600;
+             color:var(--text-3);letter-spacing:.05em;
+             border-bottom:1px solid var(--border)}
+table.sub td{padding:8px 12px;font-size:13px;color:#cbd5e1;
+             border-bottom:1px solid var(--line)}
+table.sub td.name{font-size:13.5px;font-weight:500;color:var(--text)}
+table.sub tbody tr:hover td{background:#1c2840}
+table.sub td.none{color:var(--text-3);font-size:12.5px}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;
+      color:#cbd5e1}
+footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);
+       font-size:11.5px;color:var(--text-3)}
+/* ---------- 响应式：列按优先级逐级隐藏 ---------- */
+@media (min-width:1600px){.wrap{max-width:1480px}}
+@media (max-width:1320px){
+  .c-compat,.c-l3{display:none}
+  /* 窄屏只留两项：当前值给结论，「较首日」给方向；均值让位——图上均值虚线
+     已标出它的位置，而「变好还是变差」无法从图上直接读出。 */
+  .chart-head .stat:nth-child(2){display:none}
+}
+/* URL 的 nowrap 会把表格 min-content 顶到 950px 以上；窄屏这列既不可点也读不全
+   （title 提示在触屏无意义），整列让位给名称列，避免整页横向滚动。 */
+@media (max-width:1200px){
+  .c-url{display:none}
+  #tbl .name{overflow-wrap:anywhere}
+}
+@media (max-width:900px){
+  /* 窄屏工具条会折成 2–3 行，高度随内容（计数文字长度）变化，表头吸顶的
+     top 偏移无法用静态变量对齐，会与工具条错位；此处取消表头吸顶，
+     把竖向空间让给行内容，工具条吸顶保留。 */
+  #tbl th{position:static}
+  .c-avail,.c-sites{display:none}
+  .plot{height:160px}
+  .xaxis .p1{display:none}
+  h2{scroll-margin-top:124px}
+}
+@media (max-width:600px){
+  .c-spark{display:none}
+  .plot{height:136px}
+  .wrap{padding:20px 16px 48px}
+  #q{width:100%}
+  h1{font-size:19px}
+  .cards{gap:8px}
+  .card{min-width:92px;padding:12px 14px}
+  .card b{font-size:22px}
+  .hbar{width:44px}
+  .chip{padding:2px 7px 2px 6px}
+  /* 名称列给足宽度：短名（kstore合集 / 二月红·直播 / noimank多仓 / gh-proxy.com
+     实测 67–88px）在 128px 列里都是一行。overflow-wrap 仍保留 anywhere ——
+     真实数据里有 ~204px 的不可断长名（URL 兜底名），只有它能压住 min-content，
+     否则 320–430px 会出现整页横向滚动。 */
+  #tbl .name{min-width:128px}
+  #tbl .c-live,#tbl .c-health{width:56px;padding-left:6px;padding-right:6px}
+  .xaxis span{font-size:9.5px}
+}
+@media (max-width:420px){
+  /* 7 个主刻度在 ≤420px 时相邻两枚会贴住（实测 320px 最近间距 -4.6px），
+     隔一隐藏后剩 4 个，间距回到 60px 以上。 */
+  .xaxis .p0b{display:none}
+}
+@media (max-width:344px){
+  #tbl .c-live{display:none}      /* 320px 只剩状态/名称/健康分，保不横滚 */
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+}
+"""
+
+_SITE_JS = """\
+const rows = Array.from(document.querySelectorAll('#tbl tbody tr'))
+  .filter(tr => tr.id !== 'empty');
+const cnt = document.getElementById('cnt');
+const q = document.getElementById('q');
+const emptyRow = document.getElementById('empty');
+let kind = 'all';
+function apply() {
+  const key = q.value.trim().toLowerCase();
+  let shown = 0;
+  rows.forEach(tr => {
+    const okKind = kind === 'all' || tr.dataset.kind === kind;
+    const okText = !key || tr.textContent.toLowerCase().includes(key);
+    const view = okKind && okText;
+    tr.style.display = view ? '' : 'none';
+    if (view) shown++;
+  });
+  emptyRow.style.display = shown ? 'none' : '';
+  cnt.textContent = '显示 ' + shown + ' / ' + rows.length + ' 个源';
+}
+document.querySelectorAll('.fbtn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    kind = btn.dataset.kind;
+    document.querySelectorAll('.fbtn').forEach(b =>
+      b.classList.toggle('active', b === btn));
+    apply();
+  });
+});
+q.addEventListener('input', apply);
+apply();
+"""
 
 
 def build_site(
@@ -368,7 +936,7 @@ def build_site(
     now = time.strftime("%Y-%m-%d %H:%M")
     esc = html.escape
     by_status = Counter(r["status"] for r in rows)
-    card_specs = [("总数", len(rows), "off")] + [
+    card_specs = [("总数", len(rows), "all")] + [
         (status, by_status[status], _STATUS_CLASS.get(status, "off"))
         for status in STATUS_ORDER if by_status.get(status)
     ]
@@ -385,153 +953,129 @@ def build_site(
         kind = site_kind(r)
         kind_count[kind] += 1
         l3 = f"{r['l3_ok']}/{r['l3_tested']}" if r.get("l3_tested") else "—"
-        avail = r.get("avail") or "—"
         live_disp = (r["live_channels"] if r.get("schema_type") == "live"
                      else r["lives_count"])
+        score = float(r.get("health_score") or 0)
+        width = max(0, min(100, int(round(score))))
+        # 30 天可用率按阈值上色；数值保持原文（可能带 %，也可能是 —）
+        avail_raw = r.get("avail")
+        av_num = None
+        if isinstance(avail_raw, (int, float)):
+            av_num, avail = float(avail_raw), f"{avail_raw}%"
+        elif isinstance(avail_raw, str) and avail_raw.strip() not in ("", "—", "-"):
+            avail = avail_raw
+            try:
+                av_num = float(avail_raw.strip().rstrip("%"))
+            except ValueError:
+                av_num = None
+        else:
+            avail = "—"
+        if av_num is None:
+            av_cls = ""
+        else:
+            av_cls = " a-hi" if av_num >= 95 else (" a-lo" if av_num < 80 else "")
         dup = (f' <span class="dup">归并#{esc(str(r["dup_of"])[:8])}</span>'
                if r.get("dup_of") else "")
         trs.append(
             f'<tr class="{cls}" data-kind="{kind}">'
             f'<td><span class="chip {cls}">{esc(r["status"])}</span>{dup}</td>'
             f'<td class="name">{esc(r.get("name") or "")}</td>'
-            f'<td>{esc(r.get("compat") or "—")}</td>'
-            f'<td class="num">{r["sites_count"]}</td>'
-            f'<td class="num">{live_disp}</td>'
-            f'<td class="num">{r["health_score"]}</td>'
-            f'<td class="num">{avail}</td>'
-            f'<td class="num">{l3}</td>'
-            f'<td class="spark">{_sparkline(marks)}</td>'
-            f'<td class="url" title="{esc(r["url"])}">{esc(r["url"][:80])}</td>'
+            f'<td class="c-compat">{esc(r.get("compat") or "—")}</td>'
+            f'<td class="c-sites num">{r["sites_count"]}</td>'
+            f'<td class="c-live num">{live_disp}</td>'
+            f'<td class="c-health num">{score:g}'
+            f'<i class="hbar {cls}" style="--w:{width}%"></i></td>'
+            f'<td class="c-avail num avail{av_cls}">{esc(str(avail))}</td>'
+            f'<td class="c-l3 num">{l3}</td>'
+            f'<td class="c-spark spark">{_sparkline(marks)}</td>'
+            f'<td class="c-url url" title="{esc(r["url"])}">'
+            f'{esc(r["url"][:80])}</td>'
             f'</tr>')
 
-    fail_rows = "".join(
-        f"<tr><td>{esc(f['reason'])}</td><td class='num'>{f['count']}</td>"
-        f"<td class='num'>{f['sources']}</td></tr>"
-        for f in (failure_stats or [])[:10])
-    fail_section = (f'<h2>近 30 天失败原因</h2><table id="fails"><tr>'
-                    f'<th>原因</th><th>次数</th><th>涉及源</th></tr>{fail_rows}</table>'
-                    if fail_rows else "")
+    doc_total = sum(kind_count.values())
+    live_n = kind_count.get("live", 0)
+    vod_n = kind_count.get("vod", 0)
+    lite_note = f" · 精简版 {lite_count} 个源" if lite_count else ""
+    trend_block = _trend_panel(trend, doc_total, live_n)
 
-    trend_points = trend or []
-    trend_block = (f'<h2>整体可用率趋势 · 近 {len(trend_points)} 天</h2>'
-                   f'<div class="chart">{_trend_chart(trend_points)}</div>'
-                   if len(trend_points) > 1 else "")
-
-    host_rows = "".join(
-        f"<tr><td class='mono'>{esc(h['host'])}</td>"
-        f"<td class='num'>{h['fails']}</td><td class='num'>{h['sources']}</td></tr>"
-        for h in (hosts or [])[:8])
-    host_block = (f'<h2>失败主机分布 · 近 30 天</h2><table id="hosts"><tr>'
-                  f'<th>主机</th><th>失败次数</th><th>涉及源</th></tr>'
-                  f'{host_rows}</table>' if host_rows else "")
+    # 内容变化摘要：让「本轮是否值得点开明细」一眼可见
+    chg_line = ""
+    if changes:
+        sum_a = sum(int((c.get("change") or {}).get("a") or 0) for c in changes)
+        sum_r = sum(int((c.get("change") or {}).get("r") or 0) for c in changes)
+        chg_line = (f'<p class="chg-line">本轮内容变化：{len(changes)} 个源共 '
+                    f'+{sum_a} / −{sum_r} 个站点 · '
+                    f'<a href="#changes">查看明细</a></p>')
 
     chg_rows = "".join(
         f"<tr><td class='name'>{esc(c['name'])}</td>"
         f"<td>{esc(diffing.describe(c.get('change') or {}))}</td></tr>"
         for c in (changes or [])[:6])
-    chg_block = (f'<h2>本轮内容变化 · 站点级</h2><table id="changes"><tr>'
-                 f'<th>源</th><th>变化</th></tr>{chg_rows}</table>'
-                 if chg_rows else "")
-    lite_note = f" · 精简版 {lite_count} 个源" if lite_count else ""
-    doc_total = sum(kind_count.values())
-    live_n = kind_count.get("live", 0)
-    vod_n = kind_count.get("vod", 0)
+    if not chg_rows:
+        chg_rows = '<tr><td colspan="2" class="none">本轮无内容变化</td></tr>'
+    chg_block = (f'<h2 id="changes">本轮内容变化 · 站点级</h2>'
+                 f'<table class="sub"><tbody><tr><th>源</th><th>变化</th></tr>'
+                 f'{chg_rows}</tbody></table>')
+
+    host_rows = "".join(
+        f"<tr><td class='mono'>{esc(h['host'])}</td>"
+        f"<td class='num'>{h['fails']}</td><td class='num'>{h['sources']}</td></tr>"
+        for h in (hosts or [])[:8])
+    host_block = (f'<h2>失败主机分布 · 近 30 天</h2>'
+                  f'<table class="sub"><tbody><tr><th>主机</th><th>失败次数</th>'
+                  f'<th>涉及源</th></tr>{host_rows}</tbody></table>'
+                  if host_rows else "")
+
+    fail_rows = "".join(
+        f"<tr><td>{esc(f['reason'])}</td><td class='num'>{f['count']}</td>"
+        f"<td class='num'>{f['sources']}</td></tr>"
+        for f in (failure_stats or [])[:10])
+    fail_section = (f'<h2>近 30 天失败原因</h2>'
+                    f'<table class="sub"><tbody><tr><th>原因</th><th>次数</th>'
+                    f'<th>涉及源</th></tr>{fail_rows}</tbody></table>'
+                    if fail_rows else "")
+
+    # 搜索无命中时的空态行：全表无数据与「筛掉了」要给出不同文案
+    empty_text = ("没有匹配的源，试试清空关键词" if trs else "暂无源记录")
 
     return f"""<!DOCTYPE html>
 <html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>TVBoxKeeper · 源体检看板</title>
 <style>
-:root {{ color-scheme: dark; }}
-* {{ box-sizing: border-box; }}
-body {{ margin: 0; padding: 24px; font: 14px/1.6 system-ui, "Segoe UI", "Microsoft YaHei", sans-serif;
-       background: #0f172a; color: #e2e8f0; }}
-h1 {{ font-size: 20px; margin: 0 0 4px; }}
-.meta {{ color: #64748b; margin-bottom: 16px; }}
-.cards {{ display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }}
-.card {{ background: #1e293b; border-radius: 10px; padding: 10px 18px; text-align: center; }}
-.card b {{ display: block; font-size: 22px; }}
-.card span {{ color: #94a3b8; font-size: 12px; }}
-.card.ok b {{ color: #4ade80; }} .card.warn b {{ color: #fbbf24; }}
-.card.bad b {{ color: #f87171; }} .card.off b {{ color: #94a3b8; }}
-input {{ background: #1e293b; border: 1px solid #334155; color: #e2e8f0;
-         border-radius: 8px; padding: 8px 12px; width: 280px; }}
-.tools {{ display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
-          margin-bottom: 12px; }}
-.filters {{ display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }}
-.fbtn {{ background: #1e293b; border: 1px solid #334155; color: #cbd5e1;
-         border-radius: 8px; padding: 7px 14px; font: inherit; cursor: pointer; }}
-.fbtn:hover {{ border-color: #475569; color: #e2e8f0; }}
-.fbtn.active {{ background: #1d4ed8; border-color: #1d4ed8; color: #fff; }}
-.fbtn b {{ font-variant-numeric: tabular-nums; font-weight: 600; opacity: .85; }}
-.cnt {{ color: #64748b; font-size: 12px; margin-left: auto; }}
-table {{ border-collapse: collapse; width: 100%; margin-bottom: 24px; }}
-th, td {{ padding: 6px 10px; border-bottom: 1px solid #1e293b; text-align: left; }}
-th {{ color: #94a3b8; font-weight: 500; font-size: 12px; }}
-tr:hover {{ background: #1e293b; }}
-.chip {{ display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: 12px; }}
-.chip.ok {{ background: #14532d; color: #4ade80; }}
-.chip.warn {{ background: #451a03; color: #fbbf24; }}
-.chip.bad {{ background: #450a0a; color: #f87171; }}
-.chip.off {{ background: #1e293b; color: #94a3b8; }}
-.dup {{ color: #64748b; font-size: 11px; }}
-.num {{ font-variant-numeric: tabular-nums; }}
-.url {{ color: #64748b; font-family: ui-monospace, monospace; font-size: 12px;
-        max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }}
-.spark svg {{ display: block; }}
-h2 {{ font-size: 15px; margin: 26px 0 8px; color: #94a3b8; font-weight: 600; }}
-.chart {{ background: #111c30; border-radius: 10px; padding: 10px 6px 0; }}
-.mono {{ font-family: ui-monospace, monospace; font-size: 12px; color: #cbd5e1; }}
-footer {{ color: #475569; font-size: 12px; }}
-</style></head><body>
+{_SITE_CSS}</style></head><body>
+<div class="wrap">
 <h1>TVBoxKeeper · 源体检看板</h1>
-<div class="meta">生成于 {now} · 订阅门槛：健康分 ≥ {min_health} · 订阅源 {duocang_count} 个{lite_note}</div>
+<p class="meta">生成于 {now} · 订阅门槛：健康分 ≥ {min_health} · 订阅源 {duocang_count} 个{lite_note}</p>
 <div class="cards">{cards}</div>
-{trend_block}
+{chg_line}{trend_block}
 <div class="tools">
-<input id="q" placeholder="筛选名称 / 状态 / URL…">
+<input id="q" type="search" placeholder="筛选名称 / 状态 / URL…" aria-label="按名称或链接筛选源">
 <div class="filters" role="group" aria-label="按类型筛选">
 <button type="button" class="fbtn active" data-kind="all">全部 <b>{doc_total}</b></button>
 <button type="button" class="fbtn" data-kind="live">直播 <b>{live_n}</b></button>
 <button type="button" class="fbtn" data-kind="vod">非直播 <b>{vod_n}</b></button>
 </div>
-<span class="cnt" id="cnt"></span>
+<span class="cnt" id="cnt" role="status"></span>
 </div>
 <table id="tbl">
-<tr><th>状态</th><th>名称</th><th>适配</th><th>站点</th><th>直播</th><th>健康分</th>
-<th>30天可用</th><th>L3</th><th>近期体检</th><th>URL</th></tr>
+<caption class="sr-only">源榜单</caption>
+<thead><tr>
+<th>状态</th><th>名称</th><th class="c-compat">适配</th><th class="c-sites num">站点</th>
+<th class="c-live num">直播</th><th class="c-health num">健康分</th>
+<th class="c-avail num">30天可用</th><th class="c-l3 num">L3</th>
+<th class="c-spark">近期体检</th><th class="c-url">URL</th>
+</tr></thead>
+<tbody>
 {''.join(trs)}
+<tr id="empty" style="display:none"><td colspan="10">{empty_text}</td></tr>
+</tbody>
 </table>
 {chg_block}
 {host_block}
 {fail_section}
 <footer>TVBoxKeeper 自动生成 · 内容仅为配置可达性元数据，不含任何音视频</footer>
+</div>
 <script>
-const rows = Array.from(document.querySelectorAll('#tbl tr')).slice(1);
-const cnt = document.getElementById('cnt');
-const q = document.getElementById('q');
-let kind = 'all';
-function apply() {{
-  const key = q.value.trim().toLowerCase();
-  let shown = 0;
-  rows.forEach(tr => {{
-    const okKind = kind === 'all' || tr.dataset.kind === kind;
-    const okText = !key || tr.textContent.toLowerCase().includes(key);
-    const view = okKind && okText;
-    tr.style.display = view ? '' : 'none';
-    if (view) shown++;
-  }});
-  cnt.textContent = '显示 ' + shown + ' / ' + rows.length + ' 个源';
-}}
-document.querySelectorAll('.fbtn').forEach(btn => {{
-  btn.addEventListener('click', () => {{
-    kind = btn.dataset.kind;
-    document.querySelectorAll('.fbtn').forEach(b =>
-      b.classList.toggle('active', b === btn));
-    apply();
-  }});
-}});
-q.addEventListener('input', apply);
-apply();
-</script>
+{_SITE_JS}</script>
 </body></html>"""

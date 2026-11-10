@@ -1,4 +1,5 @@
 import json
+from datetime import date, timedelta
 
 from tvboxkeeper.publish import (build_duocang, build_live_config, build_report,
                                  build_site, format_diff_text, pick_live_sources,
@@ -203,13 +204,19 @@ def test_site_includes_trend_and_hosts():
     html = build_site(rows, {}, None, 1, 60, trend=trend,
                       hosts=[{"host": "gh-proxy.com", "fails": 24, "sources": 5}],
                       lite_count=1)
-    assert "整体可用率趋势 · 近 3 天" in html
-    assert 'viewBox="0 0 660 150"' in html and "polyline" in html
+    assert "整体可用率趋势 · 11-07 → 11-09" in html
+    assert 'viewBox="0 0 1000 200"' in html
+    assert 'preserveAspectRatio="none"' in html
+    assert "polyline" in html
+    assert "可用率 %" in html and "日期（MM-DD）" in html
+    assert "data-tip=" in html
     assert "失败主机分布" in html and "gh-proxy.com" in html
     assert "精简版 1 个源" in html
-    # 单点无法成线时不渲染图表
+    # 单点保留区块（避免布局跳动），但不出折线
     short = build_site(rows, {}, None, 1, 60, trend=trend[:1])
-    assert "整体可用率趋势" not in short
+    assert "整体可用率趋势" in short
+    assert "仅有 1 天数据" in short
+    assert "<polyline" not in short.split("整体可用率趋势")[1].split("</figure>")[0]
 
 
 def test_site_kind_live_vs_vod():
@@ -251,3 +258,135 @@ def test_site_has_kind_filter_buttons_and_row_marks():
     assert 'id="cnt"' in html
     # 三个按钮的计数必须等于实际渲染行数
     assert html.count('<tr class=') == 6
+
+
+def _trend_site(rates, start=7):
+    """用一串可用率造出看板，日期从 2026-11-07 起连续排。"""
+    rows = [dict(make_row("站点A", "http://b/c.json"),
+                 id="aaa111", dup_of="", l3_tested=0, l3_ok=0)]
+    trend = [{"date": f"2026-11-{start + i:02d}", "total": 10,
+              "ok": r, "rate": r} for i, r in enumerate(rates)]
+    return build_site(rows, {}, None, 1, 60, trend=trend)
+
+
+def _panel(html):
+    return html.split("整体可用率趋势")[1].split("</figure>")[0]
+
+
+def test_trend_axis_labels_and_tooltip():
+    """轴名/刻度必须在 HTML 层（SVG 被非等比拉伸会糊字），点位带可读提示。"""
+    html = _trend_site([80, 90, 50])
+    assert "可用率 %" in html and "日期（MM-DD）" in html
+    assert 'data-tip="2026-11-07 · 可用率 80% · 10 次体检"' in html
+    # Y 轴只标 low/mid/high 三个值
+    assert '<span style="top:0.0%">100</span>' in html
+    assert '<span style="top:50.0%">50</span>' in html
+    assert '<span style="top:100.0%">0</span>' in html
+    # X 刻度是日期，按 1%–99% 均匀铺满（不因点数少而压缩到中间）
+    assert 'class="p0" style="left:1.00%">11-07' in html
+    assert 'class="p0" style="left:99.00%">11-09' in html
+    # 每个数据点一个热区按钮
+    assert html.count('class="pt') == 3
+
+
+def test_trend_axis_zoom_only_in_10_to_20_range():
+    zoom = _trend_site([80, 88, 92])          # range 12 → 应放大
+    assert "轴已放大 70–100%" in zoom
+    flat = _trend_site([90, 92, 95])          # range 5 → 保持 0–100
+    assert "轴已放大" not in flat
+    same = _trend_site([80, 80, 80])          # 全平 → 收窄到 70–90 并注明持平
+    assert "轴已放大" not in same              # 持平不是放大，不输出徽标
+    assert "轴 70–90" in same                 # 值域写进轴名
+    assert '<span style="top:0.0%">90</span>' in same
+    assert "可用率持平（近 3 天均为 80%）" in same
+    assert '<b class="flat">持平</b>' in same
+    panel = _panel(same)
+    assert '<path d="' not in panel           # 全平不画零起伏色带
+    assert panel.count('class="vlab') == 1    # 只标最后一个点，避免三个相同数字
+
+
+def test_trend_flat_drops_threshold_lines():
+    """全平不画 50/80 阈值线：持平场景阈值无参考价值，且易与数据线近距并行。"""
+    panel = _panel(_trend_site([57, 57, 57]))
+    assert panel.count("<line ") == 3          # 域底 + 域中线 + 域顶
+    assert 'stroke-dasharray="2 4"' not in panel   # 无 50% 阈值虚线
+    assert "轴 47–67" in panel
+
+
+def _trend_site_span(n, base=date(2026, 10, 1)):
+    """按 n 天连续数据造看板（跨度 = 点数），用于刻度密度测试。"""
+    rows = [dict(make_row("站点A", "http://b/c.json"),
+                 id="aaa111", dup_of="", l3_tested=0, l3_ok=0)]
+    trend = [{"date": (base + timedelta(days=i)).isoformat(), "total": 10,
+              "ok": 5, "rate": 50 + i % 7} for i in range(n)]
+    return build_site(rows, {}, None, 1, 60, trend=trend)
+
+
+def test_trend_x_tick_primary_capped_at_seven():
+    """<900px 只显示 .p0，主刻度超过 7 个在 375px 绘图区必然重叠。"""
+    # 第 4 项：≤420px 会隔一隐藏部分主刻度（.p0b），只在刻度确实挤时才分层
+    for n, want_p0, want_p1, want_extra in ((3, 3, 0, 0), (7, 7, 0, 0),
+                                            (10, 7, 3, 3), (15, 7, 8, 3),
+                                            (30, 7, 8, 3)):
+        panel = _panel(_trend_site_span(n))
+        p0 = panel.count('class="p0')     # 含 "p0 p0b"（≤420px 才隐藏的那批）
+        p1 = panel.count('class="p1')
+        assert (p0, p1) == (want_p0, want_p1), (n, p0, p1)
+        assert p0 + p1 == min(n, 15), n
+        # 首尾必是主刻度
+        assert panel.count('class="p0"') >= 2
+        # 被隐藏的只是主刻度里的偶数序号，次刻度永不参与
+        assert panel.count('class="p0 p0b"') == want_extra, n
+        assert 'class="p1 p0b"' not in panel
+
+
+def test_trend_axis_name_carries_domain():
+    assert "可用率 %</div>" in _trend_site([80, 90, 50])          # 0–100 不加后缀
+    assert "可用率 % · 轴 70–100</div>" in _trend_site([80, 88, 92])
+
+
+def test_trend_overlap_suppression():
+    """域 [30,70] 时均值 52.3 与域中线 50 相距 11.5px(<12) → 抑制域中线，刻度保留。"""
+    html = _trend_site([45, 57, 55])
+    assert "轴已放大 30–70%" in html
+    panel = _panel(html)
+    assert panel.count("<line ") == 3         # 域底 + 域顶 + 均值线
+    assert 'y1="100.0"' not in panel          # 域中线被抑制
+    assert '<span style="top:50.0%">50</span>' in panel   # Y 刻度文字仍在
+    assert 'stroke="#7d8ea6"' in panel        # 均值线保留
+
+
+def test_trend_missing_day_breaks_line():
+    """缺日要在时间轴留空：11-07 缺失 → 折线断成两段，缺口不画色带。"""
+    rows = [dict(make_row("站点A", "http://b/c.json"),
+                 id="aaa111", dup_of="", l3_tested=0, l3_ok=0)]
+    trend = [
+        {"date": "2026-11-05", "total": 10, "ok": 8, "rate": 80},
+        {"date": "2026-11-06", "total": 10, "ok": 9, "rate": 90},
+        {"date": "2026-11-08", "total": 12, "ok": 6, "rate": 50},
+        {"date": "2026-11-09", "total": 12, "ok": 9, "rate": 75},
+    ]
+    html = build_site(rows, {}, None, 1, 60, trend=trend)
+    panel = _panel(html)
+    assert panel.count("<polyline") == 2
+    assert panel.count('<path d="') == 2
+    assert "缺 1 天" in panel and "有记录 4 天" in panel
+    # 标题/明细口径按日期跨度 5 天，采样点 4 个
+    assert "近 5 天" in panel
+    assert panel.count('data-tip=') == 4
+
+
+def test_trend_panel_keeps_block_when_single_point():
+    html = _trend_site([100])
+    assert '<figure class="trend-panel"' in html
+    assert "仅有 1 天数据，明日开始显示趋势" in html
+    panel = _panel(html)
+    assert "<polyline" not in panel and '<path d="' not in panel
+    assert 'class="dot s9"' in panel and "isl" not in panel   # 单点是常规 9px 空心点
+    assert 'width:32px' in panel                             # 无相邻间距，热区固定宽
+    assert 'class="p0"' not in panel                         # 单点无时间刻度
+    assert "均值" not in panel and "较首日" not in panel      # 两项整项隐藏
+    assert panel.count('class="vlab') == 1
+    # 无数据时给空态面板，但区块仍在
+    assert "暂无体检记录" in build_site(
+        [dict(make_row("站点A", "http://b/c.json"), id="aaa111")], {}, None, 1, 60)

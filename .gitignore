@@ -9,3 +9,4 @@ build/
 dist/
 .workbuddy/
 .pytest-tmp/
+.pytest-tmp*/
