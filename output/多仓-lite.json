@@ -1,44 +1,44 @@
 {
   "storeHouse": [
     {
+      "sourceName": "kstore合集",
+      "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/3cf497015dbbcfdf.json",
+      "sourceDelay": 557
+    },
+    {
       "sourceName": "noimank多仓",
       "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/2ec885d8d3ed0e27.json",
-      "sourceDelay": 72
+      "sourceDelay": 73
     },
     {
       "sourceName": "小米",
       "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/5f8c35dc9e6dda17.json",
-      "sourceDelay": 252
+      "sourceDelay": 99
     },
     {
       "sourceName": "gh-proxy.com",
       "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/c39624c28e976b63.json",
-      "sourceDelay": 3460
-    },
-    {
-      "sourceName": "kstore合集",
-      "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/3cf497015dbbcfdf.json",
-      "sourceDelay": 604
+      "sourceDelay": 253
     },
     {
       "sourceName": "raw.githubusercontent.com",
       "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/31aef7f75002fd33.json",
-      "sourceDelay": 306
+      "sourceDelay": 249
     },
     {
       "sourceName": "🚀4-健康家用",
       "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/6b4b3302b8e0695d.json",
-      "sourceDelay": 246
+      "sourceDelay": 249
     },
     {
       "sourceName": "王小二",
       "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/d4d42756f6228813.json",
-      "sourceDelay": 514
+      "sourceDelay": 928
     },
     {
       "sourceName": "aowu",
       "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/a47397e2e8110fbf.json",
-      "sourceDelay": 649
+      "sourceDelay": 771
     }
   ]
 }

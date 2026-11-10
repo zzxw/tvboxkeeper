@@ -1,0 +1,24 @@
+{
+  "sites": [
+    {
+      "key": "meijutt",
+      "name": "美剧天堂",
+      "type": 3,
+      "api": "./py/美剧天堂.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    {
+      "key": "tengaiyou",
+      "name": "腾爱优聚合",
+      "type": 3,
+      "api": "./py/腾爱优.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    }
+  ],
+  "lives": [],
+  "parses": []
+}

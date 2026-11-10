@@ -27,7 +27,8 @@
       "name": "💥豆瓣排行💥",
       "type": 3,
       "api": "csp_Douban",
-      "ext": "https://gitee.com/jiandan1232/BabyOS/raw/master/test/douban.json"
+      "ext": "https://gitee.com/jiandan1232/BabyOS/raw/master/test/douban.json",
+      "jar":"http://118.89.172.248:8025/jar/tan2.php"
     },
     
     {
@@ -120,6 +121,19 @@
       "searchable": 1,
       "filterable": 1
     },
+    {
+      "key": "mino",
+      "name": "🍂┃MiNO┃秒播4K",
+      "type": 3,
+      "api": "csp_MiNO",
+      "searchable": 1,
+      "quickSearch": 0,
+      "filterable": 1,
+      "ext": {
+        "rotate_device": 1,
+        "auto_fallback": 1
+      }
+    }, 
     
     {
       "key": "AppDramaPingguo",
@@ -253,6 +267,34 @@
       ],
       "hide": 1
     },
+    
+    
+    {
+      "key": "KuKuMusic",
+      "name": "🎵┃库库┃音乐",
+      "type": 3,
+      "api": "csp_KuKuMusic",
+      "searchable": 0,
+      "quickSearch": 0,
+      "filterable": 0,
+      "changeable": 0,
+      "style": {
+        "type": "oval",
+        "ratio": 1
+      }
+    },
+
+    {
+      "key": "AppTd",
+      "name": "💃┃糖豆┃舞蹈",
+      "type": 3,
+      "api": "csp_AppTd",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    },
+    
+    
     {
       "key": "戏 曲",
       "name": "🎈┃国粹┃戏曲",
