@@ -295,6 +295,17 @@ _STATUS_CLASS = {
 }
 
 
+def site_kind(row: dict) -> str:
+    """看板筛选口径：纯直播配置源记 ``live``，其余记 ``vod``。
+
+    判定依据是 schema_type —— classify 只把「sites 为空、仅提供 lives/channels」
+    的源标记为 live。TVBox 单仓里附带的 ``lives`` 字段属于「点播源顺带直播」，
+    主体仍是点播站点，因此算非直播，否则按「含直播内容」筛选会命中几乎所有源，
+    筛选就失去意义。
+    """
+    return "live" if row.get("schema_type") == "live" else "vod"
+
+
 def _sparkline(marks: list[int], width: int = 120, height: int = 22) -> str:
     """最近 N 次体检的可用性折线（内联 SVG）。"""
     if not marks:
@@ -366,10 +377,13 @@ def build_site(
         for label, n, cls in card_specs)
 
     trs = []
+    kind_count: Counter[str] = Counter()
     for r in sorted((x for x in rows if not x.get("banned")),
                     key=lambda x: (-x.get("starred", 0), -x.get("health_score", 0))):
         marks = [h.get("ok", 0) for h in histories.get(r["id"], [])]
         cls = _STATUS_CLASS.get(r["status"], "off")
+        kind = site_kind(r)
+        kind_count[kind] += 1
         l3 = f"{r['l3_ok']}/{r['l3_tested']}" if r.get("l3_tested") else "—"
         avail = r.get("avail") or "—"
         live_disp = (r["live_channels"] if r.get("schema_type") == "live"
@@ -377,7 +391,7 @@ def build_site(
         dup = (f' <span class="dup">归并#{esc(str(r["dup_of"])[:8])}</span>'
                if r.get("dup_of") else "")
         trs.append(
-            f'<tr class="{cls}">'
+            f'<tr class="{cls}" data-kind="{kind}">'
             f'<td><span class="chip {cls}">{esc(r["status"])}</span>{dup}</td>'
             f'<td class="name">{esc(r.get("name") or "")}</td>'
             f'<td>{esc(r.get("compat") or "—")}</td>'
@@ -419,6 +433,9 @@ def build_site(
                  f'<th>源</th><th>变化</th></tr>{chg_rows}</table>'
                  if chg_rows else "")
     lite_note = f" · 精简版 {lite_count} 个源" if lite_count else ""
+    doc_total = sum(kind_count.values())
+    live_n = kind_count.get("live", 0)
+    vod_n = kind_count.get("vod", 0)
 
     return f"""<!DOCTYPE html>
 <html lang="zh-CN"><head><meta charset="utf-8">
@@ -438,7 +455,16 @@ h1 {{ font-size: 20px; margin: 0 0 4px; }}
 .card.ok b {{ color: #4ade80; }} .card.warn b {{ color: #fbbf24; }}
 .card.bad b {{ color: #f87171; }} .card.off b {{ color: #94a3b8; }}
 input {{ background: #1e293b; border: 1px solid #334155; color: #e2e8f0;
-         border-radius: 8px; padding: 8px 12px; width: 280px; margin-bottom: 12px; }}
+         border-radius: 8px; padding: 8px 12px; width: 280px; }}
+.tools {{ display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+          margin-bottom: 12px; }}
+.filters {{ display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }}
+.fbtn {{ background: #1e293b; border: 1px solid #334155; color: #cbd5e1;
+         border-radius: 8px; padding: 7px 14px; font: inherit; cursor: pointer; }}
+.fbtn:hover {{ border-color: #475569; color: #e2e8f0; }}
+.fbtn.active {{ background: #1d4ed8; border-color: #1d4ed8; color: #fff; }}
+.fbtn b {{ font-variant-numeric: tabular-nums; font-weight: 600; opacity: .85; }}
+.cnt {{ color: #64748b; font-size: 12px; margin-left: auto; }}
 table {{ border-collapse: collapse; width: 100%; margin-bottom: 24px; }}
 th, td {{ padding: 6px 10px; border-bottom: 1px solid #1e293b; text-align: left; }}
 th {{ color: #94a3b8; font-weight: 500; font-size: 12px; }}
@@ -462,7 +488,15 @@ footer {{ color: #475569; font-size: 12px; }}
 <div class="meta">生成于 {now} · 订阅门槛：健康分 ≥ {min_health} · 订阅源 {duocang_count} 个{lite_note}</div>
 <div class="cards">{cards}</div>
 {trend_block}
+<div class="tools">
 <input id="q" placeholder="筛选名称 / 状态 / URL…">
+<div class="filters" role="group" aria-label="按类型筛选">
+<button type="button" class="fbtn active" data-kind="all">全部 <b>{doc_total}</b></button>
+<button type="button" class="fbtn" data-kind="live">直播 <b>{live_n}</b></button>
+<button type="button" class="fbtn" data-kind="vod">非直播 <b>{vod_n}</b></button>
+</div>
+<span class="cnt" id="cnt"></span>
+</div>
 <table id="tbl">
 <tr><th>状态</th><th>名称</th><th>适配</th><th>站点</th><th>直播</th><th>健康分</th>
 <th>30天可用</th><th>L3</th><th>近期体检</th><th>URL</th></tr>
@@ -473,12 +507,31 @@ footer {{ color: #475569; font-size: 12px; }}
 {fail_section}
 <footer>TVBoxKeeper 自动生成 · 内容仅为配置可达性元数据，不含任何音视频</footer>
 <script>
-document.getElementById('q').addEventListener('input', e => {{
-  const q = e.target.value.toLowerCase();
-  document.querySelectorAll('#tbl tr').forEach((tr, i) => {{
-    if (!i) return;
-    tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+const rows = Array.from(document.querySelectorAll('#tbl tr')).slice(1);
+const cnt = document.getElementById('cnt');
+const q = document.getElementById('q');
+let kind = 'all';
+function apply() {{
+  const key = q.value.trim().toLowerCase();
+  let shown = 0;
+  rows.forEach(tr => {{
+    const okKind = kind === 'all' || tr.dataset.kind === kind;
+    const okText = !key || tr.textContent.toLowerCase().includes(key);
+    const view = okKind && okText;
+    tr.style.display = view ? '' : 'none';
+    if (view) shown++;
+  }});
+  cnt.textContent = '显示 ' + shown + ' / ' + rows.length + ' 个源';
+}}
+document.querySelectorAll('.fbtn').forEach(btn => {{
+  btn.addEventListener('click', () => {{
+    kind = btn.dataset.kind;
+    document.querySelectorAll('.fbtn').forEach(b =>
+      b.classList.toggle('active', b === btn));
+    apply();
   }});
 }});
+q.addEventListener('input', apply);
+apply();
 </script>
 </body></html>"""

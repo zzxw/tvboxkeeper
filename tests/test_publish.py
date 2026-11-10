@@ -210,3 +210,44 @@ def test_site_includes_trend_and_hosts():
     # 单点无法成线时不渲染图表
     short = build_site(rows, {}, None, 1, 60, trend=trend[:1])
     assert "整体可用率趋势" not in short
+
+
+def test_site_kind_live_vs_vod():
+    from tvboxkeeper.publish import site_kind
+
+    assert site_kind({"schema_type": "live"}) == "live"
+    assert site_kind({"schema_type": "tvbox"}) == "vod"
+    assert site_kind({"schema_type": "mixed"}) == "vod"
+    assert site_kind({"schema_type": "storehouse"}) == "vod"
+    # 未解析出结构（flaky/dead 常见空 schema_type）按非直播归类
+    assert site_kind({"schema_type": ""}) == "vod"
+    assert site_kind({}) == "vod"
+    # 点播源内附带的 lives 字段不算「直播接口」，否则筛选几乎命中全部源
+    assert site_kind({"schema_type": "tvbox", "lives_count": 17}) == "vod"
+
+
+def test_site_has_kind_filter_buttons_and_row_marks():
+    base = [dict(r, id=f"r{i}", dup_of="", l3_tested=0, l3_ok=0)
+            for i, r in enumerate(ROWS)]
+    rows = base + [
+        dict(make_row("直播A", "http://l1/c.txt", sites=0, lives=0),
+             id="l1" * 8, schema_type="live", live_channels=120,
+             dup_of="", l3_tested=0, l3_ok=0),
+        dict(make_row("直播B", "http://l2/c.txt", sites=0, lives=0),
+             id="l2" * 8, schema_type="live", live_channels=30,
+             dup_of="", l3_tested=0, l3_ok=0),
+    ]
+    html = build_site(rows, {}, None, 1, 60)
+    # 封禁源不渲染：5 + 2 - 1 = 6
+    assert 'data-kind="all">全部 <b>6</b>' in html
+    assert 'data-kind="live">直播 <b>2</b>' in html
+    assert 'data-kind="vod">非直播 <b>4</b>' in html
+    # 2 个直播行 + 1 个直播按钮；4 个非直播行 + 1 个按钮
+    assert html.count('data-kind="live"') == 3
+    assert html.count('data-kind="vod"') == 5
+    # 默认选中「全部」，筛选为纯前端逻辑
+    assert 'class="fbtn active" data-kind="all"' in html
+    assert "tr.dataset.kind === kind" in html
+    assert 'id="cnt"' in html
+    # 三个按钮的计数必须等于实际渲染行数
+    assert html.count('<tr class=') == 6
