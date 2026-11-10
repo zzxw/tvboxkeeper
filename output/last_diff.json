@@ -1,12 +1,6 @@
 {
-  "ts": "2026-11-10 03:42:49",
+  "ts": "2026-11-10 17:39:32",
   "count": 17,
-  "added": [
-    "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/06d586b221b8e0e2.json",
-    "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/648d7cf7e3fe986e.json",
-    "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/66d08dfb397a3c86.json"
-  ],
-  "removed": [
-    "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/3da98f6105487679.json"
-  ]
+  "added": [],
+  "removed": []
 }
