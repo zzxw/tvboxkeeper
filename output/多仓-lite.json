@@ -3,42 +3,42 @@
     {
       "sourceName": "kstore合集",
       "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/3cf497015dbbcfdf.json",
-      "sourceDelay": 708
-    },
-    {
-      "sourceName": "王小二",
-      "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/d4d42756f6228813.json",
-      "sourceDelay": 937
-    },
-    {
-      "sourceName": "aowu",
-      "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/a47397e2e8110fbf.json",
-      "sourceDelay": 1462
+      "sourceDelay": 356
     },
     {
       "sourceName": "gh-proxy.com",
       "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/e511034e88fd3dc2.json",
-      "sourceDelay": 4821
+      "sourceDelay": 71
     },
     {
       "sourceName": "gh-proxy.com",
       "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/6ee72818f7810f0c.json",
-      "sourceDelay": 4826
+      "sourceDelay": 75
     },
     {
       "sourceName": "gh-proxy.com",
       "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/06d586b221b8e0e2.json",
-      "sourceDelay": 1799
+      "sourceDelay": 341
     },
     {
       "sourceName": "gh-proxy.com",
       "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/cfb1f27db3fb8f51.json",
-      "sourceDelay": 4923
+      "sourceDelay": 118
     },
     {
       "sourceName": "gh-proxy.com",
       "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/f1a8ef7eb0780784.json",
-      "sourceDelay": 4870
+      "sourceDelay": 108
+    },
+    {
+      "sourceName": "🚀10-高天流云js",
+      "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/97f4dfa51a2b5d3c.json",
+      "sourceDelay": 142
+    },
+    {
+      "sourceName": "🚀1-心魔在线",
+      "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/d9a4a4ac373f01e7.json",
+      "sourceDelay": 1189
     }
   ]
 }

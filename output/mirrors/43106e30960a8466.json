@@ -1,9 +1,9 @@
 {
  "name": "妞妞",
- "notice": "妞妞 · 304 个站点 · 每日更新 2026-11-13",
+ "notice": "妞妞 · 308 个站点 · 每日更新 2026-11-14",
  "logo": "https://cdn.jsdelivr.net/gh/zknjjjx/tvbox@main/assets/logo.png",
  "wallpaper": "https://cdn.jsdelivr.net/gh/zknjjjx/tvbox@main/assets/wallpaper.jpg",
- "spider": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56",
+ "spider": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed",
  "sites": [
   {
    "key": "nn_565ddc14",
@@ -14,7 +14,7 @@
    "searchable": 0,
    "quickSearch": 0,
    "changeable": 0,
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
   },
   {
    "key": "nn_9f52a4e3",
@@ -28,7 +28,7 @@
    "ext": {
     "Cloud-drive": "tvfan/Cloud-drive.txt"
    },
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
   },
   {
    "key": "nn_b53697e7",
@@ -38,290 +38,7 @@
    "searchable": 0,
    "quickSearch": 0,
    "changeable": 0,
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
-  },
-  {
-   "key": "nn_e659b938",
-   "name": "易听┃音乐",
-   "type": 3,
-   "api": "csp_MusicGuard",
-   "style": {
-    "type": "rect",
-    "ratio": 1
-   },
-   "playerType": 2,
-   "searchable": 0,
-   "quickSearch": 0,
-   "changeable": 0,
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
-  },
-  {
-   "key": "nn_d68dff45",
-   "name": "聚剧┃四盘",
-   "type": 3,
-   "api": "csp_SeedhubGuard",
-   "ext": "5++kwLhNYm9UrO9wh7Dl7eKamTee4s/5",
-   "searchable": 1,
-   "quickSearch": 1,
-   "changeable": 0,
-   "indexs": 0,
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
-  },
-  {
-   "key": "nn_ba944014",
-   "name": "光影┃不卡",
-   "type": 3,
-   "api": "csp_T4Guard",
-   "searchable": 1,
-   "quickSearch": 1,
-   "changeable": 0,
-   "ext": "rfOIzPkSUkANv6AT2prC8en3+Trbx4j10CIoZMv3Ag4bdEYQqTMqu/Z3YPtC2NJv6n6YeZdgyWlo4WJjBL5gUt6B7LvCEDT4CLrWka31GRq7jwVkfQRB/Jy9HkG7E8xUBIJi5DdVFk3qAuGnwUWqQNRblRxzHW+tdSm6zoFcG/QkZ97bzWOXn0fzbgwjBDkBHgcPIYjlULlctCNKgJ9DzGNSl+zMZDZgmxczsZeeahRS38Cst3qvaHn1T2lmLBGVGXPaRovi77LPRRDOJSNRrdpvCHdRikYwgar0MU56hXMGeGBiKp/OmGTIYR8dFRGvZ/m8xGOqs8U13h6wvADOGlYoP9VaQBqTcDnz9Q0Urhw3oFXWyvIlUrDhX9la5L2NYzagbyk3afqhxeSXXp07nAFsNy2CojHRTbmz4eohLoIJTSi2DzPpheVx1DAapfgRdTc7Ax5ddYpN338GiDAa0GnEgLe04a1pZ5jF+/Q7HJswqlSO+DXCQ3FjRbb/ZPQcozcCWwzhUHE1QUAt799V9DPMuiHGyudIcZarGQmezB+Lb45RdHIRy0PXD+NRVPJlfDFD5FMGSqsiVklibvuwlVHT8J5vHgh/1nEZoI1RlYYLrkjTts2EeQmrpB/sgLyo1vnjFw==",
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
-  },
-  {
-   "key": "nn_edbab562",
-   "name": "厂长┃不卡",
-   "type": 3,
-   "api": "csp_NewCzGuard",
-   "timeout": 10,
-   "playerType": 2,
-   "searchable": 1,
-   "quickSearch": 1,
-   "changeable": 1,
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
-  },
-  {
-   "key": "nn_d6d4479a",
-   "name": "海绵┃不卡",
-   "type": 3,
-   "api": "csp_HmysGuard",
-   "timeout": 10,
-   "playerType": "2",
-   "searchable": 1,
-   "quickSearch": 1,
-   "changeable": 1,
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
-  },
-  {
-   "key": "nn_f5d0837c",
-   "name": "立播┃不卡",
-   "type": 3,
-   "api": "csp_LibvioGuard",
-   "timeout": 10,
-   "searchable": 1,
-   "quickSearch": 1,
-   "changeable": 1,
-   "ext": {
-    "Cloud-drive": "tvfan/Cloud-drive.txt",
-    "siteUrl": "https://www.libvio.pw/"
-   },
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
-  },
-  {
-   "key": "nn_ae42e7a1",
-   "name": "瓜子┃不卡",
-   "type": 3,
-   "api": "csp_AppgzGuard",
-   "timeout": 15,
-   "searchable": 1,
-   "quickSearch": 1,
-   "changeable": 1,
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
-  },
-  {
-   "key": "nn_b4d0e6ad",
-   "name": "比特┃不卡",
-   "type": 3,
-   "api": "csp_BttwooGuard",
-   "timeout": 10,
-   "searchable": 1,
-   "quickSearch": 1,
-   "changeable": 1,
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
-  },
-  {
-   "key": "nn_00f9d9eb",
-   "name": "糯米┃秒播",
-   "type": 3,
-   "api": "csp_NmyswvGuard",
-   "timeout": 15,
-   "searchable": 1,
-   "quickSearch": 1,
-   "changeable": 1,
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
-  },
-  {
-   "key": "nn_b07432a1",
-   "name": "文采┃秒播",
-   "type": 3,
-   "api": "csp_JpysGuard",
-   "timeout": 10,
-   "playerType": 2,
-   "searchable": 1,
-   "quickSearch": 1,
-   "changeable": 1,
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
-  },
-  {
-   "key": "nn_05642de4",
-   "name": "奶酪┃秒播",
-   "type": 3,
-   "api": "csp_T4Guard",
-   "searchable": 1,
-   "quickSearch": 1,
-   "changeable": 0,
-   "ext": "rfOIzPkSUkANv6AT2prC8en3+TzKx9TnlT8vaY37HhtYfAQe6C5xqrVuJPhQwYV6r3eRdMBGm3Qm6Th+BushR86B6KqJGXDsHazHw7alBG/7zUxkN1tK/NypRxnpBNoeUtpw4jcCGhytI75yO4g4zG6SOPA0RSwhksM0IF2friAkrHCWoW3v+0mdw6sjz4t4XB1Df7yL/R5cfaA/5LQYq3I8OkvMrJMU9Q1P7JXwx7NSF2zTyH/ANVmZ4u5m567DW1KVG7OuQjXPjZiOXTYk0+wjpfBRTf19yIq6q/C76k2Fs80joAMPw0ueDR+QHxtuDcTom2rmHkI1Fonkzi6BotbpUcbSi4PiIgmfdbvVwhG6Z+i4nvt+IYa48l5aLA7PLgDiERpuOs31aHaXlgFswT87XyTb8QaF4CuzKWJuXptwNTjvXAS9KHdxH49Ay+hfBAB2bCvUf4CMoldF2wZUv0mI2qY966erFpOFg+FOc7t88EUH8j8ACXQtHJiKC9RQ+SaLIF0=",
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
-  },
-  {
-   "key": "nn_3b8b0179",
-   "name": "热播┃多线",
-   "type": 3,
-   "api": "csp_AppTTGuard",
-   "timeout": 10,
-   "searchable": 1,
-   "quickSearch": 1,
-   "changeable": 1,
-   "ext": "uqGL1bNENExT7/hGxpSE5qU=",
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
-  },
-  {
-   "key": "nn_5a67b065",
-   "name": "风云┃多线",
-   "type": 3,
-   "api": "csp_FyGuard",
-   "ext": {
-    "type": "video",
-    "name": "Fy"
-   },
-   "quickSearch": 1,
-   "searchable": 1,
-   "changeable": 1,
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
-  },
-  {
-   "key": "nn_d9e056bd",
-   "name": "茉莉┃多线",
-   "type": 3,
-   "api": "csp_App99Guard",
-   "timeout": 10,
-   "searchable": 1,
-   "quickSearch": 1,
-   "changeable": 1,
-   "ext": "rfOX1voDIQhH8epBwtCFsuby/mmdmIu8kGlnJc+7VkMRLQ1K+jMy+KN1MKQe0MZ6tmGSO5oFzD8/vWwiSqEpFczDqLrdGT3iH6fZmryrFzKijwYkJUMctdztE0O4CsgYZdBu8XhZSwuhSqqllQz4AZMa1l0sT+1NrbhNIxHkrY0upiYSTLNqEaledgZikMCviOXWr3cPBP4COOeoGUyJSJrrybmUppnWGeDAOHhHOVUSXjwSb+QQvcJIT2lmrf1Bk68myGs7qOqc19tD/rnzf2WOb2MzJZqtURBmUFgaW6ea2dL8OPSpSeVAvaGCAnqwuUNGE9hHpK8jfOs0bLJRdkFLnijAn5Q+ofVM5hgGb8c=",
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
-  },
-  {
-   "key": "nn_9fea5fff",
-   "name": "剧圈┃多线",
-   "type": 3,
-   "api": "csp_AppSxGuard",
-   "timeout": 10,
-   "searchable": 1,
-   "quickSearch": 1,
-   "changeable": 1,
-   "ext": "rfOX1voDIQhH8epBwpmIsuSluiuZl4+/lm1iJsy3HwNWMxpf9CY77fshI+kByoxy7DyPatUZ1jk0ty1p",
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
-  },
-  {
-   "key": "nn_f0f9ad51",
-   "name": "荐片┃多线",
-   "type": 3,
-   "api": "csp_JPJGuard",
-   "timeout": 10,
-   "searchable": 1,
-   "quickSearch": 1,
-   "changeable": 0,
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
-  },
-  {
-   "key": "nn_c9e9da2f",
-   "name": "奥特┃多线",
-   "type": 3,
-   "api": "csp_AueteGuard",
-   "timeout": 10,
-   "searchable": 1,
-   "quickSearch": 1,
-   "changeable": 1,
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
-  },
-  {
-   "key": "nn_32f3d04b",
-   "name": "新6V┃磁力",
-   "type": 3,
-   "api": "csp_SixVGuard",
-   "timeout": 10,
-   "searchable": 1,
-   "quickSearch": 1,
-   "changeable": 0,
-   "ext": "https://www.xb6v.com/",
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
-  },
-  {
-   "key": "nn_3e97592f",
-   "name": "AI剧┃弹幕",
-   "type": 3,
-   "api": "csp_AiDjGuard",
-   "ext": {
-    "type": "video",
-    "name": "短剧",
-    "danMu": false
-   },
-   "indexs": 0,
-   "quickSearch": 1,
-   "searchable": 1,
-   "changeable": 0,
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
-  },
-  {
-   "key": "nn_022a866a",
-   "name": "巴士┃动漫",
-   "type": 3,
-   "api": "csp_Dm84Guard",
-   "timeout": 10,
-   "searchable": 1,
-   "quickSearch": 1,
-   "changeable": 1,
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
-  },
-  {
-   "key": "nn_03f637d1",
-   "name": "八八┃看球",
-   "type": 3,
-   "api": "csp_KanqiuGuard",
-   "timeout": 10,
-   "searchable": 0,
-   "changeable": 0,
-   "style": {
-    "type": "list"
-   },
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
-  },
-  {
-   "key": "nn_e33ddd9e",
-   "name": "多多┃回放",
-   "type": 3,
-   "api": "csp_DoubaoGuard",
-   "searchable": 0,
-   "quickSearch": 0,
-   "changeable": 0,
-   "style": {
-    "type": "list"
-   },
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
-  },
-  {
-   "key": "nn_7da6d600",
-   "name": "吃瓜┃看球",
-   "type": 3,
-   "api": "csp_LiveGzGuard",
-   "searchable": 0,
-   "quickSearch": 0,
-   "changeable": 0,
-   "style": {
-    "type": "list"
-   },
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
   },
   {
    "key": "nn_e5fcc3ea",
@@ -338,7 +55,303 @@
    "quickSearch": 0,
    "changeable": 0,
    "ext": "uqGL1fpJNAUN8ORQgIPD+b6l+CzC2t8=",
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
+  },
+  {
+   "key": "nn_e659b938",
+   "name": "易听┃音乐",
+   "type": 3,
+   "api": "csp_MusicGuard",
+   "style": {
+    "type": "rect",
+    "ratio": 1
+   },
+   "playerType": 2,
+   "searchable": 0,
+   "quickSearch": 0,
+   "changeable": 0,
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
+  },
+  {
+   "key": "nn_867f1452",
+   "name": "爱刷┃短视",
+   "type": 3,
+   "api": "csp_SsspGuard",
+   "searchable": 0,
+   "quickSearch": 0,
+   "changeable": 0,
+   "style": {
+    "type": "rect",
+    "ratio": 1.597
+   },
+   "ext": {},
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
+  },
+  {
+   "key": "nn_d68dff45",
+   "name": "聚剧┃四盘",
+   "type": 3,
+   "api": "csp_SeedhubGuard",
+   "ext": "5++kwLhNYm9UrO9wh7Dl7eKamTee4s/5",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "indexs": 0,
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
+  },
+  {
+   "key": "nn_9a14df06",
+   "name": "粤迷┃港剧",
+   "type": 3,
+   "api": "csp_MaiDuiDuiGuard",
+   "timeout": 10,
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 1,
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
+  },
+  {
+   "key": "nn_ba944014",
+   "name": "光影┃不卡",
+   "type": 3,
+   "api": "csp_T4Guard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "ext": "rfOIzPkSUkANv6AT2prC8en3+Trbx4j10CIoZMv3Ag4bdEYQqTMqu/Z3YPtC2NJv6n6YeZdgyWlo4WJjBL5gUt6B7LvCEDT4CLrWka31GRq7jwVkfQRB/Jy9HkG7E8xUBIJi5DdVFk3qAuGnwUWqQNRblRxzHW+tdSm6zoFcG/QkZ97bzWOXn0fzbgwjBDkBHgcPIYjlULlctCNKgJ9DzGNSl+zMZDZgmxczsZeeahRS38Cst3qvaHn1T2lmLBGVGXPaRovi77LPRRDOJSNRrdpvCHdRikYwgar0MU56hXMGeGBiKp/OmGTIYR8dFRGvZ/m8xGOqs8U13h6wvADOGlYoP9VaQBqTcDnz9Q0Urhw3oFXWyvIlUrDhX9la5L2NYzagbyk3afqhxeSXXp07nAFsNy2CojHRTbmz4eohLoIJTSi2DzPpheVx1DAapfgRdTc7Ax5ddYpN338GiDAa0GnEgLe04a1pZ5jF+/Q7HJswqlSO+DXCQ3FjRbb/ZPQcozcCWwzhUHE1QUAt799V9DPMuiHGyudIcZarGQmezB+Lb45RdHIRy0PXD+NRVPJlfDFD5FMGSqsiVklibvuwlVHT8J5vHgh/1nEZoI1RlYYLrkjTts2EeQmrpB/sgLyo1vnjFw==",
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
+  },
+  {
+   "key": "nn_edbab562",
+   "name": "厂长┃不卡",
+   "type": 3,
+   "api": "csp_NewCzGuard",
+   "timeout": 10,
+   "playerType": 1,
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 1,
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
+  },
+  {
+   "key": "nn_d6d4479a",
+   "name": "海绵┃不卡",
+   "type": 3,
+   "api": "csp_HmysGuard",
+   "timeout": 10,
+   "playerType": "2",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 1,
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
+  },
+  {
+   "key": "nn_f5d0837c",
+   "name": "立播┃不卡",
+   "type": 3,
+   "api": "csp_LibvioGuard",
+   "timeout": 10,
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 1,
+   "ext": {
+    "Cloud-drive": "tvfan/Cloud-drive.txt",
+    "siteUrl": "https://www.libvio.pw/"
+   },
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
+  },
+  {
+   "key": "nn_ae42e7a1",
+   "name": "瓜子┃不卡",
+   "type": 3,
+   "api": "csp_AppgzGuard",
+   "timeout": 15,
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 1,
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
+  },
+  {
+   "key": "nn_b4d0e6ad",
+   "name": "比特┃不卡",
+   "type": 3,
+   "api": "csp_BttwooGuard",
+   "timeout": 10,
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 1,
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
+  },
+  {
+   "key": "nn_00f9d9eb",
+   "name": "糯米┃秒播",
+   "type": 3,
+   "api": "csp_NmyswvGuard",
+   "timeout": 15,
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 1,
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
+  },
+  {
+   "key": "nn_b07432a1",
+   "name": "文采┃秒播",
+   "type": 3,
+   "api": "csp_JpysGuard",
+   "timeout": 10,
+   "playerType": 1,
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 1,
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
+  },
+  {
+   "key": "nn_05642de4",
+   "name": "奶酪┃秒播",
+   "type": 3,
+   "api": "csp_T4Guard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "ext": "rfOIzPkSUkANv6AT2prC8en3+TzKx9TnlT8vaY37HhtYfAQe6C5xqrVuJPhQwYV6r3eRdMBGm3Qm6Th+BushR86B6KqJGXDsHazHw7alBG/7zUxkN1tK/NypRxnpBNoeUtpw4jcCGhytI75yO4g4zG6SOPA0RSwhksM0IF2friAkrHCWoW3v+0mdw6sjz4t4XB1Df7yL/R5cfaA/5LQYq3I8OkvMrJMU9Q1P7JXwx7NSF2zTyH/ANVmZ4u5m567DW1KVG7OuQjXPjZiOXTYk0+wjpfBRTf19yIq6q/C76k2Fs80joAMPw0ueDR+QHxtuDcTom2rmHkI1Fonkzi6BotbpUcbSi4PiIgmfdbvVwhG6Z+i4nvt+IYa48l5aLA7PLgDiERpuOs31aHaXlgFswT87XyTb8QaF4CuzKWJuXptwNTjvXAS9KHdxH49Ay+hfBAB2bCvUf4CMoldF2wZUv0mI2qY966erFpOFg+FOc7t88EUH8j8ACXQtHJiKC9RQ+SaLIF0=",
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
+  },
+  {
+   "key": "nn_975052b6",
+   "name": "橘猫┃多线",
+   "type": 3,
+   "api": "csp_JumiTvGuard",
+   "timeout": 10,
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 1,
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
+  },
+  {
+   "key": "nn_3b8b0179",
+   "name": "热播┃多线",
+   "type": 3,
+   "api": "csp_AppTTGuard",
+   "timeout": 10,
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 1,
+   "ext": "uqGL1bNENExT7/hGxpSE5qU=",
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
+  },
+  {
+   "key": "nn_5a67b065",
+   "name": "风云┃多线",
+   "type": 3,
+   "api": "csp_FyGuard",
+   "ext": {
+    "type": "video",
+    "name": "Fy"
+   },
+   "quickSearch": 1,
+   "searchable": 1,
+   "changeable": 1,
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
+  },
+  {
+   "key": "nn_f0f9ad51",
+   "name": "荐片┃多线",
+   "type": 3,
+   "api": "csp_JPJGuard",
+   "timeout": 10,
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
+  },
+  {
+   "key": "nn_c9e9da2f",
+   "name": "奥特┃多线",
+   "type": 3,
+   "api": "csp_AueteGuard",
+   "timeout": 10,
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 1,
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
+  },
+  {
+   "key": "nn_32f3d04b",
+   "name": "新6V┃磁力",
+   "type": 3,
+   "api": "csp_SixVGuard",
+   "timeout": 10,
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "ext": "https://www.xb6v.com/",
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
+  },
+  {
+   "key": "nn_3e97592f",
+   "name": "AI剧┃弹幕",
+   "type": 3,
+   "api": "csp_AiDjGuard",
+   "ext": {
+    "type": "video",
+    "name": "短剧",
+    "danMu": false
+   },
+   "indexs": 0,
+   "quickSearch": 1,
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
+  },
+  {
+   "key": "nn_022a866a",
+   "name": "巴士┃动漫",
+   "type": 3,
+   "api": "csp_Dm84Guard",
+   "timeout": 10,
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 1,
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
+  },
+  {
+   "key": "nn_03f637d1",
+   "name": "八八┃看球",
+   "type": 3,
+   "api": "csp_KanqiuGuard",
+   "timeout": 10,
+   "searchable": 0,
+   "changeable": 0,
+   "style": {
+    "type": "list"
+   },
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
+  },
+  {
+   "key": "nn_e33ddd9e",
+   "name": "多多┃回放",
+   "type": 3,
+   "api": "csp_DoubaoGuard",
+   "searchable": 0,
+   "quickSearch": 0,
+   "changeable": 0,
+   "style": {
+    "type": "list"
+   },
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
+  },
+  {
+   "key": "nn_7da6d600",
+   "name": "吃瓜┃看球",
+   "type": 3,
+   "api": "csp_LiveGzGuard",
+   "searchable": 0,
+   "quickSearch": 0,
+   "changeable": 0,
+   "style": {
+    "type": "list"
+   },
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
   },
   {
    "key": "nn_3cd85e86",
@@ -355,7 +368,7 @@
    "ext": {
     "json": "https://nos.netease.com/ysf/5af5fbe12a88b7c45aa1c21e6551826c.txt"
    },
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
   },
   {
    "key": "nn_5c73787f",
@@ -369,7 +382,7 @@
    "searchable": 0,
    "quickSearch": 0,
    "changeable": 0,
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
   },
   {
    "key": "nn_d476ee36",
@@ -383,7 +396,7 @@
     "type": "rect",
     "ratio": 3.8
    },
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
   },
   {
    "key": "nn_cc15afb6",
@@ -400,7 +413,7 @@
    "searchable": 1,
    "quickSearch": 0,
    "changeable": 0,
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
   },
   {
    "key": "nn_79d92c7c",
@@ -417,7 +430,7 @@
    "searchable": 1,
    "quickSearch": 0,
    "changeable": 0,
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
   },
   {
    "key": "nn_be0a92ce",
@@ -434,7 +447,7 @@
    "style": {
     "type": "list"
    },
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
   },
   {
    "key": "nn_0d5b35eb",
@@ -447,7 +460,7 @@
    "ext": {
     "Cloud-drive": "tvfan/Cloud-drive.txt"
    },
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
   },
   {
    "key": "nn_c20d4fa1",
@@ -460,7 +473,7 @@
    "ext": {
     "Cloud-drive": "tvfan/Cloud-drive.txt"
    },
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
   },
   {
    "key": "nn_b867c125",
@@ -477,7 +490,7 @@
    "ext": {
     "json": "https://nos.netease.com/ysf/0075389dca9afadd4614e9713765ff17.txt"
    },
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
   },
   {
    "key": "nn_47637d8a",
@@ -494,7 +507,7 @@
    "ext": {
     "json": "https://nos.netease.com/ysf/6496356286589c68f52c2f99c0c674c7.txt"
    },
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
   },
   {
    "key": "nn_8c8aac94",
@@ -509,7 +522,7 @@
    "searchable": 0,
    "quickSearch": 0,
    "changeable": 0,
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
   },
   {
    "key": "nn_2e09d235",
@@ -526,7 +539,7 @@
    "ext": {
     "json": "https://nos.netease.com/ysf/89370c8ddf36b5e1beb4d71adb921bda.txt"
    },
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
   },
   {
    "key": "nn_c7c904b2",
@@ -543,7 +556,7 @@
    "ext": {
     "json": "https://nos.netease.com/ysf/d7a21cf34ede56f5c686ecfba5fc7e3f.txt"
    },
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
   },
   {
    "key": "nn_a1cee3c9",
@@ -560,7 +573,7 @@
    "ext": {
     "json": "https://nos.netease.com/ysf/8f55d520f8d70056695740ef151744a7.txt"
    },
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
   },
   {
    "key": "nn_84c9b8fc",
@@ -577,7 +590,7 @@
    "ext": {
     "json": "https://nos.netease.com/ysf/c66a4b5356141c49fd45ec51568017b4.txt"
    },
-   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/c28784a6ef0dd766a33d69837920332a.jpg;md5;164fa61b160f3119f4f21489b9dfaf56"
+   "jar": "https://xiuxiu-pro-new.meitudata.com/posters/776af3c4b61098b3573b4973f867010c.jpg;md5;76e9565340e6d28c363b914ca2d506ed"
   },
   {
    "key": "nn_551907d5",
@@ -2362,7 +2375,7 @@
    "quickSearch": 1,
    "changeable": 1,
    "ext": "AppV7Mtq",
-   "jar": "https://nos.netease.com/vcloud-statistic/nrtc/ebab8029-2b87-42f8-a964-ec1ca3de4052.png"
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
   },
   {
    "name": "柚子",
@@ -2373,7 +2386,7 @@
    "quickSearch": 1,
    "changeable": 1,
    "ext": "AppV7Xyz",
-   "jar": "https://nos.netease.com/vcloud-statistic/nrtc/ebab8029-2b87-42f8-a964-ec1ca3de4052.png"
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
   },
   {
    "name": "师兄",
@@ -2384,7 +2397,7 @@
    "quickSearch": 1,
    "changeable": 1,
    "ext": "AppV7Dsx",
-   "jar": "https://nos.netease.com/vcloud-statistic/nrtc/ebab8029-2b87-42f8-a964-ec1ca3de4052.png"
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
   },
   {
    "name": "追剧",
@@ -2395,7 +2408,7 @@
    "quickSearch": 1,
    "changeable": 1,
    "ext": "AppV7Zjdr",
-   "jar": "https://nos.netease.com/vcloud-statistic/nrtc/ebab8029-2b87-42f8-a964-ec1ca3de4052.png"
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
   },
   {
    "name": "小黄人",
@@ -2406,7 +2419,7 @@
    "quickSearch": 1,
    "changeable": 1,
    "ext": "AppV7Xhr",
-   "jar": "https://nos.netease.com/vcloud-statistic/nrtc/ebab8029-2b87-42f8-a964-ec1ca3de4052.png"
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
   },
   {
    "name": "咸鱼",
@@ -2417,7 +2430,7 @@
    "quickSearch": 1,
    "changeable": 1,
    "ext": "AppV7Xy",
-   "jar": "https://nos.netease.com/vcloud-statistic/nrtc/ebab8029-2b87-42f8-a964-ec1ca3de4052.png"
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
   },
   {
    "name": "零零七",
@@ -2428,7 +2441,7 @@
    "quickSearch": 1,
    "changeable": 1,
    "ext": "AppV7Llq",
-   "jar": "https://nos.netease.com/vcloud-statistic/nrtc/ebab8029-2b87-42f8-a964-ec1ca3de4052.png"
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
   },
   {
    "name": "特狗",
@@ -2439,7 +2452,7 @@
    "quickSearch": 1,
    "changeable": 1,
    "ext": "AppV6Tg",
-   "jar": "https://nos.netease.com/vcloud-statistic/nrtc/ebab8029-2b87-42f8-a964-ec1ca3de4052.png"
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
   },
   {
    "name": "秋天",
@@ -2450,7 +2463,7 @@
    "quickSearch": 1,
    "changeable": 1,
    "ext": "NewGrV2",
-   "jar": "https://nos.netease.com/vcloud-statistic/nrtc/ebab8029-2b87-42f8-a964-ec1ca3de4052.png"
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
   },
   {
    "name": "杜北",
@@ -2461,7 +2474,7 @@
    "quickSearch": 1,
    "changeable": 1,
    "ext": "Dubk",
-   "jar": "https://nos.netease.com/vcloud-statistic/nrtc/ebab8029-2b87-42f8-a964-ec1ca3de4052.png"
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
   },
   {
    "name": "嗷嗚动漫",
@@ -2471,7 +2484,7 @@
    "searchable": 1,
    "quickSearch": 1,
    "changeable": 1,
-   "jar": "https://nos.netease.com/vcloud-statistic/nrtc/ebab8029-2b87-42f8-a964-ec1ca3de4052.png"
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
   },
   {
    "name": "牛来动漫",
@@ -2481,7 +2494,7 @@
    "searchable": 1,
    "quickSearch": 1,
    "changeable": 1,
-   "jar": "https://nos.netease.com/vcloud-statistic/nrtc/ebab8029-2b87-42f8-a964-ec1ca3de4052.png"
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
   },
   {
    "name": "快快动漫",
@@ -2491,7 +2504,7 @@
    "searchable": 1,
    "quickSearch": 1,
    "changeable": 1,
-   "jar": "https://nos.netease.com/vcloud-statistic/nrtc/ebab8029-2b87-42f8-a964-ec1ca3de4052.png"
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
   },
   {
    "name": "冬瓜动漫",
@@ -2502,7 +2515,7 @@
    "quickSearch": 1,
    "changeable": 1,
    "ext": "DMxigua",
-   "jar": "https://nos.netease.com/vcloud-statistic/nrtc/ebab8029-2b87-42f8-a964-ec1ca3de4052.png"
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
   },
   {
    "name": "魔都动漫",
@@ -2512,7 +2525,7 @@
    "searchable": 1,
    "quickSearch": 1,
    "changeable": 1,
-   "jar": "https://nos.netease.com/vcloud-statistic/nrtc/ebab8029-2b87-42f8-a964-ec1ca3de4052.png"
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
   },
   {
    "name": "经典推荐",
@@ -2523,7 +2536,17 @@
    "quickSearch": 0,
    "changeable": 0,
    "ext": "Xxxg",
-   "jar": "https://nos.netease.com/vcloud-statistic/nrtc/ebab8029-2b87-42f8-a964-ec1ca3de4052.png"
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
+  },
+  {
+   "name": "下饭推荐",
+   "key": "nn_e623e6ff",
+   "type": 3,
+   "api": "csp_XfdhAmns",
+   "searchable": 0,
+   "quickSearch": 0,
+   "changeable": 0,
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
   },
   {
    "name": "短剧推荐",
@@ -2532,10 +2555,10 @@
    "api": "csp_HgdhAmns",
    "searchable": 1,
    "quickSearch": 1,
-   "changeable": 1,
+   "changeable": 0,
    "genre": "shortdrama",
    "ext": "Hgdh",
-   "jar": "https://nos.netease.com/vcloud-statistic/nrtc/ebab8029-2b87-42f8-a964-ec1ca3de4052.png"
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
   },
   {
    "name": "豪堪短剧",
@@ -2546,7 +2569,7 @@
    "quickSearch": 1,
    "changeable": 1,
    "genre": "shortdrama",
-   "jar": "https://nos.netease.com/vcloud-statistic/nrtc/ebab8029-2b87-42f8-a964-ec1ca3de4052.png"
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
   },
   {
    "name": "盒马短剧",
@@ -2557,7 +2580,7 @@
    "quickSearch": 1,
    "changeable": 1,
    "genre": "shortdrama",
-   "jar": "https://nos.netease.com/vcloud-statistic/nrtc/ebab8029-2b87-42f8-a964-ec1ca3de4052.png"
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
   },
   {
    "name": "拜拜短剧",
@@ -2568,7 +2591,7 @@
    "quickSearch": 1,
    "changeable": 1,
    "genre": "shortdrama",
-   "jar": "https://nos.netease.com/vcloud-statistic/nrtc/ebab8029-2b87-42f8-a964-ec1ca3de4052.png"
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
   },
   {
    "name": "围观短剧",
@@ -2579,7 +2602,7 @@
    "quickSearch": 1,
    "changeable": 1,
    "genre": "shortdrama",
-   "jar": "https://nos.netease.com/vcloud-statistic/nrtc/ebab8029-2b87-42f8-a964-ec1ca3de4052.png"
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
   },
   {
    "name": "喵喵短剧",
@@ -2590,7 +2613,7 @@
    "quickSearch": 1,
    "changeable": 1,
    "genre": "shortdrama",
-   "jar": "https://nos.netease.com/vcloud-statistic/nrtc/ebab8029-2b87-42f8-a964-ec1ca3de4052.png"
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
   },
   {
    "name": "星星短剧",
@@ -2601,7 +2624,7 @@
    "quickSearch": 1,
    "changeable": 1,
    "genre": "shortdrama",
-   "jar": "https://nos.netease.com/vcloud-statistic/nrtc/ebab8029-2b87-42f8-a964-ec1ca3de4052.png"
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
   },
   {
    "name": "瓜子体育",
@@ -2612,7 +2635,7 @@
    "quickSearch": 0,
    "changeable": 1,
    "ext": "GuaziLive",
-   "jar": "https://nos.netease.com/vcloud-statistic/nrtc/ebab8029-2b87-42f8-a964-ec1ca3de4052.png"
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
   },
   {
    "name": "飞球体育",
@@ -2622,7 +2645,7 @@
    "searchable": 1,
    "quickSearch": 1,
    "changeable": 1,
-   "jar": "https://nos.netease.com/vcloud-statistic/nrtc/ebab8029-2b87-42f8-a964-ec1ca3de4052.png"
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
   },
   {
    "name": "88体育",
@@ -2633,7 +2656,7 @@
    "quickSearch": 1,
    "changeable": 1,
    "ext": "BbkqLive",
-   "jar": "https://nos.netease.com/vcloud-statistic/nrtc/ebab8029-2b87-42f8-a964-ec1ca3de4052.png"
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
   },
   {
    "name": "咖啡体育",
@@ -2643,7 +2666,7 @@
    "searchable": 0,
    "quickSearch": 0,
    "changeable": 1,
-   "jar": "https://nos.netease.com/vcloud-statistic/nrtc/ebab8029-2b87-42f8-a964-ec1ca3de4052.png"
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
   },
   {
    "name": "富强听书",
@@ -2653,7 +2676,7 @@
    "searchable": 1,
    "quickSearch": 1,
    "changeable": 1,
-   "jar": "https://nos.netease.com/vcloud-statistic/nrtc/ebab8029-2b87-42f8-a964-ec1ca3de4052.png"
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
   },
   {
    "name": "文明听书",
@@ -2663,7 +2686,7 @@
    "searchable": 1,
    "quickSearch": 1,
    "changeable": 1,
-   "jar": "https://nos.netease.com/vcloud-statistic/nrtc/ebab8029-2b87-42f8-a964-ec1ca3de4052.png"
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
   },
   {
    "name": "嗷嗚听书",
@@ -2673,7 +2696,7 @@
    "searchable": 1,
    "quickSearch": 1,
    "changeable": 1,
-   "jar": "https://nos.netease.com/vcloud-statistic/nrtc/ebab8029-2b87-42f8-a964-ec1ca3de4052.png"
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
   },
   {
    "name": "酷听音乐",
@@ -2684,7 +2707,7 @@
    "quickSearch": 1,
    "changeable": 1,
    "genre": "music",
-   "jar": "https://nos.netease.com/vcloud-statistic/nrtc/ebab8029-2b87-42f8-a964-ec1ca3de4052.png"
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
   },
   {
    "name": "蜻蜓电台",
@@ -2695,7 +2718,7 @@
    "quickSearch": 1,
    "changeable": 1,
    "genre": "music",
-   "jar": "https://nos.netease.com/vcloud-statistic/nrtc/ebab8029-2b87-42f8-a964-ec1ca3de4052.png"
+   "jar": "https://fmsc525.oss-cn-hangzhou.aliyuncs.com/upload/235/20261111/04d7de872fa893cd2cf6139cab519da0.png"
   },
   {
    "key": "nn_351bb1de",
@@ -2871,6 +2894,30 @@
    "searchable": 1,
    "changeable": 1,
    "quickSearch": 1,
+   "jar": "https://tv.菜妮丝.top/jar/fty1016.jar;md5;aa8d37525617af470b3b8dfc91db8669"
+  },
+  {
+   "key": "nn_9668617a",
+   "name": "茉莉┃多线",
+   "type": 3,
+   "api": "csp_App99Guard",
+   "timeout": 10,
+   "searchable": 1,
+   "changeable": 1,
+   "quickSearch": 1,
+   "ext": "rfOX1voDIQhH8epBwtCFsuby/mmdmIu8kGlnJc+7VkMRLQ1K+jMy+KN1MKQe0MZ6tmGSO5oFzD8/vWwiSqEpFczDqLrdGT3iH6fZmryrFzKijwYkJUMctdztE0O4CsgYZdBu8XhZSwuhSqqllQz4AZMa1l0sT+1NrbhNIxHkrY0upiYSTLNqEaledgZikMCviOXWr3cPBP4COOeoGUyJSJrrybmUppnWGeDAOHhHOVUSXjwSb+QQvcJIT2lmrf1Bk68myGs7qOqc19tD/rnzf2WOb2MzJZqtURBmUFgaW6ea2dL8OPSpSeVAvaGCAnqwuUNGE9hHpK8jfOs0bLJRdkFLnijAn5Q+ofVM5hgGb8c=",
+   "jar": "https://tv.菜妮丝.top/jar/fty1016.jar;md5;aa8d37525617af470b3b8dfc91db8669"
+  },
+  {
+   "key": "nn_14c6a48f",
+   "name": "剧圈┃多线",
+   "type": 3,
+   "api": "csp_AppSxGuard",
+   "timeout": 10,
+   "searchable": 1,
+   "changeable": 1,
+   "quickSearch": 1,
+   "ext": "rfOX1voDIQhH8epBwpmIsuSluiuZl4+/lm1iJsy3HwNWMxpf9CY77fshI+kByoxy7DyPatUZ1jk0ty1p",
    "jar": "https://tv.菜妮丝.top/jar/fty1016.jar;md5;aa8d37525617af470b3b8dfc91db8669"
   },
   {
@@ -3737,7 +3784,15 @@
    "ua": "okHttp/Mod-1.5.0.0"
   },
   {
-   "name": "Gather果·6",
+   "name": "YY轮播·6",
+   "type": 0,
+   "url": "https://sub.ottiptv.cc/yylunbo.m3u",
+   "playerType": 2,
+   "timeout": 10,
+   "ua": "okHttp/Mod-1.5.0.0"
+  },
+  {
+   "name": "Gather果·7",
    "type": 3,
    "url": "https://down.nigx.cn/raw.githubusercontent.com/Kimentanm/aptv/master/m3u/iptv.m3u",
    "epg": "https://material.1989.click/epg.xml.gz",
@@ -3746,26 +3801,26 @@
    "playerType": 2
   },
   {
-   "name": "Kimentanm·7",
+   "name": "Kimentanm·8",
    "type": 0,
    "url": "https://ghfast.top/https://raw.githubusercontent.com/Kimentanm/aptv/master/m3u/iptv.m3u",
    "playerType": 2
   },
   {
-   "name": "综合直播·8",
+   "name": "综合直播·9",
    "type": 0,
    "playerType": 2,
    "url": "https://ghfast.top/https://raw.githubusercontent.com/develop202/migu_video/refs/heads/main/interface.txt",
    "ua": "bingcha/1.1 (mianfeifenxiang) "
   },
   {
-   "name": "superiptv·9",
+   "name": "superiptv·10",
    "type": 0,
    "url": "http://127.0.0.1:5266/iptv.m3u",
    "playerType": 2
   },
   {
-   "name": "Yoursmile·10",
+   "name": "Yoursmile·11",
    "type": 0,
    "url": "https://gh-proxy.org/https://raw.githubusercontent.com/yoursmile66/TVBox/main/live.txt",
    "ua": "okhttp/3.15",
