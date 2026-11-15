@@ -86,6 +86,19 @@ def test_weekly_markdown():
     assert "周报" in md and "83%" in md and "A源" in md and "dead.example" in md
 
 
+def test_super_live_drops_dead_urls():
+    from tvboxkeeper.publish import build_super_live
+    text, stats = build_super_live(
+        [("A", "央视,#genre#\nCCTV1,http://a/1.m3u8#http://b/1.m3u8\n"
+               "卫视,#genre#\n东方卫视,http://a/df.m3u8".encode())],
+        dead_urls={"http://b/1.m3u8", "http://a/df.m3u8"})
+    assert "http://b/1.m3u8" not in text
+    assert "东方卫视" not in text        # 线路全死 → 频道剔除
+    assert "卫视,#genre#" not in text    # 组空 → 整组剔除
+    assert "CCTV1,http://a/1.m3u8" in text
+    assert stats["dead_dropped"] == 2
+
+
 def test_duocang_names():
     data = build_duocang(ROWS, min_health=60)
     names = [e["sourceName"] for e in data["storeHouse"]]

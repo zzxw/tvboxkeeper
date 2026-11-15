@@ -38,6 +38,7 @@ jobs:
           tvboxkeeper discover
           tvboxkeeper hunt
           tvboxkeeper check
+          tvboxkeeper livetest
           tvboxkeeper publish
           tvboxkeeper notify
 

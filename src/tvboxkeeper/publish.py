@@ -1466,15 +1466,18 @@ def _parse_live_channels(text: str) -> list[tuple[str, str, str]]:
 def build_super_live(
     sources: list[tuple[str, bytes]],
     max_urls: int = 4,
+    dead_urls: "set[str] | frozenset[str]" = frozenset(),
 ) -> tuple[str, dict]:
     """合并多个直播源为超级列表。
 
     同名频道（归一键相同）合并为一行，多线路用 # 互备（TVBox 原生支持），
-    央视/卫视/其他分组排序。返回 (txt 内容, 统计)。
+    央视/卫视/其他分组排序。dead_urls 是窗口内测活判死的线路（livetest
+    产出），构建时剔除——线路全死的频道整体去掉。返回 (txt 内容, 统计)。
     """
     groups: dict[str, dict[str, dict]] = {}
     group_order: list[str] = []
-    stats = {"sources": len(sources), "in_channels": 0, "channels": 0, "urls": 0}
+    stats = {"sources": len(sources), "in_channels": 0, "channels": 0,
+             "urls": 0, "dead_dropped": 0}
 
     for name, content in sources:
         text = classify.decode_content(content)
@@ -1487,8 +1490,12 @@ def build_super_live(
             entry = groups[group].setdefault(key, {"name": cname, "urls": []})
             for u in url.split("#"):
                 u = u.strip()
-                if u and u not in entry["urls"] and len(entry["urls"]) < max_urls:
-                    entry["urls"].append(u)
+                if not u or u in entry["urls"] or len(entry["urls"]) >= max_urls:
+                    continue
+                if u in dead_urls:
+                    stats["dead_dropped"] += 1
+                    continue
+                entry["urls"].append(u)
 
     def group_rank(g: str) -> tuple:
         if "CCTV" in g.upper() or "央" in g:
@@ -1499,10 +1506,11 @@ def build_super_live(
 
     lines: list[str] = []
     for g in sorted(groups, key=group_rank):
+        alive = [e for e in groups[g].values() if e["urls"]]
+        if not alive:
+            continue  # 组内频道线路全被剔除则整组不输出
         lines.append(f"{g},#genre#")
-        for entry in groups[g].values():
-            if not entry["urls"]:
-                continue
+        for entry in alive:
             stats["channels"] += 1
             stats["urls"] += len(entry["urls"])
             lines.append(f"{entry['name']},{'#'.join(entry['urls'])}")

@@ -5,7 +5,7 @@ import time
 import httpx
 
 from tvboxkeeper.config import load_settings
-from tvboxkeeper.validate import _content_ok, check_source, should_skip_probes
+from tvboxkeeper.validate import _content_ok, check_source, probe_stream, should_skip_probes
 
 CONFIG_URL = "http://e.com/c.json"
 API_URL = "http://s.example/api.php"
@@ -109,6 +109,26 @@ def test_jar_md5_validation():
     out2 = run(bad_config_handler, settings2)
     jar2 = [p for p in out2.probes if p.kind == "jar"][0]
     assert jar2.md5_ok is False and not jar2.ok
+
+
+def test_probe_stream_alive_and_dead():
+    settings = load_settings(None)
+
+    def handler(request) -> httpx.Response:
+        if "alive" in str(request.url):
+            return httpx.Response(200, text="#EXTM3U\nhttp://x/1.ts")
+        return httpx.Response(200, text="<html>err</html>")  # 200 但非流
+
+    async def inner(url):
+        async with httpx.AsyncClient(
+                transport=httpx.MockTransport(handler)) as client:
+            sem = asyncio.Semaphore(4)
+            return await probe_stream(client, sem, url, settings)
+
+    ok, _lat = asyncio.run(inner("http://s.example/alive.m3u8"))
+    assert ok
+    ok2, _lat2 = asyncio.run(inner("http://s.example/dead.m3u8"))
+    assert not ok2
 
 
 def test_l2_no_site_sampling():

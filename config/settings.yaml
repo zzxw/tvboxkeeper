@@ -61,6 +61,13 @@ publish:
 snapshot:
   keep: 10   # 每个源保留的快照份数
 
+livetest:
+  concurrency: 6        # 直播线路测活并发（对流服务器保持克制）
+  timeout: 6            # 单条超时（秒）
+  probe_every_days: 7   # 每条线路 N 天内不重复测
+  max_per_run: 1500     # 单轮上限；首轮全覆盖分几天完成
+  # 测活结论存库，publish 构建超级直播列表时自动剔除窗口内的死线
+
 notify:
   silent_when_unchanged: true   # 无变化且无新鲜周报时不推送通知渠道
 
@@ -78,6 +85,7 @@ cleanup:
   check_log_days: 90  # 体检日志保留天数（过期自动清理 + VACUUM）
   snapshot_days: 90
   origin_days: 90
+  live_probe_days: 30
 
 discover:
   max_depth: 2          # 多仓递归展开深度

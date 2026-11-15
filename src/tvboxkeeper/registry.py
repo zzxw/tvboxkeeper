@@ -68,6 +68,13 @@ CREATE TABLE IF NOT EXISTS origin (
   ref       TEXT DEFAULT '',
   ts        TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS live_probe (
+  url_id     TEXT PRIMARY KEY,
+  url        TEXT NOT NULL,
+  ts         TEXT NOT NULL,
+  ok         INTEGER NOT NULL,
+  latency_ms INTEGER DEFAULT 0
+);
 CREATE INDEX IF NOT EXISTS idx_check_log_source ON check_log(source_id);
 CREATE INDEX IF NOT EXISTS idx_check_log_ts ON check_log(ts);
 CREATE INDEX IF NOT EXISTS idx_snapshot_source ON snapshot(source_id);
@@ -512,6 +519,22 @@ class Registry:
 
     # ---------- 生命周期 ----------
 
+    def fresh_live_probes(self, days: int = 7) -> dict[str, tuple[bool, str]]:
+        """窗口内每条直播线路的最近测活结论 {url: (ok, ts)}。"""
+        rows = self.conn.execute(
+            "SELECT url, ok, ts FROM live_probe WHERE ts >= ? ORDER BY ts",
+            (_days_ago(days),),
+        ).fetchall()
+        return {r["url"]: (bool(r["ok"]), r["ts"]) for r in rows}
+
+    def record_live_probe(self, url: str, ok: bool, latency_ms: int) -> None:
+        self.conn.execute(
+            "INSERT OR REPLACE INTO live_probe(url_id, url, ts, ok, latency_ms) "
+            "VALUES(?,?,?,?,?)",
+            (source_id(url), url, _now(), 1 if ok else 0, latency_ms),
+        )
+        self.conn.commit()
+
     def cleanup(self, settings: dict) -> dict:
         """按保留期清理 check_log / origin / snapshot，并 VACUUM 瘦身。"""
         cfg = settings.get("cleanup") or {}
@@ -528,6 +551,9 @@ class Registry:
         stats["origin"] = self.conn.execute(
             "DELETE FROM origin WHERE channel='github_repo' AND ts < ?",
             (cutoff(cfg.get("origin_days", 90)),)).rowcount
+        stats["live_probe"] = self.conn.execute(
+            "DELETE FROM live_probe WHERE ts < ?",
+            (cutoff(cfg.get("live_probe_days", 30)),)).rowcount
         old = self.conn.execute(
             "SELECT gzip_path FROM snapshot WHERE ts < ?",
             (cutoff(cfg.get("snapshot_days", 90)),)).fetchall()

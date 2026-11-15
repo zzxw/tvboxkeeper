@@ -60,6 +60,13 @@ DEFAULTS: dict[str, Any] = {
         "mirror_base": "",
     },
     "snapshot": {"keep": 10},
+    # 直播线路全量测活：增量窗口模式，未测优先、最旧次之，单轮封顶
+    "livetest": {
+        "concurrency": 6,       # 对流服务器保持克制
+        "timeout": 6,
+        "probe_every_days": 7,  # 每条线路 N 天内不重复测
+        "max_per_run": 1500,    # 单轮上限（首轮全覆盖分几天完成）
+    },
     "notify": {
         # 无变化且无新鲜周报时不推送通知渠道（GITHUB_STEP_SUMMARY 照常写）
         "silent_when_unchanged": True,
@@ -76,6 +83,7 @@ DEFAULTS: dict[str, Any] = {
         "check_log_days": 90,  # 体检日志保留天数
         "snapshot_days": 90,   # 内容快照保留天数
         "origin_days": 90,     # GitHub 挖源记录保留天数
+        "live_probe_days": 30, # 直播线路测活记录保留天数
     },
     "discover": {"max_depth": 2, "max_new_per_run": 100,
                  "max_live_per_run": 50},

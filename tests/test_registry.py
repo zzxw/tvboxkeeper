@@ -149,6 +149,19 @@ def test_latest_snapshot_roundtrip(tmp_path):
     assert got is not None and got[0] == payload and got[1]
 
 
+def test_live_probe_window(tmp_path):
+    reg = make_registry(tmp_path)
+    reg.record_live_probe("http://l/1.m3u8", True, 50)
+    reg.record_live_probe("http://l/2.m3u8", False, 0)
+    state = reg.fresh_live_probes(7)
+    assert state["http://l/1.m3u8"][0] is True
+    assert state["http://l/2.m3u8"][0] is False
+    # 窗口外的记录不算新鲜
+    reg.conn.execute("UPDATE live_probe SET ts='2020-01-01 00:00:00'")
+    reg.conn.commit()
+    assert reg.fresh_live_probes(7) == {}
+
+
 def test_dedupe_groups_same_content(tmp_path):
     from tvboxkeeper.publish import pick_sources
     reg = make_registry(tmp_path)

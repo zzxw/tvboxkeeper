@@ -91,6 +91,20 @@ async def _probe(
                        content_ok=_content_ok(kind, fr.content, fr.status))
 
 
+async def probe_stream(
+    client: httpx.AsyncClient,
+    sem: asyncio.Semaphore,
+    url: str,
+    settings: dict,
+) -> tuple[bool, int]:
+    """直播线路测活（livetest 用）：4KB 探测，内容特征判定。"""
+    lt = settings.get("livetest") or {}
+    fr = await fetch(client, sem, url, max_bytes=65536,
+                     timeout=lt.get("timeout", 6), retries=0,
+                     probe_bytes=4096)
+    return _content_ok("channel", fr.content, fr.status), fr.latency_ms
+
+
 async def _probe_site_api(
     client: httpx.AsyncClient,
     sem: asyncio.Semaphore,

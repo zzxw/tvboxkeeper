@@ -12,6 +12,7 @@ from pathlib import Path
 import httpx
 import typer
 
+from . import classify
 from . import discover as discover_mod
 from . import publish as publish_mod
 from . import validate as validate_mod
@@ -279,6 +280,74 @@ def discover() -> None:
 
 
 @app.command()
+def livetest(
+    force: bool = typer.Option(False, "--force", help="忽略测活窗口，全部重测"),
+    max_n: int = typer.Option(0, "--max", help="覆盖单轮上限（0=用配置值）"),
+) -> None:
+    """直播线路全量测活：未测优先、最旧次之；结论供 publish 剔除死线。"""
+    root, settings, reg = _open()
+    lt = settings.get("livetest") or {}
+    rows = reg.sources()
+    live_pick = publish_mod.pick_live_sources(
+        rows, settings["publish"]["min_health"])
+    urls: list[str] = []
+    for r in live_pick:
+        snap = reg.latest_snapshot(r["id"])
+        if snap:
+            for _g, _c, u in publish_mod._parse_live_channels(
+                    classify.decode_content(snap[0])):
+                urls.append(u)
+    urls = list(dict.fromkeys(urls))
+    if not urls:
+        typer.echo("没有可测的直播线路（先 discover/check 生成直播源）。")
+        reg.close()
+        return
+    window = int(lt.get("probe_every_days", 7))
+    state = reg.fresh_live_probes(window)
+    if force:
+        todo = list(urls)
+    else:
+        # 未测的先测（扩大覆盖面），测过但过期的按最旧优先复测
+        untested = [u for u in urls if u not in state]
+        stale = sorted((ts, u) for u, (_ok, ts) in state.items()
+                       if u in set(urls))
+        todo = untested + [u for _ts, u in stale]
+    cap = max_n or int(lt.get("max_per_run", 1500))
+    todo = todo[:cap]
+    conc = int(lt.get("concurrency", 6))
+    typer.echo(f"直播线路共 {len(urls)} 条，本轮测 {len(todo)} 条（并发 {conc}）...")
+
+    async def _run() -> tuple[int, int]:
+        net = settings["network"]
+        headers = make_headers(random.choice(net["user_agents"]))
+        sem = asyncio.Semaphore(conc)
+        done = ok_n = 0
+        async with httpx.AsyncClient(
+                timeout=lt.get("timeout", 6), follow_redirects=True,
+                headers=headers, verify=net.get("verify_ssl", True)) as client:
+            batch = 100
+            for i in range(0, len(todo), batch):
+                chunk = todo[i:i + batch]
+                res = await asyncio.gather(*(
+                    validate_mod.probe_stream(client, sem, u, settings)
+                    for u in chunk))
+                for u, (ok, lat) in zip(chunk, res):
+                    reg.record_live_probe(u, ok, lat)
+                done += len(chunk)
+                ok_n += sum(1 for ok, _ in res if ok)
+                typer.echo(f"  进度 {done}/{len(todo)}：通过 {ok_n}"
+                           f"（{ok_n * 100 // max(1, done)}%）")
+        return done, ok_n
+
+    done, ok_n = asyncio.run(_run())
+    typer.echo(
+        f"测活完成：{done} 条，通过 {ok_n}，判死 {done - ok_n}。"
+        "运行 `tvboxkeeper publish` 重新生成剔除死线后的超级直播列表。"
+    )
+    reg.close()
+
+
+@app.command()
 def hunt() -> None:
     """GitHub 挖源：搜索仓库/代码，探测常见配置文件名并登记。"""
     from .github_hunt import Hunter
@@ -456,13 +525,18 @@ def publish() -> None:
         rows, pub["min_health"], mirror_base=mirror_base,
         mirrored_sids=set(mirrored))
 
-    # 超级直播列表：多源频道归一合并、同频道多线路互备
+    # 超级直播列表：多源频道归一合并、同频道多线路互备；
+    # livetest 窗口内判死的线路在构建时剔除
     super_sources = []
     for r in live_pick:
         snap = reg.latest_snapshot(r["id"])
         if snap:
             super_sources.append((r.get("name") or r["url"], snap[0]))
-    super_text, super_stats = publish_mod.build_super_live(super_sources)
+    window = int((settings.get("livetest") or {}).get("probe_every_days", 7))
+    dead_urls = {u for u, (ok, _ts)
+                 in reg.fresh_live_probes(window).items() if not ok}
+    super_text, super_stats = publish_mod.build_super_live(
+        super_sources, dead_urls=dead_urls)
     super_url = ""
     if super_text and mirror_base:
         _base = (mirror_base[:-len("/mirrors")]
@@ -476,10 +550,14 @@ def publish() -> None:
         if super_url:
             live_data["lives"].insert(0, {
                 "name": "超级合集·多源互备", "type": 0, "url": super_url})
+        dead_note = (f"；已剔除 {super_stats['dead_dropped']} 条死线"
+                     f"（{window} 天窗口内测活）"
+                     if super_stats["dead_dropped"] else "")
         super_note = (f"超级直播列表：`{pub['super_live']}`"
                       f"（{super_stats['channels']} 个频道 / "
                       f"{super_stats['urls']} 条线路，由 "
-                      f"{super_stats['sources']} 个健康直播源归一合并）。")
+                      f"{super_stats['sources']} 个健康直播源归一合并"
+                      f"{dead_note}）。")
     live_path = root / pub["live"]
     live_path.parent.mkdir(parents=True, exist_ok=True)
     live_path.write_text(
