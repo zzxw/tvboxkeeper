@@ -1,0 +1,47 @@
+//此多仓接口列表为公众号【多多影音】作者大聪明为粉丝提供便利整理而成，如有冒犯各位接口所属大神，请联系删除。
+//转载请注明出处
+{
+    "urls": [
+        {
+            "url": "http://yydsys.top/duo/v.json",
+            "name": "🚨软件接口均免费严禁贩卖🚨"
+        },
+        {
+            "url": "http://yydsys.top/duo",
+            "name": "🏡应用多多家庭版"
+        },
+        {
+            "url": "https://pan.shangui.cc/f/v68xuk/xm.json",
+            "name": "🏡应用多多备用"
+        },
+          {
+            "url":"https://gh-proxy.com/https://raw.githubusercontent.com/yydfys/yydf/main/yydf/yydfjk.json",
+            "name": "🏄️业余线路"
+        },
+          {
+            "url":"http://rihou.cc:88/荷城茶秀",
+            "name": "🏄️荷城茶秀"
+        }, 
+          {
+            "url":"https://jihulab.com/ymz1231/xymz/-/raw/main/ymz",
+            "name": "🏄️夜猫子"
+        }, 
+          {
+            "url":"https://gh-proxy.com/https://raw.githubusercontent.com/gaotianliuyun/gao/master/js.json",
+            "name": "🏄️高天流云"
+        }, 
+          {
+            "url":"https://agit.ai/cyl518/yl/raw/branch/master/ml.json",
+            "name": "🏄️胖鸭线路"
+        },
+          {
+            "url":"https://freed.yuanhsing.cf/TVBox/meowcf.json",
+            "name": "🏄️元兴线路"
+        },
+          {
+            "url":"https://codeberg.org/AK47/drpy-js/raw/branch/main/js.json",
+            "name": "🏄️猫爪线路"
+        }		
+      ]  
+}
+
