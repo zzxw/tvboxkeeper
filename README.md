@@ -70,11 +70,17 @@ git push -u origin main
   飞书 / 钉钉 / 企业微信机器人（`FEISHU_WEBHOOK_URL` /
   `DINGTALK_WEBHOOK_URL` / `WECOM_WEBHOOK_URL`，填机器人 webhook 完整地址）；
 - **本地兜底**：`powershell -ExecutionPolicy Bypass -File scripts\install-task.ps1`
-  注册 Windows 计划任务（每天 06:10，错过开机补跑），与 Actions 互为备份，
-  日志在 `data/local-run.log`，卸载见脚本注释。注意 `scripts\daily-task.bat`
-  必须保持**纯 ASCII**——cmd 按 OEM 代码页解析 .bat，写中文会破坏路径；
+  注册 Windows 计划任务（每天 06:10，错过开机补跑），与 Actions 互为备份。
+  跑批完成后**自动把产物回推远端**（pull --rebase，冲突或离线时安全放弃、
+  绝不覆盖远端），日志在 `data/local-run.log`，卸载见脚本注释。
+  注意 `scripts\daily-task.bat` 必须保持**纯 ASCII**——cmd 按 OEM 代码页解析
+  .bat，写中文会破坏路径；
 - **钉钉加签**：机器人安全设置选"加签"时，另配 Secret
   `DINGTALK_SECRET` 即可自动签名；
+- **失败告警**：Actions 跑批失败时自动向已配置的通知渠道发告警
+  （`notify --event failed`），订阅过期不再静默发生；
+- **通知静默**：无变化且无新鲜周报时不推送通知渠道（`notify.silent_when_unchanged`，
+  GITHUB_STEP_SUMMARY 照常写入），避免"狼来了"；
 - **周报**：每周日 `publish` 自动生成 `output/周报.md`
   （7 天可用率趋势 / 内容变化 / 失败原因与主机），notify 当日一并推送；
 - **单源详情页**：看板表格点击源名进入 `site/source-<id>.html`，
