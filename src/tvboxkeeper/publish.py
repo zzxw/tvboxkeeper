@@ -2,13 +2,19 @@
 
 from __future__ import annotations
 
+import base64
+import hashlib
+import hmac
 import html
 import json
+import re
 import time
 from collections import Counter
 from datetime import date, timedelta
 from pathlib import Path
+from urllib.parse import quote_plus
 
+from . import classify
 from . import diffing
 from .normalize import guess_name
 
@@ -1182,6 +1188,7 @@ def build_site(
     hosts: list[dict] | None = None,
     changes: list[dict] | None = None,
     lite_count: int = 0,
+    detail_links: dict | None = None,
 ) -> str:
     """生成自包含的静态目录页（无外部依赖，可直接挂 GitHub Pages）。"""
     now = time.strftime("%Y-%m-%d %H:%M")
@@ -1243,10 +1250,14 @@ def build_site(
             f' data-sites="{sv_sites}" data-live="{sv_live}"'
             f' data-health="{score:.2f}" data-avail="{sv_av}"'
             f' data-l3="{sv_l3}"')
+        name_cell = esc(r.get("name") or "")
+        link = (detail_links or {}).get(r["id"])
+        if link:
+            name_cell = f'<a href="{esc(link)}">{name_cell}</a>'
         trs.append(
             f'<tr class="{cls}" data-kind="{kind}"{sort_attrs}>'
             f'<td><span class="chip {cls}">{esc(r["status"])}</span>{dup}</td>'
-            f'<td class="name">{esc(r.get("name") or "")}</td>'
+            f'<td class="name">{name_cell}</td>'
             f'<td class="c-compat">{esc(r.get("compat") or "—")}</td>'
             f'<td class="c-sites num">{r["sites_count"]}</td>'
             f'<td class="c-live num">{live_disp}</td>'
@@ -1366,3 +1377,228 @@ def build_site(
 <script>
 {_SITE_JS}</script>
 </body></html>"""
+
+
+# ---------- 超级直播列表 ----------
+
+# 央视频道套数别名（长 key 先替换，避免"十一套"里的"一套"误替换）
+_SUITE_MAP = {
+    "十七套": "17", "十六套": "16", "十五套": "15", "十四套": "14",
+    "十三套": "13", "十二套": "12", "十一套": "11", "十套": "10",
+    "九套": "9", "八套": "8", "七套": "7", "六套": "6", "五套": "5",
+    "四套": "4", "三套": "3", "二套": "2", "一套": "1",
+}
+
+
+def channel_key(name: str) -> str:
+    """频道名归一键：CCTV-1/央视一套/CCTV1综合 → CCTV1。
+
+    规则：中央/央视→CCTV，N套→N，+→P，去掉常见频道描述词与分隔符；
+    中文频道名（如 东方卫视）保留原文，仅去分隔符。
+    """
+    n = name.strip().upper()
+    n = n.replace("中央", "CCTV").replace("央視", "CCTV").replace("央视", "CCTV")
+    for cn, num in sorted(_SUITE_MAP.items(), key=lambda kv: -len(kv[0])):
+        if cn in n:
+            n = n.replace(cn, num)
+    n = n.replace("+", "P").replace("＋", "P")
+    # 去掉 CCTV 系常见描述词（卫视不能去，它是真正频道名的一部分）
+    n = re.sub(r"综合|财经|体育|电影|电视剧|戏曲|科教|少儿|音乐|纪实|农业"
+               r"|军事|国防|女性时尚|风云|频道|高清|超清|标清|蓝光|iptv",
+               "", n)
+    # 只保留字母数字与汉字，去掉分隔符（-、·、空格、全角符号等）
+    n = re.sub(r"[^A-Z0-9\u4e00-\u9fff]", "", n)
+    return n
+
+
+def _parse_live_channels(text: str) -> list[tuple[str, str, str]]:
+    """完整解析直播列表 → [(分组, 频道名, url)]；m3u 归入"其他"组。"""
+    out: list[tuple[str, str, str]] = []
+    group = "其他"
+    is_m3u = text.lstrip().startswith("#EXTM3U")
+    pending_name = ""
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        if line.endswith("#genre#"):
+            group = line[:-len("#genre#")].strip().rstrip(",").strip() or "其他"
+            continue
+        if line.startswith("#EXTINF"):
+            pending_name = line.split(",", 1)[1].strip() if "," in line else ""
+            continue
+        if line.startswith("#"):
+            continue
+        if "," in line:
+            cname, url = line.split(",", 1)[0].strip(), line.split(",", 1)[1].strip()
+        elif is_m3u:
+            cname, url = pending_name or "直播", line.strip()
+        else:
+            continue
+        pending_name = ""
+        if url.startswith(("http://", "https://", "rtmp://", "rtsp://")):
+            out.append((group, cname, url))
+    return out
+
+
+def build_super_live(
+    sources: list[tuple[str, bytes]],
+    max_urls: int = 4,
+) -> tuple[str, dict]:
+    """合并多个直播源为超级列表。
+
+    同名频道（归一键相同）合并为一行，多线路用 # 互备（TVBox 原生支持），
+    央视/卫视/其他分组排序。返回 (txt 内容, 统计)。
+    """
+    groups: dict[str, dict[str, dict]] = {}
+    group_order: list[str] = []
+    stats = {"sources": len(sources), "in_channels": 0, "channels": 0, "urls": 0}
+
+    for name, content in sources:
+        text = classify.decode_content(content)
+        for group, cname, url in _parse_live_channels(text):
+            stats["in_channels"] += 1
+            if group not in groups:
+                groups[group] = {}
+                group_order.append(group)
+            key = channel_key(cname) or cname.strip()
+            entry = groups[group].setdefault(key, {"name": cname, "urls": []})
+            for u in url.split("#"):
+                u = u.strip()
+                if u and u not in entry["urls"] and len(entry["urls"]) < max_urls:
+                    entry["urls"].append(u)
+
+    def group_rank(g: str) -> tuple:
+        if "CCTV" in g.upper() or "央" in g:
+            return (0, group_order.index(g))
+        if "卫视" in g:
+            return (1, group_order.index(g))
+        return (2, group_order.index(g))
+
+    lines: list[str] = []
+    for g in sorted(groups, key=group_rank):
+        lines.append(f"{g},#genre#")
+        for entry in groups[g].values():
+            if not entry["urls"]:
+                continue
+            stats["channels"] += 1
+            stats["urls"] += len(entry["urls"])
+            lines.append(f"{entry['name']},{'#'.join(entry['urls'])}")
+    if not lines:
+        return "", stats
+    return "\n".join(lines) + "\n", stats
+
+
+# ---------- 通知增强 ----------
+
+
+def dingtalk_sign(url: str, secret: str) -> str:
+    """钉钉机器人"加签"安全模式：HMAC-SHA256 时间戳签名追加到 URL。"""
+    ts = str(round(time.time() * 1000))
+    digest = hmac.new(secret.encode(), f"{ts}\n{secret}".encode(),
+                      hashlib.sha256).digest()
+    sign = base64.b64encode(digest).decode()
+    sep = "&" if "?" in url else "?"
+    return f"{url}{sep}timestamp={ts}&sign={quote_plus(sign)}"
+
+
+# ---------- 单源详情页 ----------
+
+
+def build_source_detail(row: dict, history: list[dict]) -> str:
+    """生成单源详情页：元信息 + 体检历史 + 内容变更记录。"""
+    esc = html.escape
+    hist_rows = "".join(
+        f"<tr class='{'ok' if h['ok'] else 'bad'}'><td>{esc(h['ts'])}</td>"
+        f"<td>{esc(h['level'])}</td><td>{'OK' if h['ok'] else 'FAIL'}</td>"
+        f"<td class='num'>{h['latency_ms']}</td>"
+        f"<td>{esc(str(h['parsed'].get('schema') or '-'))}</td>"
+        f"<td>{esc(str(h['parsed'].get('error') or ''))}</td></tr>"
+        for h in reversed(history))
+    changes = "".join(
+        f"<li>{esc(h['ts'])}："
+        f"+{len((h['parsed'].get('chg') or {}).get('added') or [])} / "
+        f"-{len((h['parsed'].get('chg') or {}).get('removed') or [])} 站点</li>"
+        for h in history if h["parsed"].get("chg"))
+    meta = "".join(
+        f"<tr><th>{esc(label)}</th><td>{esc(str(value))}</td></tr>"
+        for label, value in [
+            ("状态", row.get("status", "")),
+            ("健康分", row.get("health_score", "")),
+            ("适配", row.get("compat") or "—"),
+            ("30天可用", row.get("avail") or "—"),
+            ("站点/直播/子仓",
+             f"{row.get('sites_count', 0)} / {row.get('lives_count', 0)} / "
+             f"{row.get('storehouse_count', 0)}"),
+            ("延迟", f"{row.get('latency_ms', 0)} ms"),
+            ("最近检查", row.get("last_checked") or "—"),
+            ("URL", row.get("url", "")),
+        ])
+    change_html = f"<h2>内容变更</h2><ul>{changes}</ul>" if changes else ""
+    hist_html = (f"<h2>体检历史</h2><table><tr><th>时间</th><th>档位</th>"
+                 f"<th>结果</th><th>延迟</th><th>类型</th><th>备注</th></tr>"
+                 f"{hist_rows}</table>" if hist_rows else "<p>暂无体检记录。</p>")
+    return f"""<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{esc(row.get('name') or '')} · 详情</title>
+<style>
+body {{ margin: 0; padding: 24px; font: 14px/1.6 system-ui, "Segoe UI", "Microsoft YaHei", sans-serif;
+       background: #0f172a; color: #e2e8f0; }}
+h1 {{ font-size: 18px; }} h2 {{ font-size: 15px; color: #94a3b8; }}
+a {{ color: #60a5fa; }}
+table {{ border-collapse: collapse; width: 100%; margin-bottom: 20px; }}
+th, td {{ padding: 5px 10px; border-bottom: 1px solid #1e293b; text-align: left; }}
+th {{ color: #94a3b8; font-weight: 500; }}
+tr.ok td:nth-child(3) {{ color: #4ade80; }}
+tr.bad td:nth-child(3) {{ color: #f87171; }}
+.num {{ font-variant-numeric: tabular-nums; }}
+.meta td {{ color: #cbd5e1; }}
+</style></head><body>
+<h1><a href="index.html">← 返回看板</a> · {esc(row.get('name') or '')}</h1>
+<table class="meta">{meta}</table>
+{change_html}
+{hist_html}
+</body></html>"""
+
+
+# ---------- 周报 ----------
+
+
+def build_weekly_markdown(
+    breakdown: str,
+    daily: list[dict],
+    failure_stats: list[dict],
+    changes: list[dict],
+    host_failures: list[dict],
+) -> str:
+    """每周日生成：状态分布 / 7 天可用率趋势 / 内容变化 / 失败原因与主机。"""
+    now = time.strftime("%Y-%m-%d")
+    lines = [f"# TVBox 源周报 · {now}", "",
+             f"- 当前状态分布：{breakdown}", ""]
+    if daily:
+        last7 = daily[-7:]
+        avg = round(sum(d["rate"] for d in last7) / len(last7))
+        trend = " | ".join(f"{d['date'][5:]} {d['rate']}%" for d in last7)
+        lines += ["## 近 7 天整体可用率", "", trend, "",
+                  f"- 7 日平均：**{avg}%**（共体检 {sum(d['total'] for d in last7)} 次）", ""]
+    if changes:
+        lines += ["## 本周内容变化（Top）", ""]
+        for c in changes[:8]:
+            chg = c.get("change") or {}
+            lines.append(f"- {c['name']}："
+                         f"+{len(chg.get('added') or [])} / "
+                         f"-{len(chg.get('removed') or [])} 站点")
+        lines.append("")
+    if failure_stats:
+        lines += ["## 近 7 天失败原因", ""]
+        for f in failure_stats[:5]:
+            lines.append(f"- {f['reason']}：{f['count']} 次 / {f['sources']} 个源")
+        lines.append("")
+    if host_failures:
+        lines += ["## 失败集中主机", ""]
+        for h in host_failures[:5]:
+            lines.append(f"- {h['host']}：{h['fails']} 次 / {h['sources']} 个源"
+                         + ("（整站疑似不可用）" if h["sources"] >= 3 else ""))
+        lines.append("")
+    return "\n".join(lines) + "\n"

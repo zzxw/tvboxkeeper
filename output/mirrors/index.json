@@ -7,6 +7,7 @@
   "3cf497015dbbcfdf": {
     "name": "kstore合集",
     "url": "https://12586.kstore.space/123.txt",
+<<<<<<< HEAD
     "updated": "2026-11-15 01:11:55"
   },
   "db29232226aeaafd": {
@@ -18,10 +19,14 @@
     "name": "王小二",
     "url": "https://9280.kstore.vip/newwex.json",
     "updated": "2026-11-15 01:11:56"
+=======
+    "updated": "2026-11-15 15:33:56"
+>>>>>>> e0eebad (四项增强：超级直播列表 / jar md5 校验+parses 测活 / 合规黑名单 / 运维体验批)
   },
   "a47397e2e8110fbf": {
     "name": "aowu",
     "url": "https://9763.kstore.vip/aowu.json",
+<<<<<<< HEAD
     "updated": "2026-11-15 01:11:56"
   },
   "e511034e88fd3dc2": {
@@ -128,15 +133,54 @@
     "name": "二月红单仓",
     "url": "https://700sjro44343.vicp.fun/eggp/0211/tv.json",
     "updated": "2026-11-15 01:11:56"
+=======
+    "updated": "2026-11-15 15:33:56"
+>>>>>>> e0eebad (四项增强：超级直播列表 / jar md5 校验+parses 测活 / 合规黑名单 / 运维体验批)
   },
-  "43106e30960a8466": {
+  "d9a4a4ac373f01e7": {
+    "name": "🚀1-心魔在线",
+    "url": "https://gh-proxy.com/raw.githubusercontent.com/yw88075/tvbox/main/yw.json",
+    "updated": "2026-11-15 15:33:56"
+  },
+  "6b4b3302b8e0695d": {
+    "name": "🚀4-健康家用",
+    "url": "https://gitlab.com/noimank/tvbox/-/raw/main/tvbox1.json",
+    "updated": "2026-11-15 15:33:56"
+  },
+  "2ec885d8d3ed0e27": {
+    "name": "noimank多仓",
+    "url": "https://gitlab.com/noimank/tvbox/-/raw/main/tvboxmuti.json",
+    "updated": "2026-11-15 15:33:56"
+  },
+  "31aef7f75002fd33": {
+    "name": "raw.githubusercontent.com",
+    "url": "https://raw.githubusercontent.com/cluntop/tvbox/main/box.json",
+    "updated": "2026-11-15 15:33:56"
+  },
+  "c39624c28e976b63": {
     "name": "gh-proxy.com",
+<<<<<<< HEAD
     "url": "https://gh-proxy.com/https://raw.githubusercontent.com/zknjjjx/tvbox/main/tvbox.json",
     "updated": "2026-11-15 01:11:56"
+=======
+    "url": "https://gh-proxy.com/https://raw.githubusercontent.com/fengzhiku123/ysc-api/main/tvbox.json",
+    "updated": "2026-11-15 15:33:56"
+  },
+  "5f8c35dc9e6dda17": {
+    "name": "小米",
+    "url": "https://gh-proxy.org/raw.githubusercontent.com/ggrrttyyiii/CatVodSpider/refs/heads/main/json/demo.json",
+    "updated": "2026-11-15 15:33:56"
+  },
+  "7d1afd7dd32144d8": {
+    "name": "二月红",
+    "url": "https://700sjro44343.vicp.fun/eggp/0211/tv.json",
+    "updated": "2026-11-15 15:33:56"
+>>>>>>> e0eebad (四项增强：超级直播列表 / jar md5 校验+parses 测活 / 合规黑名单 / 运维体验批)
   },
   "9955aecf591bb06c": {
     "name": "🚀6-FongMI线路",
     "url": "https://gh-proxy.com/raw.githubusercontent.com//gaotianliuyun/gao/master/0827.json",
+<<<<<<< HEAD
     "updated": "2026-11-15 01:11:56"
   },
   "ee62ff5186869b78": {
@@ -188,25 +232,61 @@
     "name": "gh-proxy.com",
     "url": "https://gh-proxy.com/https://raw.githubusercontent.com/yw88075/tvbox/5df857abc263fda3c3e6cb1c285229f4d5e02230/ywdc.json",
     "updated": "2026-11-15 01:11:56"
+=======
+    "updated": "2026-11-15 15:33:56"
+>>>>>>> e0eebad (四项增强：超级直播列表 / jar md5 校验+parses 测活 / 合规黑名单 / 运维体验批)
   },
   "8ce471aeea5bc733": {
     "name": "raw.githubusercontent.com",
     "url": "https://raw.githubusercontent.com/hjwp2026-cmd/self-tvbox/main/tvbox.json",
+<<<<<<< HEAD
     "updated": "2026-11-15 01:11:56"
+=======
+    "updated": "2026-11-15 15:33:56"
+>>>>>>> e0eebad (四项增强：超级直播列表 / jar md5 校验+parses 测活 / 合规黑名单 / 运维体验批)
   },
   "648d7cf7e3fe986e": {
     "name": "gh-proxy.com",
     "url": "https://gh-proxy.com/https://raw.githubusercontent.com/lee-905/Lee-XFYIR-588/main/tvbox.json",
+<<<<<<< HEAD
     "updated": "2026-11-15 01:11:56"
+=======
+    "updated": "2026-11-15 15:33:56"
+  },
+  "d4d42756f6228813": {
+    "name": "王小二",
+    "url": "https://9280.kstore.vip/newwex.json",
+    "updated": "2026-11-15 15:33:56"
+>>>>>>> e0eebad (四项增强：超级直播列表 / jar md5 校验+parses 测活 / 合规黑名单 / 运维体验批)
   },
   "66d08dfb397a3c86": {
     "name": "gh-proxy.com",
     "url": "https://gh-proxy.com/https://raw.githubusercontent.com/becauseyour/tvbox/main/config.json",
+<<<<<<< HEAD
     "updated": "2026-11-15 01:11:56"
+=======
+    "updated": "2026-11-15 15:33:56"
+  },
+  "43106e30960a8466": {
+    "name": "gh-proxy.com",
+    "url": "https://gh-proxy.com/https://raw.githubusercontent.com/zknjjjx/tvbox/main/tvbox.json",
+    "updated": "2026-11-15 15:33:56"
+  },
+  "97f4dfa51a2b5d3c": {
+    "name": "🚀10-高天流云js",
+    "url": "https://gh-proxy.com/raw.githubusercontent.com/gaotianliuyun/gao/master/js.json",
+    "updated": "2026-11-15 15:33:56"
+  },
+  "06d586b221b8e0e2": {
+    "name": "gh-proxy.com",
+    "url": "https://gh-proxy.com/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/tvbox.json",
+    "updated": "2026-11-15 15:33:56"
+>>>>>>> e0eebad (四项增强：超级直播列表 / jar md5 校验+parses 测活 / 合规黑名单 / 运维体验批)
   },
   "53e889f9ec879f2f": {
     "name": "潇洒",
     "url": "https://qist.wyfc.qzz.io/xiaosa/api.json",
+<<<<<<< HEAD
     "updated": "2026-11-15 01:11:56"
   },
   "06d586b221b8e0e2": {
@@ -218,70 +298,131 @@
     "name": "摸鱼儿",
     "url": "http://fish.y456y.com",
     "updated": "2026-11-15 01:11:56"
+=======
+    "updated": "2026-11-15 15:33:56"
+>>>>>>> e0eebad (四项增强：超级直播列表 / jar md5 校验+parses 测活 / 合规黑名单 / 运维体验批)
   },
   "193748599d9df9d0": {
     "name": "🚀5-Clun在线·直播",
     "url": "https://raw.githubusercontent.com/mlzlzj/TV/main/output/result.m3u",
+<<<<<<< HEAD
     "updated": "2026-11-15 01:11:56"
+=======
+    "updated": "2026-11-15 15:33:56"
+>>>>>>> e0eebad (四项增强：超级直播列表 / jar md5 校验+parses 测活 / 合规黑名单 / 运维体验批)
   },
   "076d5bf1145c6b73": {
     "name": "🚀5-Clun在线·直播",
     "url": "https://raw.githubusercontent.com/Guovin/iptv-api/gd/output/result.m3u",
+<<<<<<< HEAD
     "updated": "2026-11-15 01:11:56"
+=======
+    "updated": "2026-11-15 15:33:56"
+>>>>>>> e0eebad (四项增强：超级直播列表 / jar md5 校验+parses 测活 / 合规黑名单 / 运维体验批)
   },
   "8ba5f786ff72b11d": {
     "name": "🚀5-Clun在线·直播",
     "url": "https://raw.githubusercontent.com/suxuang/myIPTV/main/ipv4.m3u",
+<<<<<<< HEAD
     "updated": "2026-11-15 01:11:56"
+=======
+    "updated": "2026-11-15 15:33:56"
+>>>>>>> e0eebad (四项增强：超级直播列表 / jar md5 校验+parses 测活 / 合规黑名单 / 运维体验批)
   },
   "d200387e02f2b5a6": {
     "name": "🚀4-健康家用·直播",
     "url": "https://gh-proxy.com/https://raw.githubusercontent.com/yoursmile66/TVBox/main/live.txt",
+<<<<<<< HEAD
     "updated": "2026-11-15 01:11:56"
+=======
+    "updated": "2026-11-15 15:33:56"
+>>>>>>> e0eebad (四项增强：超级直播列表 / jar md5 校验+parses 测活 / 合规黑名单 / 运维体验批)
   },
   "5b644a135e274d00": {
     "name": "🚀5-Clun在线·直播",
     "url": "https://sub.ottiptv.cc/huyayqk.m3u",
+<<<<<<< HEAD
     "updated": "2026-11-15 01:11:56"
   },
   "401059947fe3b7a8": {
     "name": "🚀5-Clun在线·直播",
     "url": "https://sub.ottiptv.cc/douyuyqk.m3u",
     "updated": "2026-11-15 01:11:56"
+=======
+    "updated": "2026-11-15 15:33:56"
+>>>>>>> e0eebad (四项增强：超级直播列表 / jar md5 校验+parses 测活 / 合规黑名单 / 运维体验批)
   },
   "84a6447039575529": {
     "name": "🚀5-Clun在线·直播",
     "url": "https://sub.ottiptv.cc/yylunbo.m3u",
+<<<<<<< HEAD
     "updated": "2026-11-15 01:11:56"
+=======
+    "updated": "2026-11-15 15:33:56"
+>>>>>>> e0eebad (四项增强：超级直播列表 / jar md5 校验+parses 测活 / 合规黑名单 / 运维体验批)
   },
   "7e8c6d97e3fcac16": {
     "name": "🚀5-Clun在线·直播",
     "url": "https://raw.githubusercontent.com/gambiarras/legal-iptv/refs/heads/main/playlist.m3u",
+<<<<<<< HEAD
     "updated": "2026-11-15 01:11:56"
+=======
+    "updated": "2026-11-15 15:33:56"
+>>>>>>> e0eebad (四项增强：超级直播列表 / jar md5 校验+parses 测活 / 合规黑名单 / 运维体验批)
   },
   "989d73ceab3e1792": {
     "name": "🚀5-Clun在线·直播",
     "url": "https://sub.ottiptv.cc/bililive.m3u",
+<<<<<<< HEAD
     "updated": "2026-11-15 01:11:56"
+=======
+    "updated": "2026-11-15 15:33:56"
+>>>>>>> e0eebad (四项增强：超级直播列表 / jar md5 校验+parses 测活 / 合规黑名单 / 运维体验批)
   },
   "c39eee929e84a09a": {
     "name": "🚀5-Clun在线·直播",
     "url": "https://mgtv.ottiptv.cc/mglist.m3u",
+<<<<<<< HEAD
     "updated": "2026-11-15 01:11:56"
+=======
+    "updated": "2026-11-15 15:33:56"
+>>>>>>> e0eebad (四项增强：超级直播列表 / jar md5 校验+parses 测活 / 合规黑名单 / 运维体验批)
   },
   "6a9fba7c43a75883": {
     "name": "aowu·直播",
     "url": "http://193.123.86.190:14888/TV/iptv.php",
+<<<<<<< HEAD
     "updated": "2026-11-15 01:11:56"
+=======
+    "updated": "2026-11-15 15:33:56"
+  },
+  "518a74ee5d56455e": {
+    "name": "raw.githubusercontent.com·直播",
+    "url": "https://down.nigx.cn/raw.githubusercontent.com/hjwp2026-cmd/self-tvbox/main/live.txt",
+    "updated": "2026-11-15 15:33:56"
+  },
+  "772b02d487dd64f3": {
+    "name": "raw.githubusercontent.com",
+    "url": "https://raw.githubusercontent.com/YanG-1989/m3u/main/Gather.m3u",
+    "updated": "2026-11-15 15:33:57"
+>>>>>>> e0eebad (四项增强：超级直播列表 / jar md5 校验+parses 测活 / 合规黑名单 / 运维体验批)
   },
   "5efa347195a3ec16": {
     "name": "🚀5-Clun在线·直播",
     "url": "https://raw.githubusercontent.com/Kimentanm/aptv/master/m3u/iptv.m3u",
+<<<<<<< HEAD
     "updated": "2026-11-15 01:11:56"
+=======
+    "updated": "2026-11-15 15:33:56"
+>>>>>>> e0eebad (四项增强：超级直播列表 / jar md5 校验+parses 测活 / 合规黑名单 / 运维体验批)
   },
   "649d0c4b41652f87": {
     "name": "小米·直播",
     "url": "https://mpimg.cn/down.php/caac7a6dae8f835257a11e7a11291bf2.txt",
+<<<<<<< HEAD
     "updated": "2026-11-15 01:11:56"
+=======
+    "updated": "2026-11-15 15:33:56"
+>>>>>>> e0eebad (四项增强：超级直播列表 / jar md5 校验+parses 测活 / 合规黑名单 / 运维体验批)
   }
 }

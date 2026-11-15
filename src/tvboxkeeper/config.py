@@ -29,6 +29,8 @@ DEFAULTS: dict[str, Any] = {
         "anti_crawl_grace": 3,
         "max_probes": 12,
         "probe_timeout": 8,
+        # jar 全量下载校验 md5 的字节上限（配置声明了 md5 才触发）
+        "jar_max_bytes": 20 * 1024 * 1024,
         "l3": {"sample_sites": 3, "timeout": 8, "enabled": True,
                "daily_quota": 5, "min_health": 85},
         # 增量体检：内容 md5 未变且离上次真实探测不足 probe_every_days 时跳过 L2
@@ -42,6 +44,9 @@ DEFAULTS: dict[str, Any] = {
         "site": "output/site/index.html",
         "diff": "output/last_diff.json",
         "live": "output/直播.json",  # 直播合集配置（lives 数组，可作配置地址导入）
+        # 超级直播列表：多源频道名归一合并、同频道多线路互备的大 m3u/txt
+        "super_live": "output/super_live.txt",
+        "weekly": "output/周报.md",  # 每周日生成的汇总周报
         # 精简订阅：门槛更高、条数更少，给低配盒子/长辈用，与全量版互不影响
         "lite": {
             "duocang": "output/多仓-lite.json",
@@ -55,6 +60,14 @@ DEFAULTS: dict[str, Any] = {
         "mirror_base": "",
     },
     "snapshot": {"keep": 10},
+    "compliance": {
+        "enabled": True,   # 体检时扫描敏感关键词，命中自动封禁
+        "keywords": [      # 保守匹配，只收录足够具体的词，避免误伤
+            "bet365", "hg0088", "hg3088", "hg9088", "js06", "vwin", "fun88",
+            "太阳城", "澳门威尼斯", "凯时娱乐", "乐天堂", "六合彩",
+            "麻豆传媒", "花季传媒", "十八禁",
+        ],
+    },
     "cleanup": {
         "check_log_days": 90,  # 体检日志保留天数
         "snapshot_days": 90,   # 内容快照保留天数

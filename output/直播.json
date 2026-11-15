@@ -1,6 +1,11 @@
 {
   "lives": [
     {
+      "name": "超级合集·多源互备",
+      "type": 0,
+      "url": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/super_live.txt"
+    },
+    {
       "name": "🚀5-Clun在线·直播",
       "type": 0,
       "url": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/193748599d9df9d0.json"
@@ -28,11 +33,6 @@
     {
       "name": "🚀5-Clun在线·直播",
       "type": 0,
-      "url": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/401059947fe3b7a8.json"
-    },
-    {
-      "name": "🚀5-Clun在线·直播",
-      "type": 0,
       "url": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/84a6447039575529.json"
     },
     {
@@ -54,6 +54,16 @@
       "name": "aowu·直播",
       "type": 0,
       "url": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/6a9fba7c43a75883.json"
+    },
+    {
+      "name": "raw.githubusercontent.com·直播",
+      "type": 0,
+      "url": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/518a74ee5d56455e.json"
+    },
+    {
+      "name": "raw.githubusercontent.com",
+      "type": 0,
+      "url": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/772b02d487dd64f3.json"
     },
     {
       "name": "🚀5-Clun在线·直播",

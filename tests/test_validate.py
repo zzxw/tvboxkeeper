@@ -52,6 +52,65 @@ def _run_check(settings):
     return asyncio.run(inner())
 
 
+def test_content_ok_parse():
+    assert _content_ok("parse", b'{"code": 1, "url": "http://x"}', 200)
+    assert _content_ok("parse", b"<xml>ok</xml>", 200)
+    assert not _content_ok("parse", b"<html>err</html>", 200)
+    assert not _content_ok("parse", b"", 200)
+
+
+def test_jar_md5_validation():
+    """配置声明 md5 时：jar 全量下载并校验哈希一致性。"""
+    import hashlib
+    jar_body = b"PK\x03\x04fake-jar-body"
+    good_md5 = hashlib.md5(jar_body).hexdigest()
+
+    def ok_handler(request) -> httpx.Response:
+        url = str(request.url)
+        if url == CONFIG_URL:
+            return httpx.Response(200, json={
+                "spider": f"{API_URL}/x.jar;md5;{good_md5}",
+                "sites": [{"type": 0, "api": API_URL}]})
+        if url.startswith(f"{API_URL}/x.jar"):
+            return httpx.Response(200, content=jar_body)
+        if url.startswith(API_URL):
+            return httpx.Response(200, json={"code": 1, "list": []})
+        return httpx.Response(404)
+
+    def run(handler, settings):
+        async def inner():
+            async with httpx.AsyncClient(
+                    transport=httpx.MockTransport(handler)) as client:
+                sem = asyncio.Semaphore(4)
+                return await check_source(client, sem, CONFIG_URL, settings)
+        return asyncio.run(inner())
+
+    settings = load_settings(None)
+    settings["validate"]["level"] = "L2"
+    out = run(ok_handler, settings)
+    jar = [p for p in out.probes if p.kind == "jar"][0]
+    assert jar.md5_ok is True and jar.ok
+
+    # 哈希不匹配 → 200 也不算过（jar 被静默换包）
+    settings2 = load_settings(None)
+    settings2["validate"]["level"] = "L2"
+    bad_handler_ok = ok_handler  # jar 内容相同但配置声明 0*32
+
+    def bad_config_handler(request) -> httpx.Response:
+        url = str(request.url)
+        if url == CONFIG_URL:
+            return httpx.Response(200, json={
+                "spider": f"{API_URL}/x.jar;md5;{'0' * 32}",
+                "sites": [{"type": 0, "api": API_URL}]})
+        if url.startswith(f"{API_URL}/x.jar"):
+            return httpx.Response(200, content=jar_body)
+        return httpx.Response(404)
+
+    out2 = run(bad_config_handler, settings2)
+    jar2 = [p for p in out2.probes if p.kind == "jar"][0]
+    assert jar2.md5_ok is False and not jar2.ok
+
+
 def test_l2_no_site_sampling():
     out = _run_check(SETTINGS)  # level=L2
     assert out.ok

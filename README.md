@@ -71,7 +71,14 @@ git push -u origin main
   `DINGTALK_WEBHOOK_URL` / `WECOM_WEBHOOK_URL`，填机器人 webhook 完整地址）；
 - **本地兜底**：`powershell -ExecutionPolicy Bypass -File scripts\install-task.ps1`
   注册 Windows 计划任务（每天 06:10，错过开机补跑），与 Actions 互为备份，
-  日志在 `data/local-run.log`，卸载见脚本注释；
+  日志在 `data/local-run.log`，卸载见脚本注释。注意 `scripts\daily-task.bat`
+  必须保持**纯 ASCII**——cmd 按 OEM 代码页解析 .bat，写中文会破坏路径；
+- **钉钉加签**：机器人安全设置选"加签"时，另配 Secret
+  `DINGTALK_SECRET` 即可自动签名；
+- **周报**：每周日 `publish` 自动生成 `output/周报.md`
+  （7 天可用率趋势 / 内容变化 / 失败原因与主机），notify 当日一并推送；
+- **单源详情页**：看板表格点击源名进入 `site/source-<id>.html`，
+  含体检历史与内容变更记录；
 - **同内容归并**：内容完全相同的源只保留最优一个进订阅（报告里列出归并关系）；
 - **数据生命周期**：体检日志/快照/挖源记录默认保留 90 天（settings.yaml
   `cleanup` 可调），publish 时自动清理并 VACUUM 瘦身。
@@ -88,7 +95,17 @@ git push -u origin main
 直播文件（`#genre#` txt / m3u）是一等源：`discover` 会从活跃配置的
 `lives[].url` 自动登记直播源，体检时统计频道/分组数并抽样测流（L2），
 同样参与健康分、镜像、归并。`publish` 额外生成 `output/直播.json`
-（只含直播的合集配置），可作为配置地址单独导入。
+（只含直播的合集配置）与 `output/super_live.txt` **超级直播列表**
+（多源频道名归一合并：CCTV-1/央视一套/CCTV1综合 → 同一频道，
+多线路 `#` 互备，央视/卫视/其他分组排序）。
+
+## 深度验证与合规
+
+- **jar 完整性校验**：配置里 `spider: url;md5;hash` 带哈希时，全量下载
+  jar 校验 md5 一致性——jar 被静默换包能发现（200 状态不算过）；
+- **parses 测活**：解析接口纳入 L2 探测，播放链路更完整；
+- **合规黑名单**：体检扫描配置内容里的敏感关键词（`settings.yaml
+  compliance`，保守匹配），命中自动 banned，降低公开仓库风险。
 
 ## 安全与合规边界
 

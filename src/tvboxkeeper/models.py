@@ -10,15 +10,20 @@ class ProbeResult:
     """单个子资源（jar/直播/wallpaper）的探测结果。"""
 
     url: str
-    kind: str  # jar | live | wallpaper
+    kind: str  # jar | parse | live | channel | wallpaper
     status: int = 0
     latency_ms: int = 0
     error: str = ""
     content_ok: bool = True  # 内容特征校验（jar 魔数/直播列表特征）
+    md5_ok: bool | None = None  # jar 带配置声明 md5 时的校验结果；None=未校验
 
     @property
     def ok(self) -> bool:
-        return 200 <= self.status < 400 and self.content_ok
+        if not (200 <= self.status < 400):
+            return False
+        if self.md5_ok is not None:
+            return self.md5_ok  # 配置声明了 md5 就以哈希一致性为准
+        return self.content_ok
 
 
 @dataclass
@@ -35,6 +40,8 @@ class SchemaInfo:
     live_groups: int = 0
     # L3 抽测候选：type 0/1 站点的 http(s) CMS api（最多收集 10 个）
     site_apis: list[str] = field(default_factory=list)
+    # spider 声明的 md5（"url;md5;hash" 写法）：jar 全量下载后校验一致性
+    jar_md5: dict[str, str] = field(default_factory=dict)
     # 分支适配标注：通用 / 偏影视仓 / 需特定分支（多仓为空）
     compat: str = ""
     # L2 待探测的子资源 (kind, url)，顺序即优先级

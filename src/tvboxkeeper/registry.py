@@ -10,6 +10,7 @@ import time
 from pathlib import Path
 from urllib.parse import urlsplit
 
+from . import compliance as compliance_mod
 from . import diffing
 from .models import CheckOutcome, SchemaInfo
 from .normalize import guess_name, normalize_url, source_id
@@ -386,9 +387,15 @@ class Registry:
         schema = outcome.schema
         schema_type = schema.schema_type if schema else ""
 
+        # 合规黑名单：命中敏感关键词的内容直接封禁，不进快照与订阅
+        hit = compliance_mod.scan(outcome.content, settings) if ok else None
+        if hit:
+            ok = False
+            outcome.error = f"合规黑名单命中「{hit}」，已自动封禁"
+
         streak_ok = row["streak_ok"] + 1 if ok else 0
         streak_fail = 0 if ok else row["streak_fail"] + 1
-        if row["banned"]:
+        if hit or row["banned"]:
             status = "banned"
         elif ok:
             status = "active"
@@ -426,6 +433,8 @@ class Registry:
         }
         if outcome.skipped_probes:
             detail_data["skip"] = 1
+        if hit:
+            detail_data["compliance"] = hit
         if change:
             detail_data["chg"] = change
         detail = json.dumps(detail_data, ensure_ascii=False)
@@ -460,6 +469,11 @@ class Registry:
              1 if ok else 0, content_md5, score, sid),
         )
         self.conn.commit()
+        if hit:
+            self.conn.execute(
+                "UPDATE source SET banned=1, notes=? WHERE id=?",
+                (f"自动封禁:命中「{hit}」", sid))
+            self.conn.commit()
         if ok and outcome.content:
             self._save_snapshot(sid, outcome.content,
                                 settings["snapshot"]["keep"])

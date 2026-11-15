@@ -49,6 +49,10 @@ def _content_ok(kind: str, body: bytes, status: int) -> bool:
         # 直播频道流：m3u8 文本或音视频二进制都行，唯独不能是 HTML 错误页
         low = body.lower()
         return bool(body) and b"<html" not in low and b"<!doctype" not in low
+    if kind == "parse":
+        # 解析接口：能回内容且不是 HTML 错误页即可（返回体形态各异）
+        low = body.lower()
+        return bool(body) and b"<html" not in low and b"<!doctype" not in low
     return True  # wallpaper 等只看状态
 
 
@@ -58,8 +62,23 @@ async def _probe(
     url: str,
     kind: str,
     settings: dict,
+    md5: str | None = None,
 ) -> ProbeResult:
     v = settings["validate"]
+    if kind == "jar" and md5:
+        # 配置声明了 jar md5：全量下载做哈希一致性校验（jar 被静默换包能发现）
+        net = settings["network"]
+        fr = await fetch(
+            client, sem, url,
+            max_bytes=v.get("jar_max_bytes", 20 * 1024 * 1024),
+            timeout=net["timeout"], retries=1,
+        )
+        md5_ok = (200 <= fr.status < 400
+                  and hashlib.md5(fr.content).hexdigest() == md5)
+        return ProbeResult(url=url, kind=kind, status=fr.status,
+                           latency_ms=fr.latency_ms, error=fr.error,
+                           content_ok=fr.content[:2] == b"PK",
+                           md5_ok=md5_ok)
     fr = await fetch(
         client, sem, url,
         max_bytes=65536,
@@ -136,7 +155,8 @@ async def check_source(
         probes = info.probes[: settings["validate"]["max_probes"]]
         if probes:
             out.probes = list(await asyncio.gather(
-                *(_probe(client, sem, u, kind, settings) for kind, u in probes)
+                *(_probe(client, sem, u, kind, settings,
+                         md5=info.jar_md5.get(u)) for kind, u in probes)
             ))
             out.level = "L2"
     if level == "L3":

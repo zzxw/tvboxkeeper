@@ -6,6 +6,7 @@ import asyncio
 import os
 import random
 import time
+from datetime import date
 from pathlib import Path
 
 import httpx
@@ -454,6 +455,31 @@ def publish() -> None:
     live_data = publish_mod.build_live_config(
         rows, pub["min_health"], mirror_base=mirror_base,
         mirrored_sids=set(mirrored))
+
+    # 超级直播列表：多源频道归一合并、同频道多线路互备
+    super_sources = []
+    for r in live_pick:
+        snap = reg.latest_snapshot(r["id"])
+        if snap:
+            super_sources.append((r.get("name") or r["url"], snap[0]))
+    super_text, super_stats = publish_mod.build_super_live(super_sources)
+    super_url = ""
+    if super_text and mirror_base:
+        _base = (mirror_base[:-len("/mirrors")]
+                 if mirror_base.endswith("/mirrors") else mirror_base)
+        super_url = f"{_base}/super_live.txt"
+    super_note = ""
+    if super_text:
+        super_path = root / pub["super_live"]
+        super_path.parent.mkdir(parents=True, exist_ok=True)
+        super_path.write_text(super_text, encoding="utf-8")
+        if super_url:
+            live_data["lives"].insert(0, {
+                "name": "超级合集·多源互备", "type": 0, "url": super_url})
+        super_note = (f"超级直播列表：`{pub['super_live']}`"
+                      f"（{super_stats['channels']} 个频道 / "
+                      f"{super_stats['urls']} 条线路，由 "
+                      f"{super_stats['sources']} 个健康直播源归一合并）。")
     live_path = root / pub["live"]
     live_path.parent.mkdir(parents=True, exist_ok=True)
     live_path.write_text(
@@ -499,6 +525,7 @@ def publish() -> None:
         dedupe_groups=merged,
         live_info=(f"直播合集：`{pub['live']}`（{len(live_data['lives'])} 个源），"
                    "同样可作配置地址导入，只含直播。"
+                   + (f" {super_note}" if super_note else "")
                    if live_data["lives"] else ""),
         changes=changes, hosts=hosts, incremental=incremental,
         lite_info=lite_info,
@@ -519,12 +546,35 @@ def publish() -> None:
     site_path = root / pub["site"]
     site_path.parent.mkdir(parents=True, exist_ok=True)
     histories = {r["id"]: reg.history(r["id"], limit=20) for r in rows}
+    # 单源详情页：看板行点击进入
+    site_dir = site_path.parent
+    detail_links = {}
+    for r in rows:
+        if r.get("banned"):
+            continue
+        fn = f"source-{r['id']}.html"
+        detail_links[r["id"]] = fn
+        (site_dir / fn).write_text(
+            publish_mod.build_source_detail(r, reg.history(r["id"], limit=50)),
+            encoding="utf-8")
     site_html = publish_mod.build_site(
         rows, histories, reg.failure_reasons(days=30),
         len(data["storeHouse"]), pub["min_health"],
         trend=trend, hosts=hosts, changes=changes,
-        lite_count=len(lite_data["storeHouse"]))
+        lite_count=len(lite_data["storeHouse"]),
+        detail_links=detail_links)
     site_path.write_text(site_html, encoding="utf-8")
+
+    # 周报：每周日生成，notify 会随当日通知一起推送
+    if date.today().weekday() == 6:
+        weekly = publish_mod.build_weekly_markdown(
+            publish_mod.status_breakdown(rows), trend,
+            reg.failure_reasons(days=7), reg.recent_changes(hours=7 * 24),
+            reg.host_failures(days=7))
+        weekly_path = root / pub.get("weekly", "output/周报.md")
+        weekly_path.parent.mkdir(parents=True, exist_ok=True)
+        weekly_path.write_text(weekly, encoding="utf-8")
+        typer.echo(f"已生成周报：{weekly_path.name}")
 
     # 过期数据清理（日志/快照/挖源记录 + VACUUM）
     cleaned = reg.cleanup(settings)
@@ -582,6 +632,11 @@ def notify() -> None:
         url = os.environ.get(env_key, "")
         if not url:
             continue
+        if platform == "dingtalk":
+            # 加签安全模式（机器人安全设置选了"加签"时必配 DINGTALK_SECRET）
+            secret = os.environ.get("DINGTALK_SECRET", "")
+            if secret:
+                url = publish_mod.dingtalk_sign(url, secret)
         try:
             resp = httpx.post(
                 url, json=publish_mod.webhook_payload(platform, text),

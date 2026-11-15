@@ -78,14 +78,38 @@ def _resolve_url(value: str, base: str) -> str | None:
     return None
 
 
-def _spider_urls(spider, base: str) -> list[str]:
-    """spider 字段形如 "url;md5;hash"，也可能是数组或相对路径。"""
-    urls: list[str] = []
+def _spider_urls(spider, base: str) -> list[tuple[str, str | None]]:
+    """spider 字段形如 "url;md5;hash"，也可能是数组或相对路径。
+
+    返回 (url, 声明的md5或None)，md5 供 jar 全量校验用。
+    """
+    out: list[tuple[str, str | None]] = []
     items = spider if isinstance(spider, list) else [spider]
     for item in items:
         if not isinstance(item, str):
             continue
-        resolved = _resolve_url(item.split(";")[0], base)
+        parts = [p.strip() for p in item.split(";")]
+        resolved = _resolve_url(parts[0], base)
+        if not resolved:
+            continue
+        md5 = None
+        if len(parts) >= 3 and re.fullmatch(r"[0-9a-fA-F]{32}", parts[2] or ""):
+            md5 = parts[2].lower()
+        elif len(parts) >= 2 and re.fullmatch(r"[0-9a-fA-F]{32}", parts[1] or ""):
+            md5 = parts[1].lower()
+        out.append((resolved, md5))
+    return out
+
+
+def _parse_urls(parses, base: str) -> list[str]:
+    """parses[].url 解析接口地址（type 0/1/2 常见），供 L2 测活。"""
+    urls: list[str] = []
+    if not isinstance(parses, list):
+        return urls
+    for parse in parses:
+        if not isinstance(parse, dict):
+            continue
+        resolved = _resolve_url(str(parse.get("url") or ""), base)
         if resolved:
             urls.append(resolved)
     return urls
@@ -240,9 +264,13 @@ def parse_config(url: str, text: str) -> SchemaInfo:
     info.site_apis = info.site_apis[:10]
     info.compat = _compat_tag(info.sites_count, csp, drpy, ext)
 
-    # 子资源探测清单：jar 优先，其次直播、壁纸
-    for sp in _spider_urls(data.get("spider"), url):
+    # 子资源探测清单：jar（含 md5 校验）→ 解析接口 → 直播 → 壁纸
+    for sp, md5 in _spider_urls(data.get("spider"), url):
         info.probes.append(("jar", sp))
+        if md5:
+            info.jar_md5[sp] = md5
+    for pu in _parse_urls(data.get("parses"), url):
+        info.probes.append(("parse", pu))
     for lv in _live_urls(data.get("lives")):
         info.probes.append(("live", lv))
     wallpaper = _resolve_url(str(data.get("wallpaper") or ""), url)

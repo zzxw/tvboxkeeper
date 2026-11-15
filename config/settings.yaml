@@ -20,6 +20,7 @@ validate:
   anti_crawl_grace: 3        # 反爬页判死宽限倍数（3×3=9 次才判死）
   max_probes: 12             # L2 最多探测的子资源数
   probe_timeout: 8           # 子资源探测超时（秒）
+  jar_max_bytes: 20971520    # jar 全量校验 md5 的下载上限（20MB）
   l3:
     sample_sites: 3          # L3 抽测的站点接口数
     timeout: 8               # L3 单次请求超时（秒）
@@ -45,6 +46,7 @@ publish:
   site: output/site/index.html   # 静态看板（GitHub Pages 用）
   diff: output/last_diff.json    # 本轮变化记录，notify 命令读取
   live: output/直播.json         # 直播合集配置（可作配置地址导入）
+  super_live: output/super_live.txt  # 超级直播列表（频道归一合并、多线路互备）
   # 精简订阅：门槛更高、条数更少，给低配盒子/长辈用，与全量版互不影响
   lite:
     duocang: output/多仓-lite.json
@@ -58,6 +60,16 @@ publish:
 
 snapshot:
   keep: 10   # 每个源保留的快照份数
+
+compliance:
+  enabled: true        # 体检时扫描敏感关键词，命中自动 banned
+  keywords:            # 保守匹配，可按需增删
+    - bet365
+    - hg0088
+    - 太阳城
+    - 澳门威尼斯
+    - 麻豆传媒
+    - 十八禁
 
 cleanup:
   check_log_days: 90  # 体检日志保留天数（过期自动清理 + VACUUM）

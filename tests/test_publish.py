@@ -33,6 +33,59 @@ def test_duocang_filters_and_sorts():
     assert "storeHouse" in data
 
 
+def test_channel_key_normalization():
+    from tvboxkeeper.publish import channel_key
+    assert channel_key("CCTV-1") == channel_key("央视一套") == "CCTV1"
+    assert channel_key("CCTV1综合") == "CCTV1"
+    assert channel_key("CCTV-5+") == "CCTV5P"
+    assert channel_key("东方卫视") == "东方卫视"
+
+
+def test_super_live_merge_and_backup():
+    from tvboxkeeper.publish import build_super_live
+    text, stats = build_super_live([
+        ("A", "央视,#genre#\nCCTV1,http://a/1.m3u8\nCCTV-1,http://b/1.m3u8\n"
+              "卫视,#genre#\n东方卫视,http://a/df.m3u8".encode()),
+        ("B", "央视,#genre#\n央视一套,http://c/1.m3u8".encode()),
+    ])
+    assert "央视,#genre#" in text and "卫视,#genre#" in text
+    # 三个写法的 CCTV1 合并成一行，3 条线路互备
+    assert "CCTV1,http://a/1.m3u8#http://b/1.m3u8#http://c/1.m3u8" in text
+    assert stats["channels"] == 2 and stats["urls"] == 4
+    # 空输入
+    text2, stats2 = build_super_live([])
+    assert text2 == "" and stats2["channels"] == 0
+
+
+def test_dingtalk_sign():
+    from tvboxkeeper.publish import dingtalk_sign
+    url = dingtalk_sign("https://oapi.dingtalk.com/robot/send?access_token=x",
+                        "secret123")
+    assert "timestamp=" in url and "sign=" in url
+    assert url != "https://oapi.dingtalk.com/robot/send?access_token=x"
+
+
+def test_source_detail_page():
+    from tvboxkeeper.publish import build_source_detail
+    row = dict(make_row("站点A", "http://b/c.json"),
+               id="aaa111", l3_tested=0, l3_ok=0, dup_of="", compat="通用")
+    hist = [{"ts": "2026-11-12 06:00:00", "level": "L2", "ok": 1,
+             "latency_ms": 500, "parsed": {"schema": "tvbox", "error": ""}}]
+    page = build_source_detail(row, hist)
+    assert "站点A" in page and "index.html" in page and "2026-11-12" in page
+
+
+def test_weekly_markdown():
+    from tvboxkeeper.publish import build_weekly_markdown
+    md = build_weekly_markdown(
+        "总数 66（active 36）",
+        [{"date": "2026-11-11", "total": 60, "ok": 50, "rate": 83}],
+        [{"reason": "超时", "count": 9, "sources": 4}],
+        [{"name": "A源", "change": {"added": ["x"], "removed": []}}],
+        [{"host": "dead.example", "fails": 6, "sources": 4}])
+    assert "周报" in md and "83%" in md and "A源" in md and "dead.example" in md
+
+
 def test_duocang_names():
     data = build_duocang(ROWS, min_health=60)
     names = [e["sourceName"] for e in data["storeHouse"]]
