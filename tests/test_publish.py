@@ -99,6 +99,19 @@ def test_super_live_drops_dead_urls():
     assert stats["dead_dropped"] == 2
 
 
+def test_site_copy_buttons_and_sub_urls():
+    rows = [dict(make_row("站点A", "http://b/c.json"),
+                 id="aaa111", l3_tested=0, l3_ok=0, dup_of="", compat="通用")]
+    out = build_site(rows, {}, [], duocang_count=1, min_health=60,
+                     sub_urls={"多仓订阅": "https://x/多仓.json"})
+    # 每行 URL 带复制按钮（完整 URL 进 data-url，不受截断影响）
+    assert 'class="copy-btn"' in out
+    assert 'data-url="http://b/c.json"' in out
+    assert "url-text" in out
+    # 订阅地址卡片
+    assert "订阅地址" in out and "https://x/多仓.json" in out
+
+
 def test_duocang_names():
     data = build_duocang(ROWS, min_health=60)
     names = [e["sourceName"] for e in data["storeHouse"]]

@@ -889,8 +889,7 @@ th[aria-sort="ascending"] .arw,th[aria-sort="descending"] .arw{
 .hbar.ok{color:var(--ok)} .hbar.warn{color:var(--warn)}
 .hbar.bad{color:var(--bad)} .hbar.off{color:var(--text-4)}
 .avail.a-hi{color:var(--ok)} .avail.a-lo{color:var(--bad)}
-.url{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-     font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;
+.url{max-width:340px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;
      color:#64748b}
 #empty td{text-align:center;padding:32px;font-size:12.5px;color:var(--text-3)}
 /* ---------- 表尾：排序摘要 + 分页 ---------- */
@@ -996,6 +995,25 @@ footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);
 @media (prefers-reduced-motion:reduce){
   *{transition:none!important;animation:none!important}
 }
+/* ---------- 复制链接按钮：截断的 URL 悬浮可见但复制不了，按钮补上这一步 ---------- */
+td.c-url{white-space:nowrap}
+.url .url-text{display:inline-block;vertical-align:middle;max-width:230px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.copy-btn{border:1px solid #334155;background:#1e293b;color:#93c5fd;
+  border-radius:6px;padding:2px 8px;font-size:11.5px;line-height:1.4;
+  cursor:pointer;vertical-align:middle;margin-left:6px}
+.copy-btn:hover{background:#273449;color:#bfdbfe;border-color:#475569}
+.copy-btn.copied{border-color:#14532d;background:#14532d;color:#4ade80}
+/* ---------- 订阅地址卡片 ---------- */
+.sub-panel{background:#111a2e;border:1px solid #1e293b;border-radius:12px;
+  padding:12px 16px;margin:0 0 18px}
+.sub-panel h3{margin:0 0 8px;font-size:13px;color:var(--text-2);font-weight:600}
+.sub-item{display:flex;align-items:center;gap:10px;padding:4px 0}
+.sub-item .sub-name{flex:none;width:76px;color:var(--text);font-size:13px}
+.sub-item .sub-url{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:11.5px;color:#64748b}
+@media (max-width:640px){.sub-item .sub-name{width:58px}}
 """
 
 _SITE_JS = """\
@@ -1197,6 +1215,32 @@ psize.addEventListener('change', () => {
 
 syncHead();
 render();
+
+/* ---------- 复制链接：事件委托，分页/筛选后新增的按钮同样生效 ---------- */
+async function tvkCopy(t) {
+  try { await navigator.clipboard.writeText(t); return true; } catch (e) {}
+  /* 非 HTTPS（如本地 file:// 预览）走降级方案 */
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    const ok = document.execCommand('copy');
+    ta.remove(); return ok;
+  } catch (e) { return false; }
+}
+document.addEventListener('click', async (ev) => {
+  const btn = ev.target.closest('.copy-btn');
+  if (!btn) return;
+  ev.preventDefault();
+  const ok = await tvkCopy(btn.getAttribute('data-url') || '');
+  const old = btn.textContent;
+  btn.textContent = ok ? '已复制' : '失败';
+  btn.classList.toggle('copied', ok);
+  clearTimeout(btn._t);
+  btn._t = setTimeout(() => {
+    btn.textContent = old; btn.classList.remove('copied');
+  }, 1200);
+});
 """
 
 
@@ -1211,6 +1255,7 @@ def build_site(
     changes: list[dict] | None = None,
     lite_count: int = 0,
     detail_links: dict | None = None,
+    sub_urls: dict | None = None,
 ) -> str:
     """生成自包含的静态目录页（无外部依赖，可直接挂 GitHub Pages）。"""
     now = time.strftime("%Y-%m-%d %H:%M")
@@ -1289,7 +1334,9 @@ def build_site(
             f'<td class="c-l3 num">{l3}</td>'
             f'<td class="c-spark spark">{_sparkline(marks)}</td>'
             f'<td class="c-url url" title="{esc(r["url"])}">'
-            f'{esc(r["url"][:80])}</td>'
+            f'<span class="url-text">{esc(r["url"][:80])}</span>'
+            f'<button type="button" class="copy-btn" data-url="{esc(r["url"])}" '
+            f'aria-label="复制完整链接">复制</button></td>'
             f'</tr>')
 
     doc_total = sum(kind_count.values())
@@ -1297,6 +1344,18 @@ def build_site(
     vod_n = kind_count.get("vod", 0)
     lite_note = f" · 精简版 {lite_count} 个源" if lite_count else ""
     trend_block = _trend_panel(trend, doc_total, live_n)
+
+    # 订阅地址卡片：把可直接导入的链接摆到最显眼处，一键复制
+    sub_panel = ""
+    if sub_urls:
+        sub_items = "".join(
+            f'<div class="sub-item"><span class="sub-name">{esc(k)}</span>'
+            f'<code class="sub-url" title="{esc(v)}">{esc(v)}</code>'
+            f'<button type="button" class="copy-btn" data-url="{esc(v)}" '
+            f'aria-label="复制{k}订阅地址">复制</button></div>'
+            for k, v in sub_urls.items())
+        sub_panel = (f'<div class="sub-panel"><h3>订阅地址 · 点击「复制」即可导入 '
+                     f'TVBox / 影视仓</h3>{sub_items}</div>')
 
     # 内容变化摘要：让「本轮是否值得点开明细」一眼可见
     chg_line = ""
@@ -1348,7 +1407,7 @@ def build_site(
 <h1>TVBoxKeeper · 源体检看板</h1>
 <p class="meta">生成于 {now} · 订阅门槛：健康分 ≥ {min_health} · 订阅源 {duocang_count} 个{lite_note}</p>
 <div class="cards">{cards}</div>
-{chg_line}{trend_block}
+{sub_panel}{chg_line}{trend_block}
 <div class="tools">
 <input id="q" type="search" placeholder="筛选名称 / 状态 / URL…" aria-label="按名称或链接筛选源">
 <div class="filters" role="group" aria-label="按类型筛选">

@@ -620,6 +620,20 @@ def publish() -> None:
         "added": sorted(added), "removed": sorted(removed),
     }, ensure_ascii=False, indent=2), encoding="utf-8")
 
+    # 订阅地址卡片：从镜像基址推导可直接导入的完整链接
+    sub_urls: dict[str, str] = {}
+    if mirror_base:
+        _base = (mirror_base[:-len("/mirrors")]
+                 if mirror_base.endswith("/mirrors") else mirror_base)
+        sub_urls = {
+            "多仓订阅": f"{_base}/多仓.json",
+            "直播订阅": f"{_base}/直播.json",
+            "超级直播": f"{_base}/super_live.txt",
+        }
+        if lite.get("duocang"):
+            sub_urls["多仓·精简"] = f"{_base}/多仓-lite.json"
+            sub_urls["直播·精简"] = f"{_base}/直播-lite.json"
+
     # 静态看板
     site_path = root / pub["site"]
     site_path.parent.mkdir(parents=True, exist_ok=True)
@@ -640,7 +654,8 @@ def publish() -> None:
         len(data["storeHouse"]), pub["min_health"],
         trend=trend, hosts=hosts, changes=changes,
         lite_count=len(lite_data["storeHouse"]),
-        detail_links=detail_links)
+        detail_links=detail_links,
+        sub_urls=sub_urls or None)
     site_path.write_text(site_html, encoding="utf-8")
 
     # 周报：每周日生成，notify 会随当日通知一起推送
