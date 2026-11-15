@@ -3,42 +3,42 @@
     {
       "sourceName": "kstore合集",
       "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/3cf497015dbbcfdf.json",
-      "sourceDelay": 360
+      "sourceDelay": 234
     },
     {
-      "sourceName": "aowu",
-      "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/a47397e2e8110fbf.json",
-      "sourceDelay": 7187
+      "sourceName": "gh-proxy.com",
+      "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/e511034e88fd3dc2.json",
+      "sourceDelay": 1905
+    },
+    {
+      "sourceName": "gh-proxy.com",
+      "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/6ee72818f7810f0c.json",
+      "sourceDelay": 3140
+    },
+    {
+      "sourceName": "gh-proxy.com",
+      "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/06d586b221b8e0e2.json",
+      "sourceDelay": 12265
+    },
+    {
+      "sourceName": "gh-proxy.com",
+      "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/cfb1f27db3fb8f51.json",
+      "sourceDelay": 3859
+    },
+    {
+      "sourceName": "gh-proxy.com",
+      "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/f1a8ef7eb0780784.json",
+      "sourceDelay": 2936
+    },
+    {
+      "sourceName": "gh-proxy.com",
+      "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/43106e30960a8466.json",
+      "sourceDelay": 6671
     },
     {
       "sourceName": "🚀1-心魔在线",
       "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/d9a4a4ac373f01e7.json",
-      "sourceDelay": 7796
-    },
-    {
-      "sourceName": "🚀4-健康家用",
-      "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/6b4b3302b8e0695d.json",
-      "sourceDelay": 952
-    },
-    {
-      "sourceName": "noimank多仓",
-      "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/2ec885d8d3ed0e27.json",
-      "sourceDelay": 812
-    },
-    {
-      "sourceName": "raw.githubusercontent.com",
-      "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/31aef7f75002fd33.json",
-      "sourceDelay": 8140
-    },
-    {
-      "sourceName": "gh-proxy.com",
-      "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/c39624c28e976b63.json",
-      "sourceDelay": 7421
-    },
-    {
-      "sourceName": "小米",
-      "sourceUrl": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/5f8c35dc9e6dda17.json",
-      "sourceDelay": 2125
+      "sourceDelay": 3844
     }
   ]
 }

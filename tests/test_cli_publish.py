@@ -119,3 +119,28 @@ def test_publish_writes_lite_subscription(tmp_path, monkeypatch):
     site = (tmp_path / "output" / "site" / "index.html").read_text(
         encoding="utf-8")
     assert "精简版 1 个源" in site
+
+
+def test_notify_silent_when_unchanged(tmp_path, monkeypatch):
+    monkeypatch.setenv("TVBOX_ROOT", str(tmp_path))
+    (tmp_path / "config").mkdir()
+    (tmp_path / "output").mkdir()
+    (tmp_path / "output" / "last_diff.json").write_text(
+        json.dumps({"ts": "2026-11-15 06:00:00", "count": 5,
+                    "added": [], "removed": []}), encoding="utf-8")
+
+    result = CliRunner().invoke(app, ["notify"])
+    assert result.exit_code == 0, result.output
+    assert "静默" in result.output  # 无变化不打扰通知渠道
+
+
+def test_notify_failure_alert(tmp_path, monkeypatch):
+    monkeypatch.setenv("TVBOX_ROOT", str(tmp_path))
+    monkeypatch.setenv("GITHUB_REPOSITORY", "zzxw/tvboxkeeper")
+    monkeypatch.setenv("GITHUB_RUN_ID", "12345")
+    (tmp_path / "config").mkdir()
+
+    result = CliRunner().invoke(app, ["notify", "--event", "failed"])
+    assert result.exit_code == 0, result.output
+    assert "跑批失败" in result.output
+    assert "actions/runs/12345" in result.output

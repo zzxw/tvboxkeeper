@@ -60,6 +60,10 @@ DEFAULTS: dict[str, Any] = {
         "mirror_base": "",
     },
     "snapshot": {"keep": 10},
+    "notify": {
+        # 无变化且无新鲜周报时不推送通知渠道（GITHUB_STEP_SUMMARY 照常写）
+        "silent_when_unchanged": True,
+    },
     "compliance": {
         "enabled": True,   # 体检时扫描敏感关键词，命中自动封禁
         "keywords": [      # 保守匹配，只收录足够具体的词，避免误伤

@@ -7,6 +7,7 @@ import hashlib
 import hmac
 import html
 import json
+import os
 import re
 import time
 from collections import Counter
@@ -285,6 +286,27 @@ def format_diff_text(diff: dict) -> str:
     if len(added) > 10:
         lines.append(f"  - …等 {len(added)} 个")
     return "\n".join(lines) + "\n"
+
+
+def failure_text() -> str:
+    """跑批失败告警文本（在 Actions 失败步骤里调用）。"""
+    repo = os.environ.get("GITHUB_REPOSITORY", "")
+    run_id = os.environ.get("GITHUB_RUN_ID", "")
+    link = (f"https://github.com/{repo}/actions/runs/{run_id}"
+            if repo and run_id else "")
+    lines = ["## ⚠️ TVBoxKeeper 跑批失败", ""]
+    if link:
+        lines.append(f"日志：{link}")
+    lines.append("订阅产物可能已过期，请尽快排查。")
+    return "\n".join(lines) + "\n"
+
+
+def should_notify(diff: dict, weekly_fresh: bool, settings: dict) -> bool:
+    """无变化且无周报时是否静默（notify.silent_when_unchanged 控制）。"""
+    cfg = settings.get("notify") or {}
+    if not cfg.get("silent_when_unchanged", True):
+        return True
+    return bool(diff.get("added") or diff.get("removed") or weekly_fresh)
 
 
 def webhook_payload(platform: str, text: str) -> dict:

@@ -594,22 +594,48 @@ def publish() -> None:
 
 
 @app.command()
-def notify() -> None:
-    """推送最近一次发布的变化：写 GITHUB_STEP_SUMMARY，可选发 Telegram。"""
+def notify(
+    event: str = typer.Option("updated", "--event",
+                              help="updated=推送最近变化；failed=跑批失败告警"),
+) -> None:
+    """推送发布变化/失败告警：写 GITHUB_STEP_SUMMARY，可选发 Telegram/webhook。"""
     import json
     root, settings, reg = _open()
+    if event == "failed":
+        text = publish_mod.failure_text()
+        diff: dict = {}
+        weekly_text = ""
+    else:
+        try:
+            diff = json.loads((root / settings["publish"]["diff"])
+                              .read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            diff = {}
+        text = publish_mod.format_diff_text(diff)
+
+    # 周报（1.5 天内生成）随通知附带
+    weekly_path = root / settings["publish"].get("weekly", "output/周报.md")
+    weekly_text = ""
     try:
-        diff = json.loads((root / settings["publish"]["diff"])
-                          .read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        diff = {}
-    text = publish_mod.format_diff_text(diff)
+        if (event == "updated" and weekly_path.exists()
+                and time.time() - weekly_path.stat().st_mtime < 86400 * 1.5):
+            weekly_text = weekly_path.read_text(encoding="utf-8")
+            text += "\n---\n" + weekly_text[:1500]
+    except OSError:
+        pass
 
     gh = os.environ.get("GITHUB_STEP_SUMMARY")
     if gh:
         with open(gh, "a", encoding="utf-8") as fh:
             fh.write(text + "\n")
         typer.echo("已写入 GitHub Step Summary。")
+
+    # 无变化且无周报：只写 summary，不打扰通知渠道
+    if event == "updated" and not publish_mod.should_notify(
+            diff, bool(weekly_text), settings):
+        typer.echo("本轮无变化（静默，未推送通知渠道）。")
+        reg.close()
+        return
 
     token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
     chat = os.environ.get("TELEGRAM_CHAT_ID", "")

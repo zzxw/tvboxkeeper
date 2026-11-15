@@ -61,6 +61,9 @@ publish:
 snapshot:
   keep: 10   # 每个源保留的快照份数
 
+notify:
+  silent_when_unchanged: true   # 无变化且无新鲜周报时不推送通知渠道
+
 compliance:
   enabled: true        # 体检时扫描敏感关键词，命中自动 banned
   keywords:            # 保守匹配，可按需增删
