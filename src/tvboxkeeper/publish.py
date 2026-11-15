@@ -934,6 +934,8 @@ table.sub td{padding:8px 12px;font-size:13px;color:#cbd5e1;
 table.sub td.name{font-size:13.5px;font-weight:500;color:var(--text)}
 table.sub tbody tr:hover td{background:#1c2840}
 table.sub td.none{color:var(--text-3);font-size:12.5px}
+/* 数字列的表头跟着数据一起右对齐，文字右缘落在数字右缘上 */
+table.sub th.num{text-align:right}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;
       color:#cbd5e1}
 footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);
@@ -1381,8 +1383,9 @@ def build_site(
         f"<td class='num'>{h['fails']}</td><td class='num'>{h['sources']}</td></tr>"
         for h in (hosts or [])[:8])
     host_block = (f'<h2>失败主机分布 · 近 30 天</h2>'
-                  f'<table class="sub"><tbody><tr><th>主机</th><th>失败次数</th>'
-                  f'<th>涉及源</th></tr>{host_rows}</tbody></table>'
+                  f'<table class="sub"><tbody><tr><th>主机</th>'
+                  f"<th class='num'>失败次数</th>"
+                  f"<th class='num'>涉及源</th></tr>{host_rows}</tbody></table>"
                   if host_rows else "")
 
     fail_rows = "".join(
@@ -1390,8 +1393,9 @@ def build_site(
         f"<td class='num'>{f['sources']}</td></tr>"
         for f in (failure_stats or [])[:10])
     fail_section = (f'<h2>近 30 天失败原因</h2>'
-                    f'<table class="sub"><tbody><tr><th>原因</th><th>次数</th>'
-                    f'<th>涉及源</th></tr>{fail_rows}</tbody></table>'
+                    f'<table class="sub"><tbody><tr><th>原因</th>'
+                    f"<th class='num'>次数</th>"
+                    f"<th class='num'>涉及源</th></tr>{fail_rows}</tbody></table>"
                     if fail_rows else "")
 
     # 搜索无命中时的空态行：全表无数据与「筛掉了」要给出不同文案

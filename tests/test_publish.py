@@ -631,3 +631,15 @@ def test_site_table_has_sortable_heads_and_pager():
     # 组合排序靠 Shift，提示与实现都要在页面上
     assert "ev.shiftKey" in html and 'id="multi"' in html
     assert "tr.dataset.kind === kind" in html      # 筛选与排序/分页仍需并存
+
+
+def test_site_sub_table_header_alignment():
+    """失败主机/失败原因表的数字列表头应与右对齐的数据同边。"""
+    rows = [dict(make_row("站点A", "http://b/c.json"),
+                 id="aaa111", l3_tested=0, l3_ok=0, dup_of="", compat="通用")]
+    out = build_site(rows, {}, [{"reason": "超时", "count": 9, "sources": 4}],
+                     duocang_count=1, min_health=60,
+                     hosts=[{"host": "h.example", "fails": 3, "sources": 1}])
+    assert "<th class='num'>失败次数</th>" in out
+    assert "<th class='num'>涉及源</th>" in out
+    assert "<th class='num'>次数</th>" in out
