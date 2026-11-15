@@ -585,7 +585,7 @@ def publish() -> None:
 
     changes = reg.recent_changes(hours=30)
     hosts = reg.host_failures(days=30)
-    trend = reg.daily_stats(days=30)
+    trend = reg.daily_stats(days=365)  # 全量给前端，趋势面板自己按周/月/全部切换
     # 体检口径：本轮有多少源因内容未变而跳过子资源探测
     skipped = reg.conn.execute(
         "SELECT COUNT(DISTINCT source_id) AS n FROM check_log "

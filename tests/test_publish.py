@@ -432,7 +432,7 @@ def test_trend_overlap_suppression():
     assert panel.count("<line ") == 3         # 域底 + 域顶 + 均值线
     assert 'y1="100.0"' not in panel          # 域中线被抑制
     assert '<span style="top:50.0%">50</span>' in panel   # Y 刻度文字仍在
-    assert 'stroke="#7d8ea6"' in panel        # 均值线保留
+    assert 'stroke="var(--text-3)"' in panel        # 均值线保留
 
 
 def test_trend_missing_day_breaks_line():
@@ -643,3 +643,54 @@ def test_site_sub_table_header_alignment():
     assert "<th class='num'>失败次数</th>" in out
     assert "<th class='num'>涉及源</th>" in out
     assert "<th class='num'>次数</th>" in out
+
+
+def test_theme_toggle_and_light_palette():
+    rows = [dict(make_row("站点A", "http://b/c.json"),
+                 id="aaa111", dup_of="", l3_tested=0, l3_ok=0)]
+    html = build_site(rows, {}, None, 1, 60)
+    assert 'id="theme-toggle"' in html
+    assert 'html[data-theme="light"]' in html
+    assert "tvk.theme" in html          # 主题选择持久化
+    assert "--title:#0f172a" in html    # 亮色块的值确实存在
+
+
+def test_detail_page_has_theme_toggle():
+    from tvboxkeeper.publish import build_source_detail
+    rows = [dict(make_row("站点A", "http://b/c.json"),
+                 id="aaa111", dup_of="", l3_tested=0, l3_ok=0)]
+    hist = [{"ts": "2026-11-15 06:00:00", "level": "L2", "ok": 1,
+             "latency_ms": 500, "parsed": {"schema": "tvbox", "error": ""}}]
+    page = build_source_detail(rows[0], hist)
+    assert 'id="theme-toggle"' in page
+    assert "tvk.theme" in page
+    assert 'html[data-theme="light"]' in page
+
+
+def test_trend_range_buttons_when_long():
+    rows = [dict(make_row("站点A", "http://b/c.json"),
+                 id="aaa111", dup_of="", l3_tested=0, l3_ok=0)]
+    trend = [{"date": (date(2026, 10, 1) + timedelta(days=i)).isoformat(),
+              "total": 10, "ok": 8, "rate": 80} for i in range(45)]
+    html = build_site(rows, {}, None, 1, 60, trend=trend)
+    assert 'class="trbtn active" data-range="month"' in html
+    assert 'data-range="week" hidden' in html
+    assert "最近一周" in html and "最近一月" in html and "全部" in html
+
+
+def test_trend_all_view_weekly_aggregated():
+    rows = [dict(make_row("站点A", "http://b/c.json"),
+                 id="aaa111", dup_of="", l3_tested=0, l3_ok=0)]
+    trend = [{"date": (date(2026, 8, 10) + timedelta(days=i)).isoformat(),
+              "total": 10, "ok": 5, "rate": 50} for i in range(90)]
+    html = build_site(rows, {}, None, 1, 60, trend=trend)
+    assert "已按周聚合" in html
+
+
+def test_trend_drops_data_over_a_year():
+    rows = [dict(make_row("站点A", "http://b/c.json"),
+                 id="aaa111", dup_of="", l3_tested=0, l3_ok=0)]
+    trend = [{"date": (date(2025, 6, 1) + timedelta(days=i)).isoformat(),
+              "total": 10, "ok": 5, "rate": 50} for i in range(400)]
+    html = build_site(rows, {}, None, 1, 60, trend=trend)
+    assert "2025-06-01" not in html  # 一年前的数据不予展示

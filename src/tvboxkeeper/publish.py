@@ -366,7 +366,7 @@ def _sparkline(marks: list[int], width: int = 120, height: int = 22) -> str:
         f"{i * step:.1f},{(height - 3) - m * (height - 6):.1f}"
         for i, m in enumerate(marks))
     rate = sum(marks) / n
-    color = "#4ade80" if rate >= 0.8 else ("#fbbf24" if rate >= 0.5 else "#f87171")
+    color = "var(--ok)" if rate >= 0.8 else ("var(--warn)" if rate >= 0.5 else "var(--bad)")
     return (f'<svg width="{width}" height="{height}" aria-hidden="true">'
             f'<polyline fill="none" stroke="{color}" stroke-width="2" '
             f'points="{pts}"/></svg>')
@@ -374,7 +374,7 @@ def _sparkline(marks: list[int], width: int = 120, height: int = 22) -> str:
 
 def _rate_color(rate: float) -> str:
     """可用率色档（与内联 sparkline 同口径）。"""
-    return "#4ade80" if rate >= 80 else ("#fbbf24" if rate >= 50 else "#f87171")
+    return "var(--ok)" if rate >= 80 else ("var(--warn)" if rate >= 50 else "var(--bad)")
 
 
 def _rate_class(rate: float) -> str:
@@ -385,8 +385,8 @@ _TREND_EMPTY = ('<figure class="trend-panel"><div class="chart-empty">'
                 '暂无体检记录，明日开始生成趋势</div></figure>')
 
 
-def _trend_panel(points: list[dict] | None, n_total: int = 0,
-                 n_live: int = 0) -> str:
+def _trend_figure(points: list[dict] | None, n_total: int = 0,
+                  n_live: int = 0, attrs: str = "", note_ext: str = "") -> str:
     """整体可用率趋势面板（几何层走 SVG，文字层走 HTML）。
 
     关键取舍：SVG 用 ``viewBox="0 0 1000 200"`` + ``preserveAspectRatio="none"``
@@ -498,10 +498,10 @@ def _trend_panel(points: list[dict] | None, n_total: int = 0,
     if (not single and not flat and n_data <= 3
             and low + 3 <= 50 <= high - 3):
         sem.append(("t50", 50))
-    structs = [{"k": "bottom", "v": low, "stroke": "#334155"},
-               {"k": "mid", "v": mid, "stroke": "#1f2d45"}]
+    structs = [{"k": "bottom", "v": low, "stroke": "var(--border)"},
+               {"k": "mid", "v": mid, "stroke": "var(--grid)"}]
     if high < 100:      # high==100 时顶线与绘图区上边界重合，不画
-        structs.append({"k": "top", "v": high, "stroke": "#1f2d45"})
+        structs.append({"k": "top", "v": high, "stroke": "var(--grid)"})
 
     # 重合抑制一：语义线压在结构线上（<2px）→ 删语义线，实线更利读数
     kept_sem = [s for s in sem
@@ -525,9 +525,9 @@ def _trend_panel(points: list[dict] | None, n_total: int = 0,
         grid.append(f'<line x1="0" y1="{y:.1f}" x2="1000" y2="{y:.1f}" '
                     f'stroke="{t["stroke"]}" stroke-width="1" {nss}/>')
     for name, v in kept_sem:
-        style = ('stroke="#7d8ea6" stroke-width="1" stroke-opacity="0.45" '
+        style = ('stroke="var(--text-3)" stroke-width="1" stroke-opacity="0.45" '
                  'stroke-dasharray="4 3"' if name == "mean" else
-                 'stroke="#334155" stroke-width="1" stroke-dasharray="2 4"')
+                 'stroke="var(--border)" stroke-width="1" stroke-dasharray="2 4"')
         grid.append(f'<line x1="0" y1="{py(v):.1f}" x2="1000" y2="{py(v):.1f}" '
                     f'{style} {nss}/>')
 
@@ -669,9 +669,9 @@ def _trend_panel(points: list[dict] | None, n_total: int = 0,
                 f'<td>{int(p.get("total") or 0)}</td></tr>')
 
     return (
-        f'<figure class="trend-panel" aria-labelledby="trend-h">'
+        f'<figure class="trend-panel"{attrs} aria-label="可用率趋势图">'
         f'<div class="trend-top">'
-        f'<figcaption><h2 id="trend-h">整体可用率趋势 · '
+        f'<figcaption><h2>整体可用率趋势 · '
         f'{clean[0]["date"][5:]} → {clean[-1]["date"][5:]}</h2>'
         f'<ul class="legend"><li class="ok">≥80% 健康</li>'
         f'<li class="warn">50–79% 观察</li>'
@@ -686,11 +686,87 @@ def _trend_panel(points: list[dict] | None, n_total: int = 0,
         f'<div class="xname">日期（MM-DD）</div>'
         f'</div>'
         f'<div class="pfoot"><span class="lead">{lead}</span>'
-        f'<span class="note">{note}</span></div>'
+        f'<span class="note">{note}'
+        f'{f" · {note_ext}" if note_ext else ""}</span>'
         f'<table class="sr-only"><caption>近 {n_axis} 天可用率明细</caption>'
         f'<tr><th>日期</th><th>可用率</th><th>体检次数</th></tr>'
         f'{"".join(rows_sr)}</table>'
         f'</figure>')
+
+
+
+
+def _weekly_aggregate(points: list[dict]) -> tuple[list[dict], str]:
+    """全部视图超 60 天时按 ISO 周聚合，热区/刻度密度才有意义。"""
+    buckets: dict[str, dict] = {}
+    for p in points:
+        d = date.fromisoformat(p["date"])
+        iso = d.isocalendar()
+        key = f"{iso[0]}-W{iso[1]:02d}"
+        b = buckets.setdefault(key, {"date": p["date"], "total": 0, "ok": 0})
+        if p["date"] > b["date"]:
+            b["date"] = p["date"]
+        b["total"] += int(p.get("total") or 0)
+        b["ok"] += int(p.get("ok") or 0)
+    out = [{"date": b["date"], "total": b["total"], "ok": b["ok"],
+            "rate": round(b["ok"] * 100 / b["total"]) if b["total"] else 0}
+           for b in buckets.values()]
+    return out, f"跨度超 60 天，已按周聚合（{len(out)} 周）"
+
+
+def _trend_panel(points: list[dict] | None, n_total: int = 0,
+                 n_live: int = 0) -> str:
+    """趋势入口：按最近一周 / 最近一月 / 全部各渲染一份服务端图，按钮切换。
+
+    - 每份图与旧版单视图完全同构（自适应缩放/热区/标签全部保留）；
+    - 全部视图超 60 天按周聚合，超 365 天的旧数据直接不展示（成本换可读）；
+    - 只有一个可用视图时输出与旧版完全一致（无按钮）。
+    """
+    clean = sorted((p for p in (points or []) if p.get("date")),
+                   key=lambda p: p["date"])
+    if not clean:
+        return _TREND_EMPTY
+    today = date.fromisoformat(clean[-1]["date"])
+    week = [p for p in clean
+            if date.fromisoformat(p["date"]) >= today - timedelta(days=6)]
+    month = [p for p in clean
+             if date.fromisoformat(p["date"]) >= today - timedelta(days=29)]
+    all_pts = [p for p in clean
+               if date.fromisoformat(p["date"]) >= today - timedelta(days=364)]
+    agg_note = ""
+    if len(all_pts) > 60:
+        all_pts, agg_note = _weekly_aggregate(all_pts)
+    views: list[tuple[str, str, list[dict], str]] = []
+    seen: set[tuple[str, str, int]] = set()
+    for key, label, pts in (("week", "最近一周", week),
+                            ("month", "最近一月", month),
+                            ("all", "全部", all_pts)):
+        if not pts:
+            continue
+        sig = (pts[0]["date"], pts[-1]["date"], len(pts))
+        if sig in seen:
+            continue
+        seen.add(sig)
+        views.append((key, label, pts, agg_note if key == "all" else ""))
+    if len(views) == 1:
+        return _trend_figure(views[0][2], n_total, n_live)
+    active = ("month" if any(k == "month" for k, *_ in views)
+              else views[-1][0])
+    btns = "".join(
+        f'<button type="button" class="trbtn{" active" if k == active else ""}" '
+        f'data-range="{k}" role="tab" '
+        f'aria-selected="{"true" if k == active else "false"}">{label}</button>'
+        for k, label, _p, _n in views)
+    # 激活视图排 DOM 首位：读屏/测试取第一个 figure 就是默认展示的那份
+    ordered = sorted(views, key=lambda v: v[0] != active)
+    figs = "".join(
+        _trend_figure(p, n_total, n_live,
+                      attrs=f' data-range="{k}"'
+                      f'{"" if k == active else " hidden"}',
+                      note_ext=note)
+        for k, _label, p, note in ordered)
+    return (f'<div class="trange" role="tablist" '
+            f'aria-label="趋势时间范围切换">{btns}</div>{figs}')
 
 
 _SITE_CSS = """\
@@ -701,9 +777,29 @@ _SITE_CSS = """\
   --text:#e2e8f0; --text-2:#94a3b8; --text-3:#7d8ea6; --text-4:#475569;
   --ok:#4ade80; --ok-bg:#14532d; --warn:#fbbf24; --warn-bg:#451a03;
   --bad:#f87171; --bad-bg:#450a0a; --accent:#3b82f6; --accent-solid:#1d4ed8;
+    --accent-soft:#93c5fd; --accent-soft-2:#bfdbfe; --link:#60a5fa;
+  --text-hi:#cbd5e1; --title:#f8fafc; --inv:#ffffff;
+  --bg-2:#0b1220; --card-3:#273449; --grid:#1f2d45;
   --tools-h:63px;
 }
+html[data-theme="light"]{
+  color-scheme:light;
+  --bg:#f5f7fb; --bg-2:#eef1f8; --panel:#ffffff; --card:#ffffff; --card-2:#f1f4f9;
+  --line:#e3e8f0; --border:#d7dde8; --border-2:#c4cdda;
+  --text:#1f2937; --text-2:#5b6474; --text-3:#6b7280; --text-4:#98a1b0;
+  --ok:#15803d; --ok-bg:#dcfce7; --warn:#b45309; --warn-bg:#fef3c7;
+  --bad:#dc2626; --bad-bg:#fee2e2; --accent:#2563eb; --accent-solid:#1d4ed8;
+  --accent-soft:#2563eb; --accent-soft-2:#1d4ed8; --link:#2563eb;
+  --text-hi:#111827; --title:#0f172a; --inv:#ffffff;
+  --bg-2:#eef1f8; --card-3:#e7ecf5; --grid:#dde3ee;
+}
 *{box-sizing:border-box}
+/* ---------- 顶栏与主题切换 ---------- */
+.head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.tbtn{flex:none;border:1px solid var(--border);background:var(--card);
+  color:var(--text-2);border-radius:8px;padding:6px 10px;font-size:14px;
+  cursor:pointer;line-height:1}
+.tbtn:hover{background:var(--card-3);color:var(--text)}
 body{margin:0;background:var(--bg);color:var(--text);
      font:14px/1.6 system-ui,"Segoe UI","Microsoft YaHei",sans-serif}
 .wrap{max-width:1320px;margin:0 auto;padding:32px 40px 64px}
@@ -711,10 +807,10 @@ a{color:var(--accent);text-decoration:none}
 a:hover{text-decoration:underline}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;
          overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-h1{font-size:22px;font-weight:700;color:#f8fafc;margin:0 0 6px;letter-spacing:-.01em}
+h1{font-size:22px;font-weight:700;color:var(--title);margin:0 0 6px;letter-spacing:-.01em}
 .meta{font-size:12.5px;color:var(--text-3);margin:0 0 24px}
 h2{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;
-   color:#cbd5e1;margin:40px 0 12px;scroll-margin-top:88px}
+   color:var(--text-hi);margin:40px 0 12px;scroll-margin-top:88px}
 h2::before{content:"";flex:none;width:3px;height:14px;border-radius:2px;
            background:var(--border)}
 /* 状态卡片：彩色只落在数字上，不铺底色 */
@@ -726,7 +822,7 @@ h2::before{content:"";flex:none;width:3px;height:14px;border-radius:2px;
         font-variant-numeric:tabular-nums;color:var(--text)}
 .card span{font-size:11.5px;font-weight:500;color:var(--text-2)}
 .card.all{min-width:132px;border-left:3px solid var(--accent)}
-.card.all b{color:#f8fafc}
+.card.all b{color:var(--title)}
 .card.ok b{color:var(--ok)} .card.warn b{color:var(--warn)}
 .card.bad b{color:var(--bad)} .card.off b{color:var(--text-2)}
 .chg-line{font-size:12.5px;color:var(--text-3);margin:16px 0 0}
@@ -771,7 +867,7 @@ h2::before{content:"";flex:none;width:3px;height:14px;border-radius:2px;
     background:none;border:0;color:inherit;cursor:pointer;
     -webkit-appearance:none;appearance:none;transition:background-color 120ms linear}
 .pt:hover,.pt:focus-visible{
-  background:linear-gradient(90deg,transparent,#334155 45%,#334155 55%,transparent)}
+  background:linear-gradient(90deg,transparent,var(--border) 45%,var(--border) 55%,transparent)}
 .pt:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .dot{position:absolute;left:50%;top:var(--y);display:block;border-radius:50%;
      border:2px solid currentColor;background:var(--panel);box-sizing:border-box;
@@ -780,18 +876,18 @@ h2::before{content:"";flex:none;width:3px;height:14px;border-radius:2px;
 .dot.s5{width:5px;height:5px} .dot.s7{width:7px;height:7px}
 .dot.s9{width:9px;height:9px}
 /* 孤岛点：5px 实心灰，与线色的空心点明确区分 */
-.dot.isl{width:5px;height:5px;background:#94a3b8;border-color:#94a3b8}
+.dot.isl{width:5px;height:5px;background:var(--text-2);border-color:var(--text-2)}
 .pt:hover .dot,.pt:focus-visible .dot{box-shadow:0 0 0 4px rgba(148,163,184,.18);
                                       outline:1.5px solid currentColor;outline-offset:1px}
 .vlab{position:absolute;left:50%;top:var(--y);transform:translate(-50%,-100%);
       margin-top:-10px;font-size:11px;font-weight:600;color:currentColor;
       font-variant-numeric:tabular-nums;white-space:nowrap;pointer-events:none;
-      text-shadow:0 1px 2px #0b1424,0 0 6px #0b1424}
+      text-shadow:0 1px 2px rgba(2,6,23,.55),0 0 6px rgba(2,6,23,.55)}
 .vlab.vb{transform:translate(-50%,0);margin-top:10px}
 /* tooltip 走纯 CSS，不依赖 JS */
 .pt::after{content:attr(data-tip);position:absolute;left:50%;top:var(--y);z-index:4;
            transform:translate(-50%,-150%);padding:4px 8px;border-radius:6px;
-           background:#0b1220;border:1px solid var(--border-2);color:var(--text);
+           background:var(--bg-2);border:1px solid var(--border-2);color:var(--text);
            font-size:11px;font-weight:500;white-space:nowrap;
            box-shadow:0 6px 16px rgba(0,0,0,.5);
            opacity:0;pointer-events:none;transition:opacity 120ms linear}
@@ -825,10 +921,10 @@ h2::before{content:"";flex:none;width:3px;height:14px;border-radius:2px;
                  border-color:var(--accent)}
 .filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .fbtn{padding:7px 14px;border-radius:8px;border:1px solid var(--border);
-      background:var(--card);color:#cbd5e1;font:inherit;font-size:13px;cursor:pointer;
+      background:var(--card);color:var(--text-hi);font:inherit;font-size:13px;cursor:pointer;
       transition:background-color 120ms linear,border-color 120ms linear}
 .fbtn:hover{border-color:var(--border-2);color:var(--text)}
-.fbtn.active{background:var(--accent-solid);border-color:var(--accent-solid);color:#fff}
+.fbtn.active{background:var(--accent-solid);border-color:var(--accent-solid);color:var(--inv)}
 .fbtn b{font-variant-numeric:tabular-nums;font-weight:600;opacity:.85}
 .fbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .cnt{margin-left:auto;font-size:12px;color:var(--text-3);
@@ -842,14 +938,14 @@ table{border-collapse:collapse;width:100%}
         border-bottom:0;box-shadow:inset 0 -1px 0 var(--border);
         font-size:11.5px;font-weight:600;color:var(--text-3);
         letter-spacing:.05em;white-space:nowrap}
-#tbl td{font-size:13px;color:#cbd5e1}
+#tbl td{font-size:13px;color:var(--text-hi)}
 /* `#tbl th,#tbl td{text-align:left}` 特异性高于 `.num`，数字列要带 id 再声明一次
    才真正右对齐；th 的右内边距归零，让「文字 + 箭头」里的文字右缘正好落在
    数字右缘（td 有 12px 内边距，箭头 8px + 间隙 4px 抵掉它）。 */
 #tbl .num{text-align:right}
 #tbl th.num{padding-right:0}
 #tbl td.name{font-size:13.5px;font-weight:500;color:var(--text)}
-#tbl tbody tr:hover td{background:#1c2840}
+#tbl tbody tr:hover td{background:var(--line)}
 #tbl tbody tr:hover td.url{color:var(--text-2)}
 #tbl tr.bad td:first-child{box-shadow:inset 3px 0 0 var(--bad)}
 #tbl tr.warn td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
@@ -870,7 +966,7 @@ th[aria-sort="ascending"] .arw,th[aria-sort="descending"] .arw{
   color:var(--accent);opacity:1}
 /* 组合排序的优先级序号：只有叠了第二列才出现，单列排序不打扰视线 */
 .ord{display:none;min-width:13px;height:13px;padding:0 3px;border-radius:99px;
-     background:var(--accent-solid);color:#fff;font-size:9px;font-weight:700;
+     background:var(--accent-solid);color:var(--inv);font-size:9px;font-weight:700;
      line-height:13px;text-align:center;font-variant-numeric:tabular-nums}
 .ord.on{display:inline-block}
 .num{text-align:right;font-variant-numeric:tabular-nums}
@@ -890,7 +986,7 @@ th[aria-sort="ascending"] .arw,th[aria-sort="descending"] .arw{
 .hbar.bad{color:var(--bad)} .hbar.off{color:var(--text-4)}
 .avail.a-hi{color:var(--ok)} .avail.a-lo{color:var(--bad)}
 .url{max-width:340px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;
-     color:#64748b}
+     color:var(--text-4)}
 #empty td{text-align:center;padding:32px;font-size:12.5px;color:var(--text-3)}
 /* ---------- 表尾：排序摘要 + 分页 ---------- */
 .tfoot{display:flex;align-items:center;justify-content:space-between;gap:10px 14px;
@@ -905,7 +1001,7 @@ th[aria-sort="ascending"] .arw,th[aria-sort="descending"] .arw{
 .clr:hover{border-color:var(--border-2);color:var(--text)}
 .clr:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 #multi[aria-pressed="true"]{background:var(--accent-solid);
-                            border-color:var(--accent-solid);color:#fff}
+                            border-color:var(--accent-solid);color:var(--inv)}
 .pager{display:flex;align-items:center;gap:8px 10px;margin-left:auto;flex-wrap:wrap}
 .psize{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-3)}
 .psize select{padding:4px 6px;border-radius:7px;border:1px solid var(--border);
@@ -915,12 +1011,12 @@ th[aria-sort="ascending"] .arw,th[aria-sort="descending"] .arw{
 .pinfo{font-size:11.5px;color:var(--text-3);font-variant-numeric:tabular-nums}
 .pnums,.pnumlist{display:flex;align-items:center;gap:4px}
 .pbtn{min-width:26px;height:26px;padding:0 7px;border-radius:7px;
-      border:1px solid var(--border);background:var(--card);color:#cbd5e1;
+      border:1px solid var(--border);background:var(--card);color:var(--text-hi);
       font:inherit;font-size:12px;font-variant-numeric:tabular-nums;cursor:pointer;
       transition:background-color 120ms linear,border-color 120ms linear}
 .pbtn:hover:not(:disabled){border-color:var(--border-2);color:var(--text)}
 .pbtn[aria-current="page"]{background:var(--accent-solid);
-                           border-color:var(--accent-solid);color:#fff}
+                           border-color:var(--accent-solid);color:var(--inv)}
 .pbtn:disabled{opacity:.4;cursor:default}
 .pbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .pgap{padding:0 1px;font-size:12px;color:var(--text-4)}
@@ -929,15 +1025,15 @@ table.sub{margin:0;width:100%}
 table.sub th{padding:8px 12px;text-align:left;font-size:11.5px;font-weight:600;
              color:var(--text-3);letter-spacing:.05em;
              border-bottom:1px solid var(--border)}
-table.sub td{padding:8px 12px;font-size:13px;color:#cbd5e1;
+table.sub td{padding:8px 12px;font-size:13px;color:var(--text-hi);
              border-bottom:1px solid var(--line)}
 table.sub td.name{font-size:13.5px;font-weight:500;color:var(--text)}
-table.sub tbody tr:hover td{background:#1c2840}
+table.sub tbody tr:hover td{background:var(--line)}
 table.sub td.none{color:var(--text-3);font-size:12.5px}
 /* 数字列的表头跟着数据一起右对齐，文字右缘落在数字右缘上 */
 table.sub th.num{text-align:right}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;
-      color:#cbd5e1}
+      color:var(--text-hi)}
 footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);
        font-size:11.5px;color:var(--text-3)}
 /* ---------- 响应式：列按优先级逐级隐藏 ---------- */
@@ -997,24 +1093,32 @@ footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);
 @media (prefers-reduced-motion:reduce){
   *{transition:none!important;animation:none!important}
 }
+/* ---------- 趋势时间范围切换 ---------- */
+.trange{display:flex;gap:8px;margin:0 0 10px}
+.trbtn{border:1px solid var(--border);background:var(--card);color:var(--text-2);
+  border-radius:8px;padding:5px 14px;font-size:12.5px;cursor:pointer}
+.trbtn:hover{background:var(--card-3);color:var(--text)}
+.trbtn.active{background:var(--accent-solid);border-color:var(--accent-solid);
+  color:var(--inv);font-weight:600}
+figure.trend-panel[hidden]{display:none}
 /* ---------- 复制链接按钮：截断的 URL 悬浮可见但复制不了，按钮补上这一步 ---------- */
 td.c-url{white-space:nowrap}
 .url .url-text{display:inline-block;vertical-align:middle;max-width:230px;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.copy-btn{border:1px solid #334155;background:#1e293b;color:#93c5fd;
+.copy-btn{border:1px solid var(--border);background:var(--card);color:var(--accent-soft);
   border-radius:6px;padding:2px 8px;font-size:11.5px;line-height:1.4;
   cursor:pointer;vertical-align:middle;margin-left:6px}
-.copy-btn:hover{background:#273449;color:#bfdbfe;border-color:#475569}
-.copy-btn.copied{border-color:#14532d;background:#14532d;color:#4ade80}
+.copy-btn:hover{background:var(--card-3);color:var(--accent-soft-2);border-color:var(--text-4)}
+.copy-btn.copied{border-color:var(--ok-bg);background:var(--ok-bg);color:var(--ok)}
 /* ---------- 订阅地址卡片 ---------- */
-.sub-panel{background:#111a2e;border:1px solid #1e293b;border-radius:12px;
+.sub-panel{background:var(--bg-2);border:1px solid var(--card);border-radius:12px;
   padding:12px 16px;margin:0 0 18px}
 .sub-panel h3{margin:0 0 8px;font-size:13px;color:var(--text-2);font-weight:600}
 .sub-item{display:flex;align-items:center;gap:10px;padding:4px 0}
 .sub-item .sub-name{flex:none;width:76px;color:var(--text);font-size:13px}
 .sub-item .sub-url{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;
   white-space:nowrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
-  font-size:11.5px;color:#64748b}
+  font-size:11.5px;color:var(--text-4)}
 @media (max-width:640px){.sub-item .sub-name{width:58px}}
 """
 
@@ -1218,6 +1322,39 @@ psize.addEventListener('change', () => {
 syncHead();
 render();
 
+/* ---------- 主题切换 + 趋势范围切换 ---------- */
+(function () {
+  const root = document.documentElement;
+  let t = null;
+  try { t = localStorage.getItem('tvk.theme'); } catch (e) {}
+  if (t === 'light' || t === 'dark') { root.setAttribute('data-theme', t); }
+  const btn = document.getElementById('theme-toggle');
+  if (btn) {
+    const paint = () => {
+      btn.textContent = root.getAttribute('data-theme') === 'light' ? '🌙' : '☀️';
+    };
+    paint();
+    btn.addEventListener('click', () => {
+      const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('tvk.theme', next); } catch (e) {}
+      paint();
+    });
+  }
+  document.addEventListener('click', (ev) => {
+    const tb = ev.target.closest('.trbtn');
+    if (!tb) return;
+    document.querySelectorAll('.trbtn').forEach(b => {
+      const on = b === tb;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    document.querySelectorAll('figure.trend-panel[data-range]').forEach(f => {
+      f.hidden = f.getAttribute('data-range') !== tb.getAttribute('data-range');
+    });
+  });
+})();
+
 /* ---------- 复制链接：事件委托，分页/筛选后新增的按钮同样生效 ---------- */
 async function tvkCopy(t) {
   try { await navigator.clipboard.writeText(t); return true; } catch (e) {}
@@ -1408,7 +1545,11 @@ def build_site(
 <style>
 {_SITE_CSS}</style></head><body>
 <div class="wrap">
+<div class="head">
 <h1>TVBoxKeeper · 源体检看板</h1>
+<button type="button" id="theme-toggle" class="tbtn"
+        aria-label="切换亮色/暗色主题">☀️</button>
+</div>
 <p class="meta">生成于 {now} · 订阅门槛：健康分 ≥ {min_health} · 订阅源 {duocang_count} 个{lite_note}</p>
 <div class="cards">{cards}</div>
 {sub_panel}{chg_line}{trend_block}
@@ -1598,8 +1739,59 @@ def dingtalk_sign(url: str, secret: str) -> str:
 # ---------- 单源详情页 ----------
 
 
+# 亮/暗主题 token 与切换脚本（详情页用；看板的 _SITE_CSS 内嵌同一套值）
+_THEME_ROOT = """
+:root{
+  color-scheme:dark;
+  --bg:#0f172a; --panel:#131e33; --card:#1e293b; --card-2:#24334a;
+  --line:#1c2840; --border:#334155; --border-2:#3d4f6b;
+  --text:#e2e8f0; --text-2:#94a3b8; --text-3:#7d8ea6; --text-4:#475569;
+  --ok:#4ade80; --ok-bg:#14532d; --warn:#fbbf24; --warn-bg:#451a03;
+  --bad:#f87171; --bad-bg:#450a0a; --accent:#3b82f6; --accent-solid:#1d4ed8;
+  --accent-soft:#93c5fd; --accent-soft-2:#bfdbfe; --link:#60a5fa;
+  --text-hi:#cbd5e1; --title:#f8fafc; --inv:#ffffff;
+  --bg-2:#0b1220; --card-3:#273449; --grid:#1f2d45;
+}
+html[data-theme="light"]{
+  color-scheme:light;
+  --bg:#f5f7fb; --bg-2:#eef1f8; --panel:#ffffff; --card:#ffffff; --card-2:#f1f4f9;
+  --line:#e3e8f0; --border:#d7dde8; --border-2:#c4cdda;
+  --text:#1f2937; --text-2:#5b6474; --text-3:#6b7280; --text-4:#98a1b0;
+  --ok:#15803d; --ok-bg:#dcfce7; --warn:#b45309; --warn-bg:#fef3c7;
+  --bad:#dc2626; --bad-bg:#fee2e2; --accent:#2563eb; --accent-solid:#1d4ed8;
+  --accent-soft:#2563eb; --accent-soft-2:#1d4ed8; --link:#2563eb;
+  --text-hi:#111827; --title:#0f172a; --inv:#ffffff;
+  --bg-2:#eef1f8; --card-3:#e7ecf5; --grid:#dde3ee;
+}
+"""
+
+_THEME_JS = """
+(function () {
+  const root = document.documentElement;
+  let t = null;
+  try { t = localStorage.getItem('tvk.theme'); } catch (e) {}
+  if (t === 'light' || t === 'dark') { root.setAttribute('data-theme', t); }
+  const btn = document.getElementById('theme-toggle');
+  if (btn) {
+    const paint = () => {
+      btn.textContent = root.getAttribute('data-theme') === 'light' ? '🌙' : '☀️';
+    };
+    paint();
+    btn.addEventListener('click', () => {
+      const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('tvk.theme', next); } catch (e) {}
+      paint();
+    });
+  }
+})();
+"""
+
+
 def build_source_detail(row: dict, history: list[dict]) -> str:
     """生成单源详情页：元信息 + 体检历史 + 内容变更记录。"""
+    detail_theme = _THEME_ROOT
+    theme_js = _THEME_JS
     esc = html.escape
     hist_rows = "".join(
         f"<tr class='{'ok' if h['ok'] else 'bad'}'><td>{esc(h['ts'])}</td>"
@@ -1636,22 +1828,30 @@ def build_source_detail(row: dict, history: list[dict]) -> str:
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{esc(row.get('name') or '')} · 详情</title>
 <style>
+{detail_theme}
 body {{ margin: 0; padding: 24px; font: 14px/1.6 system-ui, "Segoe UI", "Microsoft YaHei", sans-serif;
-       background: #0f172a; color: #e2e8f0; }}
-h1 {{ font-size: 18px; }} h2 {{ font-size: 15px; color: #94a3b8; }}
-a {{ color: #60a5fa; }}
+       background: var(--bg); color: var(--text); }}
+h1 {{ font-size: 18px; }} h2 {{ font-size: 15px; color: var(--text-2); }}
+a {{ color: var(--link); }}
+.tbtn {{ float: right; border: 1px solid var(--border); background: var(--card);
+        color: var(--text-2); border-radius: 8px; padding: 4px 10px;
+        font-size: 13px; cursor: pointer; }}
+.tbtn:hover {{ background: var(--card-3); color: var(--text); }}
 table {{ border-collapse: collapse; width: 100%; margin-bottom: 20px; }}
-th, td {{ padding: 5px 10px; border-bottom: 1px solid #1e293b; text-align: left; }}
-th {{ color: #94a3b8; font-weight: 500; }}
-tr.ok td:nth-child(3) {{ color: #4ade80; }}
-tr.bad td:nth-child(3) {{ color: #f87171; }}
+th, td {{ padding: 5px 10px; border-bottom: 1px solid var(--card); text-align: left; }}
+th {{ color: var(--text-2); font-weight: 500; }}
+tr.ok td:nth-child(3) {{ color: var(--ok); }}
+tr.bad td:nth-child(3) {{ color: var(--bad); }}
 .num {{ font-variant-numeric: tabular-nums; }}
-.meta td {{ color: #cbd5e1; }}
+.meta td {{ color: var(--text-hi); }}
 </style></head><body>
-<h1><a href="index.html">← 返回看板</a> · {esc(row.get('name') or '')}</h1>
+<h1><a href="index.html">← 返回看板</a> · {esc(row.get('name') or '')}
+<button type="button" id="theme-toggle" class="tbtn"
+        aria-label="切换亮色/暗色主题">☀️</button></h1>
 <table class="meta">{meta}</table>
 {change_html}
 {hist_html}
+<script>{theme_js}</script>
 </body></html>"""
 
 
