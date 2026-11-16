@@ -30,6 +30,21 @@ def normalize_url(url: str) -> str:
     return urlunsplit((scheme, parts.netloc, parts.path, query, ""))
 
 
+def is_fetchable_url(url: str) -> bool:
+    """判断 URL 能否被 httpx 直接请求（http/https + 合法主机与端口）。
+
+    httpx 对 `host:1935:1935` 这类重复冒号的 authority 会抛 InvalidURL，
+    而 InvalidURL 不是 HTTPError 子类——不在这里拦掉，脏数据会一路传到
+    探测层并中断整批体检。
+    """
+    try:
+        parts = urlsplit(url or "")
+        _ = parts.port          # 访问即校验：端口非数字/越界会抛 ValueError
+    except ValueError:
+        return False
+    return parts.scheme in ("http", "https") and bool(parts.hostname)
+
+
 def source_id(url: str) -> str:
     return hashlib.sha1(normalize_url(url).encode("utf-8")).hexdigest()[:16]
 

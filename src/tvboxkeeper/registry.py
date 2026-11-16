@@ -96,6 +96,8 @@ def reason_of(detail: dict) -> str:
     err = str(detail.get("error") or "")
     if err.startswith("HTTP "):
         return err[:12]
+    if "InvalidURL" in err:
+        return "URL 非法（端口/主机名）"
     if err.startswith("响应为空"):
         return "空响应/疑似反爬"
     if "getaddrinfo" in err:

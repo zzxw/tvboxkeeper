@@ -141,3 +141,32 @@ def test_gbk_decode():
     raw = ("{" + '"sites": [{"name": "中文"}]' + "}").encode("gbk")
     assert "中文" in decode_content(raw) or parse_config(BASE, decode_content(raw)).schema_type == "tvbox"
     assert text  # 占位，防止误删
+
+
+BAD_PORT_CFG = """{
+  "spider": "http://h.example:1935:1935/spider.jar",
+  "sites": [{"key": "a", "type": 0, "api": "http://h.example:1935:1935/api.php"}],
+  "parses": [{"type": 0, "url": "http://p.example:1935:1935/"}],
+  "lives": [{"name": "x", "type": 0, "url": "http://l.example:1935:1935/live.txt"}],
+  "storeHouse": [{"sourceName": "坏仓", "sourceUrl": "http://s.example:1935:1935/a.json"}]
+}"""
+
+
+def test_bad_port_urls_never_become_probes_or_children():
+    """端口重复的 URL 会让 httpx 抛 InvalidURL（非 HTTPError），必须在解析期拦掉。"""
+    info = parse_config(BASE, BAD_PORT_CFG)
+    assert info.probes == []
+    assert info.site_apis == []
+    assert info.children == []
+    # 计数仍按原始条目统计，不受 URL 合法性过滤影响
+    assert info.sites_count == 1
+
+
+def test_live_sample_skips_unfetchable_urls():
+    text = ("频道组,#genre#\n"
+            "A,rtmp://h.example:1935/live\n"
+            "B,http://h.example:1935:1935/live\n"
+            "C,http://ok.example/1.m3u8\n")
+    info = parse_config(BASE, text)
+    assert info.live_channels == 3      # 计数按原始行统计
+    assert info.probes == [("channel", "http://ok.example/1.m3u8")]

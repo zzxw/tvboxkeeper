@@ -739,7 +739,7 @@ def notify(
                 f"https://api.telegram.org/bot{token}/sendMessage",
                 json={"chat_id": chat, "text": text}, timeout=15)
             typer.echo(f"Telegram 推送：HTTP {resp.status_code}")
-        except httpx.HTTPError as exc:
+        except (httpx.HTTPError, httpx.InvalidURL) as exc:
             typer.echo(f"Telegram 推送失败：{exc}")
         delivered = True
 
@@ -761,7 +761,7 @@ def notify(
                 url, json=publish_mod.webhook_payload(platform, text),
                 timeout=15)
             typer.echo(f"{name} 推送：HTTP {resp.status_code}")
-        except httpx.HTTPError as exc:
+        except (httpx.HTTPError, httpx.InvalidURL) as exc:
             typer.echo(f"{name} 推送失败：{exc}")
         delivered = True
 

@@ -37,7 +37,12 @@ class Hunter:
     # ---------- 搜索 ----------
 
     def _search(self, path: str, params: dict) -> dict | None:
-        resp = self.client.get(f"{API}{path}", params=params)
+        try:
+            resp = self.client.get(f"{API}{path}", params=params)
+        except (httpx.HTTPError, httpx.InvalidURL):
+            # 网络抖动不应中断整批跑源：返回 None 让调用方停止后续搜索
+            self._log("GitHub 搜索网络异常，停止本轮搜索")
+            return None
         if resp.status_code in (403, 429):
             self._log("GitHub 搜索触发限流，跳过后续搜索（建议配置 token）")
             return None
@@ -97,7 +102,7 @@ class Hunter:
         self.fetched += 1
         try:
             resp = self.client.get(url)
-        except httpx.HTTPError:
+        except (httpx.HTTPError, httpx.InvalidURL):
             return None
         if resp.status_code >= 400 or not resp.content:
             return None

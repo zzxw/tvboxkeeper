@@ -92,6 +92,13 @@ async def fetch(
                         latency_ms=latency,
                         error="" if status < 400 else f"HTTP {status}",
                     )
+        except httpx.InvalidURL as exc:
+            # URL 本身非法（如 host:1935:1935）：重试没有意义，直接判失败。
+            # InvalidURL 不是 HTTPError 子类，必须单独捕获，否则单条脏 URL
+            # 会让整个 asyncio.gather 抛异常、中断整批跑批。
+            return FetchResult(url=url, status=0,
+                               latency_ms=int((time.monotonic() - start) * 1000),
+                               error=f"{type(exc).__name__}: {exc}")
         except (httpx.HTTPError, OSError, asyncio.TimeoutError) as exc:
             last_error = f"{type(exc).__name__}: {exc}"
             if attempt > retries:

@@ -10,6 +10,7 @@ import re
 from urllib.parse import urljoin
 
 from .models import SchemaInfo
+from .normalize import is_fetchable_url
 
 _SCHEME_RE = re.compile(r"^https?://", re.IGNORECASE)
 # 真正的 TVBox 配置不可能是 HTML；返回 HTML 基本就是反爬/落地页
@@ -72,9 +73,10 @@ def _resolve_url(value: str, base: str) -> str | None:
     if not value or value.startswith("proxy://"):
         return None
     if _SCHEME_RE.match(value):
-        return value
+        return value if is_fetchable_url(value) else None
     if value.startswith(("./", "/")) and base:
-        return urljoin(base, value)
+        resolved = urljoin(base, value)
+        return resolved if is_fetchable_url(resolved) else None
     return None
 
 
@@ -158,7 +160,9 @@ def parse_live(text: str) -> SchemaInfo:
             continue
         if url.startswith(("http://", "https://", "rtmp://", "rtsp://")):
             info.live_channels += 1
-            if len(sample) < 5:
+            # 只有 http(s) 能被探测器请求；rtmp/rtsp 必失败，端口非法的 URL
+            # 还会让 httpx 抛 InvalidURL，故都不放进探测样本
+            if len(sample) < 5 and is_fetchable_url(url):
                 sample.append(url)
     info.probes = [("channel", u) for u in sample]
     return info
@@ -209,10 +213,11 @@ def parse_config(url: str, text: str) -> SchemaInfo:
     storehouse = data.get("storeHouse")
     if isinstance(storehouse, list):
         for entry in storehouse:
-            if isinstance(entry, dict) and isinstance(entry.get("sourceUrl"), str) and entry["sourceUrl"].strip():
+            src = entry.get("sourceUrl") if isinstance(entry, dict) else None
+            if isinstance(src, str) and is_fetchable_url(src.strip()):
                 info.children.append({
                     "sourceName": str(entry.get("sourceName") or "").strip(),
-                    "sourceUrl": entry["sourceUrl"].strip(),
+                    "sourceUrl": src.strip(),
                 })
 
     # 另一种主流多仓格式：顶层 "urls": [{"url": ..., "name": ...}]
@@ -222,7 +227,7 @@ def parse_config(url: str, text: str) -> SchemaInfo:
             if not isinstance(entry, dict):
                 continue
             src_url = entry.get("url") or entry.get("sourceUrl")
-            if isinstance(src_url, str) and src_url.strip():
+            if isinstance(src_url, str) and is_fetchable_url(src_url.strip()):
                 info.children.append({
                     "sourceName": str(entry.get("name")
                                       or entry.get("sourceName") or "").strip(),
@@ -258,8 +263,7 @@ def parse_config(url: str, text: str) -> SchemaInfo:
         low = api.lower()
         if low.endswith(".js") or "drpy" in low:
             drpy += 1
-        if (stype in (0, 1) and isinstance(site.get("api"), str)
-                and _SCHEME_RE.match(site["api"])):
+        if stype in (0, 1) and is_fetchable_url(str(site.get("api") or "")):
             info.site_apis.append(site["api"])
     info.site_apis = info.site_apis[:10]
     info.compat = _compat_tag(info.sites_count, csp, drpy, ext)

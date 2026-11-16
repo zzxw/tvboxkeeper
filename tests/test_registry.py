@@ -219,6 +219,8 @@ def test_reason_of_variants():
     from tvboxkeeper.registry import reason_of
     assert reason_of({"error": "响应为空（疑似反爬或接口异常）"}) == "空响应/疑似反爬"
     assert reason_of({"error": "HTTP 404 Not Found"}) == "HTTP 404 Not"
+    assert (reason_of({"error": "InvalidURL: Invalid port: '1935:1935'"})
+            == "URL 非法（端口/主机名）")
     assert reason_of({}) == "未知"
 
 

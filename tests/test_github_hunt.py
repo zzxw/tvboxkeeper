@@ -68,3 +68,21 @@ def test_hunt_rate_limited_search(tmp_path):
 
     stats = Hunter(make_client(limited_handler), reg, SETTINGS).hunt()
     assert stats["repos"] == 0
+
+
+def test_try_url_ignores_invalid_port(tmp_path):
+    """端口重复的 URL 在 httpx 里会抛 InvalidURL，不应中断挖源。"""
+    reg = Registry(tmp_path / "t.sqlite")
+    hunter = Hunter(make_client(handler), reg, SETTINGS)
+    assert hunter._try_url("http://h.example:1935:1935/a.json") is None
+
+
+def test_hunt_search_network_error_degrades(tmp_path):
+    """搜索接口网络异常时降级为「本轮无结果」，而不是抛异常中断跑批。"""
+    reg = Registry(tmp_path / "t.sqlite")
+
+    def boom(request) -> httpx.Response:
+        raise httpx.ConnectError("boom", request=request)
+
+    stats = Hunter(make_client(boom), reg, SETTINGS).hunt()
+    assert stats["repos"] == 0
