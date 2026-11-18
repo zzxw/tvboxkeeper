@@ -13,6 +13,9 @@ DEFAULTS: dict[str, Any] = {
         "timeout": 10,
         "retries": 2,
         "concurrency": 8,
+        # 同一主机的并发与最小请求间隔：避免一次体检把单站打爆（被限流/封 IP）
+        "per_host_concurrency": 2,
+        "per_host_interval": 0.5,
         "max_bytes": 5_242_880,
         "verify_ssl": True,
         # 证书链校验失败时才对该源降级复检；设为 False 表示一律不校验证书

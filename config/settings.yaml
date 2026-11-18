@@ -5,6 +5,9 @@ network:
   timeout: 10          # 单次请求超时（秒）
   retries: 2           # 失败重试次数
   concurrency: 8       # 全局并发上限
+  # 同一主机的并发与最小请求间隔：同一站点源很多时避免打爆（被限流/封 IP）
+  per_host_concurrency: 2
+  per_host_interval: 0.5   # 秒；0 = 只限并发，不额外等待
   max_bytes: 5242880   # 配置文件大小上限（5MB）
   verify_ssl: true     # 默认校验证书（比全局关掉更安全）
   # ↓ 若某个源因证书链不完整失败，仅对该源降级为不校验并重试一次（不掩盖超时/握手失败）；

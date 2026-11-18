@@ -8,7 +8,9 @@ from __future__ import annotations
 
 import asyncio
 import time
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
+from urllib.parse import urlsplit
 
 import httpx
 
@@ -50,6 +52,38 @@ def make_headers(user_agent: str) -> dict[str, str]:
         "Accept": "*/*",
         "Accept-Language": "zh-CN,zh;q=0.9",
     }
+
+
+class HostLimiter:
+    """按主机名限制并发与请求间隔，避免同一站点被打爆（误判 dead / 封 IP）。
+
+    只约束调度，不改变单次请求的超时与重试语义。interval 是同一主机
+    两次请求开始之间的最小间隔（秒），0 表示不额外等待。
+    """
+
+    def __init__(self, concurrency: int = 2, interval: float = 0.0):
+        self.concurrency = max(1, int(concurrency))
+        self.interval = max(0.0, float(interval))
+        self._sems: dict[str, asyncio.Semaphore] = {}
+        self._last: dict[str, float] = {}
+
+    def _sem(self, host: str) -> asyncio.Semaphore:
+        sem = self._sems.get(host)
+        if sem is None:
+            sem = self._sems[host] = asyncio.Semaphore(self.concurrency)
+        return sem
+
+    @asynccontextmanager
+    async def slot(self, url: str):
+        """占用某主机的请求名额：同主机并发不超过 concurrency。"""
+        host = urlsplit(url).hostname or ""
+        async with self._sem(host):
+            if self.interval:
+                wait = self._last.get(host, 0.0) + self.interval - time.monotonic()
+                if wait > 0:
+                    await asyncio.sleep(wait)
+                self._last[host] = time.monotonic()
+            yield
 
 
 async def fetch(

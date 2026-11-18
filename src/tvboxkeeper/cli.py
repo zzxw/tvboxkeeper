@@ -17,7 +17,7 @@ from . import discover as discover_mod
 from . import publish as publish_mod
 from . import validate as validate_mod
 from .config import load_seeds, load_settings
-from .fetch import is_cert_error, make_headers
+from .fetch import HostLimiter, is_cert_error, make_headers
 from .normalize import normalize_url
 from .registry import Registry
 
@@ -152,6 +152,9 @@ async def _run_checks(reg: Registry, settings: dict, rows: list[dict]) -> list:
     verify = net.get("verify_ssl", True)
     fallback = net.get("verify_ssl_fallback", True)
     sem = asyncio.Semaphore(net["concurrency"])
+    # 同主机限速：同一站点挂了大量源时，避免并发请求把自己打成 dead / 被封
+    host_gate = HostLimiter(net.get("per_host_concurrency", 2),
+                            net.get("per_host_interval", 0.5))
     # 增量体检所需的上一轮状态：内容 md5 + 上次真实探测时间
     prev_map = {
         r["url"]: {"content_md5": r.get("content_md5") or "",
@@ -167,13 +170,14 @@ async def _run_checks(reg: Registry, settings: dict, rows: list[dict]) -> list:
         )
 
     async def _batch(client: httpx.AsyncClient, items: list[dict]) -> list:
-        return await asyncio.gather(*[
-            validate_mod.check_source(
-                client, sem, item["url"], settings,
-                level="L3" if item["url"] in l3_urls else "",
-                prev=prev_map.get(item["url"]))
-            for item in items
-        ])
+        async def _one(item: dict):
+            async with host_gate.slot(item["url"]):
+                return await validate_mod.check_source(
+                    client, sem, item["url"], settings,
+                    level="L3" if item["url"] in l3_urls else "",
+                    prev=prev_map.get(item["url"]))
+
+        return await asyncio.gather(*(_one(item) for item in items))
 
     async with _client(verify) as client:
         outcomes = await _batch(client, [{"url": r["url"]} for r in rows])
@@ -321,6 +325,9 @@ def livetest(
         net = settings["network"]
         headers = make_headers(random.choice(net["user_agents"]))
         sem = asyncio.Semaphore(conc)
+        # 直播线路常集中在少数 CDN 主机，同主机限速同样适用
+        host_gate = HostLimiter(net.get("per_host_concurrency", 2),
+                                net.get("per_host_interval", 0.5))
         done = ok_n = 0
         async with httpx.AsyncClient(
                 timeout=lt.get("timeout", 6), follow_redirects=True,
@@ -328,9 +335,13 @@ def livetest(
             batch = 100
             for i in range(0, len(todo), batch):
                 chunk = todo[i:i + batch]
-                res = await asyncio.gather(*(
-                    validate_mod.probe_stream(client, sem, u, settings)
-                    for u in chunk))
+
+                async def _one(u: str):
+                    async with host_gate.slot(u):
+                        return await validate_mod.probe_stream(
+                            client, sem, u, settings)
+
+                res = await asyncio.gather(*(_one(u) for u in chunk))
                 for u, (ok, lat) in zip(chunk, res):
                     reg.record_live_probe(u, ok, lat)
                 done += len(chunk)
