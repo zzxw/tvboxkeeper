@@ -492,7 +492,7 @@ def publish() -> None:
     pub = settings["publish"]
 
     # 同内容归并先于取数：dup_of 写库后 rows 才带标记
-    merged = reg.dedupe()
+    merged = reg.dedupe(settings.get("dedupe", {}).get("fingerprint", True))
     rows = reg.sources(include_banned=True)
     for r in rows:
         a = reg.availability(r["id"])
@@ -672,6 +672,14 @@ def publish() -> None:
         "added": sorted(added), "removed": sorted(removed),
     }, ensure_ascii=False, indent=2), encoding="utf-8")
 
+    # 结构化统计：与日志/报告并存，方便看板或外部监控直接读取
+    stats_path = root / pub["stats"]
+    stats_path.write_text(json.dumps(
+        publish_mod.build_stats(rows, len(data["storeHouse"]),
+                                len(live_data["lives"]), added, removed,
+                                pub["min_health"]),
+        ensure_ascii=False, indent=2), encoding="utf-8")
+
     # 订阅地址卡片：从镜像基址推导可直接导入的完整链接
     sub_urls: dict[str, str] = {}
     if mirror_base:
@@ -689,7 +697,8 @@ def publish() -> None:
     # 静态看板
     site_path = root / pub["site"]
     site_path.parent.mkdir(parents=True, exist_ok=True)
-    histories = {r["id"]: reg.history(r["id"], limit=20) for r in rows}
+    # 一次取 50 条：前 20 条给看板迷你趋势，全量给详情页，省掉一半查询
+    histories = {r["id"]: reg.history(r["id"], limit=50) for r in rows}
     # 单源详情页：看板行点击进入
     site_dir = site_path.parent
     detail_links = {}
@@ -699,10 +708,10 @@ def publish() -> None:
         fn = f"source-{r['id']}.html"
         detail_links[r["id"]] = fn
         (site_dir / fn).write_text(
-            publish_mod.build_source_detail(r, reg.history(r["id"], limit=50)),
+            publish_mod.build_source_detail(r, histories.get(r["id"], [])),
             encoding="utf-8")
     site_html = publish_mod.build_site(
-        rows, histories, reg.failure_reasons(days=30),
+        rows, {k: v[:20] for k, v in histories.items()}, reg.failure_reasons(days=30),
         len(data["storeHouse"]), pub["min_health"],
         trend=trend, hosts=hosts, changes=changes,
         lite_count=len(lite_data["storeHouse"]),
@@ -732,7 +741,7 @@ def publish() -> None:
         f"（{len(live_data['lives'])} 个直播源）"
         + (f"、{lite['duocang']}（{len(lite_data['storeHouse'])} 个源）"
            if lite_info else "")
-        + f"、{pub['report']}、{pub['csv']}、{pub['site']}"
+        + f"、{pub['report']}、{pub['csv']}、{pub['stats']}、{pub['site']}"
         f"（diff: +{len(added)} / -{len(removed)}，归并 {len(merged)} 组）"
     )
     reg.close()

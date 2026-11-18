@@ -240,8 +240,7 @@ def build_report(
         "| 状态 | 名称 | 适配 | 站点 | 直播 | 子仓 | 探测 | L3 | 健康分 | 30天可用 | 延迟ms | 最近检查 | URL |",
         "|---|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
-    for r in sorted((r for r in rows if not r.get("banned")),
-                    key=lambda x: (-x.get("starred", 0), -x.get("health_score", 0))):
+    for r in rank_rows(rows):
         name = (r.get("name") or "").replace("|", "\\|")[:28]
         compat = (r.get("compat") or "-").replace("|", "\\|")
         # 直播源在「直播」列显示频道数，配置源显示 lives 数
@@ -253,11 +252,13 @@ def build_report(
               if r.get("l3_tested") else "-")
         avail = r.get("avail") or "-"
         dup = f" →#{str(r['dup_of'])[:8]}" if r.get("dup_of") else ""
+        # 竖线需转义，避免破坏 Markdown 表格；先算好再进 f-string（3.11 不支持反斜杠表达式）
+        url_cell = r["url"].replace("|", "\\|")
         lines.append(
             f"| {r['status']}{dup} | {name} | {compat} | {r['sites_count']} | {live_disp} "
             f"| {r['storehouse_count']} | {probe} | {l3} | {r['health_score']} "
             f"| {avail} | {r['latency_ms']} | {r.get('last_checked') or '-'} "
-            f"| `{r['url'].replace('|', '\\|')}` |"
+            f"| `{url_cell}` |"
         )
     banned_n = len([r for r in rows if r.get("banned")])
     if banned_n:
@@ -270,6 +271,40 @@ _CSV_HEADER = ("状态", "名称", "适配", "站点", "直播", "子仓", "探�
                "健康分", "30天可用", "延迟ms", "最近检查", "URL")
 
 
+def build_stats(
+    rows: list[dict],
+    duocang_count: int = 0,
+    live_count: int = 0,
+    added: "set[str] | None" = None,
+    removed: "set[str] | None" = None,
+    min_health: float = 0,
+) -> dict:
+    """跑批结构化统计：供看板/监控复用，省得只能翻 Actions 日志。"""
+    counts = Counter(r["status"] for r in rows if not r.get("banned"))
+    scheme_total = sum(int(r.get("https_sites") or 0)
+                       + int(r.get("http_sites") or 0) for r in rows)
+    https_total = sum(int(r.get("https_sites") or 0) for r in rows)
+    return {
+        "generated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "total": len(rows),
+        "status": dict(sorted(counts.items())),
+        "banned": len([r for r in rows if r.get("banned")]),
+        "publishable": duocang_count,
+        "live": live_count,
+        "min_health": min_health,
+        "added": len(added or ()),
+        "removed": len(removed or ()),
+        "https_ratio": (round(https_total / scheme_total, 4)
+                        if scheme_total else None),
+    }
+
+
+def rank_rows(rows: list[dict]) -> list[dict]:
+    """报告 / CSV / 看板共用的榜单口径：剔除 banned，置顶优先、健康分倒序。"""
+    return sorted((r for r in rows if not r.get("banned")),
+                  key=lambda r: (-r.get("starred", 0), -r.get("health_score", 0)))
+
+
 def build_rank_csv(rows: list[dict]) -> str:
     """源榜单 CSV：行集合/顺序与报告榜单一致，便于 Excel 直接筛选排序。
 
@@ -279,8 +314,7 @@ def build_rank_csv(rows: list[dict]) -> str:
     buf = io.StringIO()
     writer = csv.writer(buf, lineterminator="\n")
     writer.writerow(_CSV_HEADER)
-    for r in sorted((x for x in rows if not x.get("banned")),
-                    key=lambda x: (-x.get("starred", 0), -x.get("health_score", 0))):
+    for r in rank_rows(rows):
         live_disp = (r.get("live_channels") if r.get("schema_type") == "live"
                      else r.get("lives_count"))
         probe = (f"{r['sub_ok']}/{r['sub_total']}" if r.get("sub_total") else "-")
@@ -1126,6 +1160,7 @@ footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);
      否则 320–430px 会出现整页横向滚动。 */
   #tbl .name{min-width:128px}
   #tbl .c-live,#tbl .c-health{width:56px;padding-left:6px;padding-right:6px}
+  #tbl .c-https{width:58px;padding-left:6px;padding-right:6px}
   .xaxis span{font-size:9.5px}
   /* 表尾竖排：排序摘要一行、分页一行，避免与计数文字挤成 3 行 */
   .tfoot{flex-direction:column;align-items:flex-start;gap:10px}
@@ -1188,6 +1223,7 @@ const COL = {};
 heads.forEach(th => { COL[th.dataset.sort] = th.dataset.label; });
 
 let kind = 'all';
+let slowOnly = false;          // 仅看 slow：降权但仍可发布的慢源
 let page = 1;
 let size = 20;
 let keys = [];                 // 组合排序：靠前的键优先，越靠后越是次级条件
@@ -1198,7 +1234,7 @@ rows.forEach((tr, i) => { tr.dataset.i = i; });   // 稳定末位比较：还原
 
 /* 排序值在构建期写到行上（dataset），运行时零文本解析；空串 = 无数据 */
 const SORT_COLS = ['status', 'name', 'compat', 'sites', 'live', 'health',
-                   'avail', 'l3'];
+                   'avail', 'https', 'l3'];
 const DATA = new Map();
 function dataOf(tr) {
   let o = DATA.get(tr);
@@ -1271,8 +1307,10 @@ function render() {
   const key = q.value.trim().toLowerCase();
   const list = rows.filter(tr => {
     const okKind = kind === 'all' || tr.dataset.kind === kind;
+    // 状态排序值 1 = slow（见 _STATUS_RANK），复用行上已有的排序属性
+    const okSlow = !slowOnly || tr.dataset.status === '1';
     const okText = !key || tr.textContent.toLowerCase().includes(key);
-    return okKind && okText;
+    return okKind && okSlow && okText;
   });
   list.sort(cmp);
 
@@ -1324,15 +1362,27 @@ heads.forEach(th => {
   });
 });
 
-document.querySelectorAll('.fbtn').forEach(btn => {
+document.querySelectorAll('.fbtn[data-kind]').forEach(btn => {
   btn.addEventListener('click', () => {
     kind = btn.dataset.kind;
-    document.querySelectorAll('.fbtn').forEach(b =>
+    document.querySelectorAll('.fbtn[data-kind]').forEach(b =>
       b.classList.toggle('active', b === btn));
     page = 1;
     render();
   });
 });
+
+/* slow 快捷筛选：与类型筛选叠加，不改变 kind */
+const slowBtn = document.getElementById('slowonly');
+if (slowBtn) {
+  slowBtn.addEventListener('click', () => {
+    slowOnly = !slowOnly;
+    slowBtn.classList.toggle('active', slowOnly);
+    slowBtn.setAttribute('aria-pressed', slowOnly ? 'true' : 'false');
+    page = 1;
+    render();
+  });
+}
 
 q.addEventListener('input', () => { page = 1; render(); });
 
@@ -1498,13 +1548,19 @@ def build_site(
         sv_l3 = (f"{float(r['l3_ok']) / float(r['l3_tested']):.4f}"
                  if r.get("l3_tested") else "")
         sv_av = "" if av_num is None else f"{av_num:.2f}"
+        # HTTPS 覆盖率（0~1）；分母为 0 时留空，排序时按「无数据」处理
+        scheme_total = int(r.get("https_sites") or 0) + int(r.get("http_sites") or 0)
+        https_num = int(r.get("https_sites") or 0)
+        https_disp = (f"{https_num * 100 // scheme_total}%"
+                      if scheme_total else "—")
+        sv_https = f"{https_num / scheme_total:.4f}" if scheme_total else ""
         sort_attrs = (
             f' data-status="{_STATUS_RANK.get(r["status"], 9)}"'
             f' data-name="{esc(r.get("name") or "")}"'
             f' data-compat="{esc(r.get("compat") or "")}"'
             f' data-sites="{sv_sites}" data-live="{sv_live}"'
             f' data-health="{score:.2f}" data-avail="{sv_av}"'
-            f' data-l3="{sv_l3}"')
+            f' data-l3="{sv_l3}" data-https="{sv_https}"')
         name_cell = esc(r.get("name") or "")
         link = (detail_links or {}).get(r["id"])
         if link:
@@ -1519,6 +1575,8 @@ def build_site(
             f'<td class="c-health num">{score:g}'
             f'<i class="hbar {cls}" style="--w:{width}%"></i></td>'
             f'<td class="c-avail num avail{av_cls}">{esc(str(avail))}</td>'
+            f'<td class="c-https num" title="站点/解析/直播/spider 的 https 占比">'
+            f'{https_disp}</td>'
             f'<td class="c-l3 num">{l3}</td>'
             f'<td class="c-spark spark">{_sparkline(marks)}</td>'
             f'<td class="c-url url" title="{esc(r["url"])}">'
@@ -1530,6 +1588,9 @@ def build_site(
     doc_total = sum(kind_count.values())
     live_n = kind_count.get("live", 0)
     vod_n = kind_count.get("vod", 0)
+    slow_n = by_status.get("slow", 0)
+    # 榜单 CSV 与站点同一父目录（output/），文件名含中文需 URL 编码
+    csv_href = quote_plus("榜单.csv").replace("+", "%20")
     lite_note = f" · 精简版 {lite_count} 个源" if lite_count else ""
     trend_block = _trend_panel(trend, doc_total, live_n)
 
@@ -1599,7 +1660,7 @@ def build_site(
 <button type="button" id="theme-toggle" class="tbtn"
         aria-label="切换亮色/暗色主题">☀️</button>
 </div>
-<p class="meta">生成于 {now} · 订阅门槛：健康分 ≥ {min_health} · 订阅源 {duocang_count} 个{lite_note}</p>
+<p class="meta">生成于 {now} · 订阅门槛：健康分 ≥ {min_health} · 订阅源 {duocang_count} 个{lite_note} · <a class="dl" href="../{csv_href}" download>下载榜单 CSV</a></p>
 <div class="cards">{cards}</div>
 {sub_panel}{chg_line}{trend_block}
 <div class="tools">
@@ -1608,6 +1669,7 @@ def build_site(
 <button type="button" class="fbtn active" data-kind="all">全部 <b>{doc_total}</b></button>
 <button type="button" class="fbtn" data-kind="live">直播 <b>{live_n}</b></button>
 <button type="button" class="fbtn" data-kind="vod">非直播 <b>{vod_n}</b></button>
+<button type="button" class="fbtn" id="slowonly" aria-pressed="false">仅看 slow <b>{slow_n}</b></button>
 </div>
 <span class="cnt" id="cnt" role="status"></span>
 </div>
@@ -1617,12 +1679,13 @@ def build_site(
 {_th("status", "状态")}{_th("name", "名称", "s")}{_th("compat", "适配", "s", "c-compat")}
 {_th("sites", "站点", "n", "c-sites num")}{_th("live", "直播", "n", "c-live num")}
 {_th("health", "健康分", "n", "c-health num")}
-{_th("avail", "30天可用", "n", "c-avail num")}{_th("l3", "L3", "n", "c-l3 num")}
+{_th("avail", "30天可用", "n", "c-avail num")}{_th("https", "HTTPS", "n", "c-https num")}
+{_th("l3", "L3", "n", "c-l3 num")}
 <th class="c-spark">近期体检</th><th class="c-url">URL</th>
 </tr></thead>
 <tbody>
 {''.join(trs)}
-<tr id="empty" style="display:none"><td colspan="10">{empty_text}</td></tr>
+<tr id="empty" style="display:none"><td colspan="11">{empty_text}</td></tr>
 </tbody>
 </table>
 <div class="tfoot">
