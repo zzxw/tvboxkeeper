@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 *.egg-info/
 .pytest_cache/
+.ruff_cache/
 data/snapshots/
 data/tvbox.sqlite
 data/local-run.log
