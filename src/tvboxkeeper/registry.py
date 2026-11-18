@@ -40,6 +40,8 @@ CREATE TABLE IF NOT EXISTS source (
   live_channels    INTEGER DEFAULT 0,
   live_groups      INTEGER DEFAULT 0,
   compat           TEXT DEFAULT '',
+  https_sites      INTEGER DEFAULT 0,
+  http_sites       INTEGER DEFAULT 0,
   content_md5      TEXT DEFAULT '',
   dup_of           TEXT DEFAULT '',
   health_score     REAL DEFAULT 0,
@@ -173,6 +175,9 @@ class Registry:
             ("live_channels", "INTEGER DEFAULT 0"),
             ("live_groups", "INTEGER DEFAULT 0"),
             ("compat", "TEXT DEFAULT ''"),
+            # 站点 api 的 https/http 计数（HTTPS 覆盖率展示用）
+            ("https_sites", "INTEGER DEFAULT 0"),
+            ("http_sites", "INTEGER DEFAULT 0"),
             ("content_md5", "TEXT DEFAULT ''"),
             ("dup_of", "TEXT DEFAULT ''"),
             # 最近一次真正执行 L2/L3 探测的时间（增量体检判定依据）
@@ -407,7 +412,10 @@ class Registry:
         if hit or row["banned"]:
             status = "banned"
         elif ok:
-            status = "active"
+            # 可用但明显慢：单独标记降权展示，仍参与发布（订阅里排在 active 之后）
+            slow_ms = int(settings["validate"].get("slow_ms", 3000))
+            status = ("slow" if slow_ms > 0 and outcome.latency_ms >= slow_ms
+                      else "active")
         elif schema_type in ("invalid", "empty") and outcome.status > 0:
             status = "invalid"
         elif schema_type == "anti_crawl":
@@ -460,7 +468,7 @@ class Registry:
             "streak_ok=?, streak_fail=?, latency_ms=?, sites_count=?, "
             "parses_count=?, lives_count=?, storehouse_count=?, sub_ok=?, "
             "sub_total=?, l3_tested=?, l3_ok=?, live_channels=?, "
-            "live_groups=?, compat=?, "
+            "live_groups=?, compat=?, https_sites=?, http_sites=?, "
             "probe_ts=CASE WHEN ? THEN ? ELSE probe_ts END, "
             "content_md5=CASE WHEN ? THEN ? ELSE content_md5 END, "
             "dup_of='', health_score=? WHERE id=?",
@@ -474,6 +482,8 @@ class Registry:
              schema.live_channels if schema else 0,
              schema.live_groups if schema else 0,
              schema.compat if schema else "",
+             schema.https_sites if schema else 0,
+             schema.http_sites if schema else 0,
              probed, now,
              1 if ok else 0, content_md5, score, sid),
         )

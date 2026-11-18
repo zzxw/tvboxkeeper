@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import base64
+import csv
 import hashlib
 import hmac
 import html
+import io
 import json
 import os
 import re
@@ -19,8 +21,9 @@ from . import classify
 from . import diffing
 from .normalize import guess_name
 
-# 状态展示顺序：存活 → 观察中 → 结构/网络异常 → 人工处置
-STATUS_ORDER = ("active", "flaky", "anti_crawl", "invalid", "dead", "new", "banned")
+# 状态展示顺序：存活 → 慢速 → 观察中 → 结构/网络异常 → 人工处置
+STATUS_ORDER = ("active", "slow", "flaky", "anti_crawl", "invalid", "dead",
+                "new", "banned")
 
 
 def status_breakdown(rows: list[dict]) -> str:
@@ -33,30 +36,36 @@ def status_breakdown(rows: list[dict]) -> str:
 
 
 def pick_sources(rows: list[dict], min_health: float) -> list[dict]:
-    """筛出可进入多仓订阅的配置源：active + 达标 + 未封禁 + 非重复 + 非直播。"""
+    """筛出可进入多仓订阅的配置源：active/slow + 达标 + 未封禁 + 非重复 + 非直播。
+
+    slow 仍可发布，但排序上整体排在 active 之后（降权不剔除）。
+    """
     picked = [
         r for r in rows
-        if r.get("status") == "active"
+        if r.get("status") in ("active", "slow")
         and r.get("health_score", 0) >= min_health
         and not r.get("banned")
         and not r.get("dup_of")
         and r.get("schema_type") != "live"
     ]
-    picked.sort(key=lambda r: (-r.get("starred", 0), -r.get("health_score", 0)))
+    picked.sort(key=lambda r: (-r.get("starred", 0),
+                               r.get("status") != "active",
+                               -r.get("health_score", 0)))
     return picked
 
 
 def pick_live_sources(rows: list[dict], min_health: float) -> list[dict]:
-    """筛出可进入直播合集的直播源（schema_type=live）。"""
+    """筛出可进入直播合集的直播源（schema_type=live），slow 同样保留。"""
     picked = [
         r for r in rows
         if r.get("schema_type") == "live"
-        and r.get("status") == "active"
+        and r.get("status") in ("active", "slow")
         and r.get("health_score", 0) >= min_health
         and not r.get("banned")
         and not r.get("dup_of")
     ]
     picked.sort(key=lambda r: (-r.get("starred", 0),
+                               r.get("status") != "active",
                                -r.get("live_channels", 0)))
     return picked
 
@@ -257,6 +266,43 @@ def build_report(
     return "\n".join(lines)
 
 
+_CSV_HEADER = ("状态", "名称", "适配", "站点", "直播", "子仓", "探测", "L3",
+               "健康分", "30天可用", "延迟ms", "最近检查", "URL")
+
+
+def build_rank_csv(rows: list[dict]) -> str:
+    """源榜单 CSV：行集合/顺序与报告榜单一致，便于 Excel 直接筛选排序。
+
+    带 UTF-8 BOM，双击用 Excel 打开不会按本地代码页乱码；字段一律交给
+    csv 模块转义，名称里的逗号/引号/换行不会破表。
+    """
+    buf = io.StringIO()
+    writer = csv.writer(buf, lineterminator="\n")
+    writer.writerow(_CSV_HEADER)
+    for r in sorted((x for x in rows if not x.get("banned")),
+                    key=lambda x: (-x.get("starred", 0), -x.get("health_score", 0))):
+        live_disp = (r.get("live_channels") if r.get("schema_type") == "live"
+                     else r.get("lives_count"))
+        probe = (f"{r['sub_ok']}/{r['sub_total']}" if r.get("sub_total") else "-")
+        l3 = (f"{r['l3_ok']}/{r['l3_tested']}" if r.get("l3_tested") else "-")
+        writer.writerow([
+            r.get("status", ""),
+            r.get("name") or "",
+            r.get("compat") or "",
+            int(r.get("sites_count") or 0),
+            "" if live_disp is None else live_disp,
+            int(r.get("storehouse_count") or 0),
+            probe,
+            l3,
+            r.get("health_score", 0),
+            r.get("avail") or "",
+            int(r.get("latency_ms") or 0),
+            r.get("last_checked") or "",
+            r.get("url", ""),
+        ])
+    return "\ufeff" + buf.getvalue()
+
+
 def write_duocang(path: Path, data: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
@@ -314,19 +360,22 @@ def webhook_payload(platform: str, text: str) -> dict:
     plain = text.replace("**", "").replace("`", "").replace("## ", "【").replace("\n## ", "\n【")
     if platform == "feishu":
         return {"msg_type": "text", "content": {"text": plain}}
+    if platform == "bark":
+        # Bark 走 /push 的 JSON：title/body 分开，device_key 由调用方按 env 补
+        return {"title": "TVBoxKeeper", "body": plain}
     # 企业微信 / 钉钉同为 {"msgtype": "text", ...}
     return {"msgtype": "text", "text": {"content": plain}}
 
 
 _STATUS_CLASS = {
-    "active": "ok", "anti_crawl": "warn", "flaky": "warn",
+    "active": "ok", "slow": "warn", "anti_crawl": "warn", "flaky": "warn",
     "invalid": "bad", "dead": "bad", "banned": "off", "new": "off",
 }
 
-# 按「可用程度」而非字母序排序：active 优先，死源沉底；未知状态排最后
+# 按「可用程度」而非字母序排序：active 优先，slow 紧随其后，死源沉底
 _STATUS_RANK = {
-    "active": 0, "new": 1, "flaky": 2, "anti_crawl": 3,
-    "invalid": 4, "dead": 5, "banned": 6,
+    "active": 0, "slow": 1, "new": 2, "flaky": 3, "anti_crawl": 4,
+    "invalid": 5, "dead": 6, "banned": 7,
 }
 
 
@@ -1805,6 +1854,12 @@ def build_source_detail(row: dict, history: list[dict]) -> str:
         f"+{len((h['parsed'].get('chg') or {}).get('added') or [])} / "
         f"-{len((h['parsed'].get('chg') or {}).get('removed') or [])} 站点</li>"
         for h in history if h["parsed"].get("chg"))
+    https_n = int(row.get("https_sites") or 0)
+    http_n = int(row.get("http_sites") or 0)
+    scheme_total = https_n + http_n
+    # 分母只含 http(s) 站点；全是相对路径/csp 站点时展示占位符
+    https_cov = (f"{https_n}/{scheme_total}（{https_n * 100 // scheme_total}%）"
+                 if scheme_total else "—")
     meta = "".join(
         f"<tr><th>{esc(label)}</th><td>{esc(str(value))}</td></tr>"
         for label, value in [
@@ -1815,6 +1870,7 @@ def build_source_detail(row: dict, history: list[dict]) -> str:
             ("站点/直播/子仓",
              f"{row.get('sites_count', 0)} / {row.get('lives_count', 0)} / "
              f"{row.get('storehouse_count', 0)}"),
+            ("HTTPS 覆盖率", https_cov),
             ("延迟", f"{row.get('latency_ms', 0)} ms"),
             ("最近检查", row.get("last_checked") or "—"),
             ("URL", row.get("url", "")),

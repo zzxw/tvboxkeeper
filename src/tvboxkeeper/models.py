@@ -44,6 +44,9 @@ class SchemaInfo:
     jar_md5: dict[str, str] = field(default_factory=dict)
     # 分支适配标注：通用 / 偏影视仓 / 需特定分支（多仓为空）
     compat: str = ""
+    # 站点 api 的协议分布（相对路径、proxy:// 不计入），用于 HTTPS 覆盖率
+    https_sites: int = 0
+    http_sites: int = 0
     # L2 待探测的子资源 (kind, url)，顺序即优先级
     probes: list[tuple[str, str]] = field(default_factory=list)
     # 多仓的子仓条目 [{"sourceName": ..., "sourceUrl": ...}]

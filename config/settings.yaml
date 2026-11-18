@@ -21,6 +21,7 @@ validate:
   level: L2                  # 默认验证深度：L1 | L2（L3 预留）
   dead_after_failures: 3     # 连续失败 N 次判死
   anti_crawl_grace: 3        # 反爬页判死宽限倍数（3×3=9 次才判死）
+  slow_ms: 3000              # 延迟 ≥ 该值且体检成功 → slow（降权但仍可发布；0=关闭）
   max_probes: 12             # L2 最多探测的子资源数
   probe_timeout: 8           # 子资源探测超时（秒）
   jar_max_bytes: 20971520    # jar 全量校验 md5 的下载上限（20MB）
@@ -46,6 +47,7 @@ publish:
   min_health: 60           # 进入多仓订阅的健康分门槛
   duocang: output/多仓.json
   report: output/报告.md
+  csv: output/榜单.csv           # 源榜单 CSV（UTF-8 BOM，Excel 双击直开）
   site: output/site/index.html   # 静态看板（GitHub Pages 用）
   diff: output/last_diff.json    # 本轮变化记录，notify 命令读取
   live: output/直播.json         # 直播合集配置（可作配置地址导入）
@@ -94,6 +96,15 @@ discover:
   max_depth: 2          # 多仓递归展开深度
   max_new_per_run: 100  # 单轮 discover 最多登记的新源数
   max_live_per_run: 50  # 单轮最多登记的直播源数
+
+# 网页挖源：抓取指定页面，按正则提取配置地址并登记（默认关闭）
+web:
+  enabled: false        # 确认 pages 内容可控后再打开
+  pages: []             # 待抓取页面，例如 https://example.com/tvbox
+  pattern: 'https?://[^\s"''<>]+?\.(?:json|txt|m3u)'  # 候选地址正则
+  timeout: 10           # 单页请求超时（秒）
+  max_bytes: 2000000    # 单页最多解析的字节数
+  max_new_per_run: 20   # 单轮最多登记的新源数
 
 github:
   token_env: GITHUB_TOKEN   # 从哪个环境变量读 token（可选，但强烈建议）

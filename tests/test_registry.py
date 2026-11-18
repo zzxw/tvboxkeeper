@@ -51,6 +51,33 @@ def test_status_transitions(tmp_path):
     assert row["status"] == "active" and row["streak_fail"] == 0
 
 
+def test_site_scheme_counts_persisted(tmp_path):
+    reg = make_registry(tmp_path)
+    reg.upsert("http://e.com/a.json")
+    outcome = make_outcome()
+    outcome.schema.https_sites = 7
+    outcome.schema.http_sites = 3
+    reg.record(outcome, SETTINGS)
+    row = reg.get_by_url("http://e.com/a.json")
+    assert row["https_sites"] == 7 and row["http_sites"] == 3
+
+
+def test_slow_source_kept_but_flagged(tmp_path):
+    """成功但延迟超阈值：记 slow，健康分照常算（仍可发布）。"""
+    reg = make_registry(tmp_path)
+    reg.upsert("http://e.com/a.json")
+    outcome = make_outcome()
+    outcome.latency_ms = 3500
+    reg.record(outcome, SETTINGS)
+    row = reg.get_by_url("http://e.com/a.json")
+    assert row["status"] == "slow" and row["health_score"] > 0
+    # 阈值以下仍是 active
+    fast = make_outcome(url="http://e.com/b.json")
+    fast.latency_ms = 1000
+    reg.record(fast, SETTINGS)
+    assert reg.get_by_url("http://e.com/b.json")["status"] == "active"
+
+
 def test_invalid_reachable(tmp_path):
     reg = make_registry(tmp_path)
     reg.upsert("http://e.com/b.json")

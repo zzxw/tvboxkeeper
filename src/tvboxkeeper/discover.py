@@ -50,7 +50,7 @@ async def expand(
         r for r in registry.sources()
         if r["gen"] < cfg["max_depth"]
         and r["schema_type"] in ("storehouse", "mixed")
-        and r["status"] in ("active", "flaky", "new")
+        and r["status"] in ("active", "slow", "flaky", "new")
     ]
     created_total = 0
     for parent in parents:
@@ -83,7 +83,7 @@ async def expand(
         if created_live >= max_live:
             break
         if (r["schema_type"] not in ("tvbox", "mixed")
-                or r["status"] not in ("active", "flaky")):
+                or r["status"] not in ("active", "slow", "flaky")):
             continue
         snap = registry.latest_snapshot(r["id"])
         if not snap:

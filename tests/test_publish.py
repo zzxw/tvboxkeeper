@@ -57,6 +57,29 @@ def test_super_live_merge_and_backup():
     assert text2 == "" and stats2["channels"] == 0
 
 
+def test_rank_csv_has_bom_and_escapes_fields():
+    from tvboxkeeper.publish import build_rank_csv
+
+    rows = [
+        dict(make_row('名,含逗号"引号"', "http://a/c.json", health=90),
+             compat="通用", schema_type="tvbox", avail="99%",
+             live_channels=0, dup_of=""),
+        dict(make_row("封禁", "http://b/c.json", health=99, banned=1),
+             schema_type="tvbox", dup_of=""),
+        dict(make_row("置顶低速", "http://c/c.json", health=70, starred=1),
+             schema_type="tvbox", dup_of=""),
+    ]
+    text = build_rank_csv(rows)
+    assert text.startswith("\ufeff")  # Excel 双击直开不乱码
+    lines = [line for line in text.lstrip("\ufeff").split("\n") if line]
+    assert lines[0].startswith("状态,名称,适配,站点,直播,子仓,探测,L3,健康分")
+    # 置顶优先；banned 与报告榜单一致地被剔除
+    assert "置顶低速" in lines[1] and "封禁" not in text
+    # 逗号/引号交给 csv 模块转义，不能破表
+    assert '"名,含逗号""引号"""' in text
+    assert len(lines) == 3
+
+
 def test_dingtalk_sign():
     from tvboxkeeper.publish import dingtalk_sign
     url = dingtalk_sign("https://oapi.dingtalk.com/robot/send?access_token=x",
@@ -204,6 +227,18 @@ def test_live_pick_and_duocang_exclusion():
                                 "url": "http://l/b.txt"}
 
 
+def test_pick_sources_includes_slow_after_active():
+    """slow 降权不剔除：仍进多仓，但整体排在 active 之后。"""
+    rows = [
+        dict(make_row("慢但可用", "http://s/c.json", status="slow", health=95),
+             schema_type="tvbox", dup_of=""),
+        dict(make_row("正常低分", "http://a/c.json", status="active", health=70),
+             schema_type="tvbox", dup_of=""),
+    ]
+    assert ([r["url"] for r in pick_sources(rows, 60)]
+            == ["http://a/c.json", "http://s/c.json"])
+
+
 def test_webhook_payload_platforms():
     text = "## TVBox 源更新\n- 新增 **2**"
     feishu = webhook_payload("feishu", text)
@@ -214,6 +249,10 @@ def test_webhook_payload_platforms():
     assert ding["msgtype"] == "text" and "**" not in ding["text"]["content"]
     wecom = webhook_payload("wecom", text)
     assert wecom["msgtype"] == "text"
+    # Bark 用 title/body 两段；webhook 文本已去掉 markdown 记号
+    bark = webhook_payload("bark", text)
+    assert bark["title"] == "TVBoxKeeper"
+    assert "**" not in bark["body"] and "TVBox 源更新" in bark["body"]
 
 
 def test_build_site_html():
@@ -503,7 +542,8 @@ def test_th_helper_marks_type_and_initial_direction():
 def test_status_rank_orders_by_usability():
     from tvboxkeeper.publish import _STATUS_RANK
 
-    chain = ["active", "new", "flaky", "anti_crawl", "invalid", "dead", "banned"]
+    chain = ["active", "slow", "new", "flaky", "anti_crawl", "invalid",
+             "dead", "banned"]
     ranks = [_STATUS_RANK[s] for s in chain]
     assert ranks == sorted(ranks) and len(set(ranks)) == len(ranks)
 
@@ -584,7 +624,8 @@ def test_th_helper_marks_type_and_initial_direction():
 def test_status_rank_orders_by_usability():
     from tvboxkeeper.publish import _STATUS_RANK
 
-    chain = ["active", "new", "flaky", "anti_crawl", "invalid", "dead", "banned"]
+    chain = ["active", "slow", "new", "flaky", "anti_crawl", "invalid",
+             "dead", "banned"]
     ranks = [_STATUS_RANK[s] for s in chain]
     assert ranks == sorted(ranks) and len(set(ranks)) == len(ranks)
 
@@ -653,6 +694,19 @@ def test_theme_toggle_and_light_palette():
     assert 'html[data-theme="light"]' in html
     assert "tvk.theme" in html          # 主题选择持久化
     assert "--title:#0f172a" in html    # 亮色块的值确实存在
+
+
+def test_source_detail_shows_https_coverage():
+    from tvboxkeeper.publish import build_source_detail
+
+    row = dict(make_row("站点A", "http://b/c.json"), id="x1", dup_of="",
+               https_sites=8, http_sites=2)
+    page = build_source_detail(row, [])
+    assert "HTTPS 覆盖率" in page and "8/10（80%）" in page
+    # 没有 http(s) 站点时给占位符，避免展示成 0%
+    row2 = dict(make_row("站点B", "http://b/d.json"), id="x2", dup_of="")
+    page2 = build_source_detail(row2, [])
+    assert "<th>HTTPS 覆盖率</th><td>—</td>" in page2
 
 
 def test_detail_page_has_theme_toggle():

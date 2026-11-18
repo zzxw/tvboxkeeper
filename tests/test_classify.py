@@ -36,6 +36,18 @@ def test_live_urls_split_by_semicolon():
                          "http://y.example.com/tv.txt"]
 
 
+def test_site_scheme_counts():
+    """HTTPS 覆盖率只统计 http(s) 绝对地址站点，相对路径/csp 不进分母。"""
+    text = """{"sites": [
+      {"key": "a", "type": 0, "api": "https://a.example.com/api.php/provide/vod/"},
+      {"key": "b", "type": 0, "api": "http://b.example.com/api.php/provide/vod/"},
+      {"key": "c", "type": 1, "api": "./proxy"},
+      {"key": "d", "type": 3, "api": "csp_X"}
+    ]}"""
+    info = parse_config(BASE, text)
+    assert info.https_sites == 1 and info.http_sites == 1
+
+
 def test_storehouse_children():
     info = parse_config(BASE, STOREHOUSE)
     assert info.schema_type == "storehouse"

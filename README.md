@@ -23,7 +23,8 @@ tvboxkeeper check       # 全量体检（默认 L2：可达 + 解析 + 子资源
 tvboxkeeper check --level L3   # 深度抽测：真实请求站点 CMS 接口
 tvboxkeeper discover    # 展开库中多仓（storeHouse/urls）的子仓
 tvboxkeeper hunt        # GitHub 挖源：搜仓库/代码，探测常见配置文件名
-tvboxkeeper publish     # 生成 多仓.json / 直播.json / 报告.md / site看板 / mirrors 镜像
+tvboxkeeper webhunt     # 网页挖源：按 settings.yaml 的 web.* 抓页面提地址（默认关闭）
+tvboxkeeper publish     # 生成 多仓.json / 直播.json / 报告.md / 榜单.csv / site看板 / mirrors 镜像
 tvboxkeeper notify      # 推送最近发布的变化（Actions Summary / Telegram 可选）
 tvboxkeeper history <url或id>   # 单源体检历史 + 30 天可用率
 tvboxkeeper stats       # 整体统计：状态分布、失败原因、低可用源
@@ -39,6 +40,7 @@ tvboxkeeper list        # 查看源库
 |---|---|
 | new | 刚登记，还没体检 |
 | active | 最近一次体检通过 |
+| slow | 体检通过但延迟 ≥ `validate.slow_ms`（默认 3000ms）：降权展示，仍进入订阅，但排在 active 之后 |
 | flaky | 失败中，但连续失败次数未达判死线 |
 | dead | 连续 N 次失败（默认 3，可在 settings.yaml 调整） |
 | invalid | 可达但解析不出 TVBox 配置结构 |
@@ -66,9 +68,10 @@ git push -u origin main
   Settings → Pages → Source 选 **GitHub Actions**），地址形如
   `https://zzxw.github.io/tvboxkeeper/`；
 - **变化通知**：默认写入 Actions 运行摘要；配 Secrets 后可推送到
-  Telegram（`TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID`）或国内直连的
+  Telegram（`TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID`）、国内直连的
   飞书 / 钉钉 / 企业微信机器人（`FEISHU_WEBHOOK_URL` /
-  `DINGTALK_WEBHOOK_URL` / `WECOM_WEBHOOK_URL`，填机器人 webhook 完整地址）；
+  `DINGTALK_WEBHOOK_URL` / `WECOM_WEBHOOK_URL`，填机器人 webhook 完整地址），
+  或 iOS 上的 Bark（`BARK_URL` 填服务地址，`BARK_KEY` 可选填设备 key）；
 - **本地兜底**：`powershell -ExecutionPolicy Bypass -File scripts\install-task.ps1`
   注册 Windows 计划任务（每天 06:10，错过开机补跑），与 Actions 互为备份。
   跑批完成后**自动把产物回推远端**（pull --rebase，冲突或离线时安全放弃、
@@ -84,7 +87,9 @@ git push -u origin main
 - **周报**：每周日 `publish` 自动生成 `output/周报.md`
   （7 天可用率趋势 / 内容变化 / 失败原因与主机），notify 当日一并推送；
 - **单源详情页**：看板表格点击源名进入 `site/source-<id>.html`，
-  含体检历史与内容变更记录；
+  含体检历史、内容变更记录与站点 HTTPS 覆盖率；
+- **CSV 榜单**：`publish` 同时产出 `output/榜单.csv`（UTF-8 BOM，
+  Excel 双击直开，行集合与排序口径同 `报告.md` 的源榜单）；
 - **同内容归并**：内容完全相同的源只保留最优一个进订阅（报告里列出归并关系）；
 - **数据生命周期**：体检日志/快照/挖源记录默认保留 90 天（settings.yaml
   `cleanup` 可调），publish 时自动清理并 VACUUM 瘦身。
@@ -109,6 +114,24 @@ git push -u origin main
 （增量窗口：每条 7 天内不重复测，单轮封顶 1500 条，未测优先），
 结论存库；`publish` 构建超级列表时自动剔除窗口内判死的线路——
 免费直播流死亡率极高（实测首轮通过率约 10%），这是榜单可信度的关键。
+
+## 网页挖源（可选）
+
+除 GitHub 搜索外，还可以从指定网页里提取配置地址，配置见 `settings.yaml`：
+
+```yaml
+web:
+  enabled: true          # 默认 false：确认 pages 内容可控后再开启
+  pages:                 # 待抓取的页面列表
+    - https://example.com/tvbox
+  pattern: 'https?://[^\s"''<>]+?\.(?:json|txt|m3u)'
+  max_new_per_run: 20    # 单轮最多登记的新源数
+```
+
+运行 `tvboxkeeper webhunt`：命中的地址先做 URL 合法性校验（非法端口、
+非 http(s) 直接丢弃），再以 `origin=web` 登记进源库；内容是否可用仍交给
+`check` 体检判定。该渠道只做 GET + 正则文本提取，**不执行页面脚本**，
+也不会因为页面上写了地址就直接信任它。
 
 ## 深度验证与合规
 

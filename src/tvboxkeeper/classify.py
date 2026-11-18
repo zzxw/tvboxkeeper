@@ -261,6 +261,10 @@ def parse_config(url: str, text: str) -> SchemaInfo:
         if api.startswith("csp_"):
             csp += 1
         low = api.lower()
+        if low.startswith("https://"):
+            info.https_sites += 1
+        elif low.startswith("http://"):
+            info.http_sites += 1
         if low.endswith(".js") or "drpy" in low:
             drpy += 1
         if stype in (0, 1) and is_fetchable_url(str(site.get("api") or "")):

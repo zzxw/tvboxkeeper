@@ -385,6 +385,26 @@ def hunt() -> None:
 
 
 @app.command()
+def webhunt() -> None:
+    """网页挖源：抓取配置里的页面，按正则提取配置地址并登记。"""
+    from .web_hunt import WebHunter
+    _, settings, reg = _open()
+    cfg = settings.get("web") or {}
+    if not cfg.get("enabled"):
+        typer.echo("网页挖源未启用：在 settings.yaml 打开 web.enabled 并配置 web.pages。")
+        reg.close()
+        return
+    headers = make_headers(random.choice(settings["network"]["user_agents"]))
+    with httpx.Client(headers=headers, timeout=cfg.get("timeout", 10),
+                      follow_redirects=True) as client:
+        stats = WebHunter(client, reg, settings).run()
+    typer.echo(
+        f"webhunt 完成：抓取页面 {stats['pages']} 个，命中地址 {stats['found']} 个，"
+        f"新登记 {stats['registered']} 个，失败页面 {stats['failed']} 个。")
+    reg.close()
+
+
+@app.command()
 def history(
     url_or_id: str,
     limit: int = typer.Option(30, "--limit", help="最多显示 N 条记录"),
@@ -623,6 +643,11 @@ def publish() -> None:
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text(report, encoding="utf-8")
 
+    # 源榜单 CSV：与报告榜单同口径，供表格软件筛选（带 BOM）
+    csv_path = root / pub["csv"]
+    csv_path.parent.mkdir(parents=True, exist_ok=True)
+    csv_path.write_text(publish_mod.build_rank_csv(rows), encoding="utf-8")
+
     # 本轮变化落盘，notify 命令读取
     diff_path = root / pub["diff"]
     diff_path.write_text(json.dumps({
@@ -691,7 +716,7 @@ def publish() -> None:
         f"（{len(live_data['lives'])} 个直播源）"
         + (f"、{lite['duocang']}（{len(lite_data['storeHouse'])} 个源）"
            if lite_info else "")
-        + f"、{pub['report']}、{pub['site']}"
+        + f"、{pub['report']}、{pub['csv']}、{pub['site']}"
         f"（diff: +{len(added)} / -{len(removed)}，归并 {len(merged)} 组）"
     )
     reg.close()
@@ -758,19 +783,25 @@ def notify(
     for name, env_key, platform in (
             ("飞书", "FEISHU_WEBHOOK_URL", "feishu"),
             ("钉钉", "DINGTALK_WEBHOOK_URL", "dingtalk"),
-            ("企业微信", "WECOM_WEBHOOK_URL", "wecom")):
+            ("企业微信", "WECOM_WEBHOOK_URL", "wecom"),
+            ("Bark", "BARK_URL", "bark")):
         url = os.environ.get(env_key, "")
         if not url:
             continue
-        if platform == "dingtalk":
+        payload = publish_mod.webhook_payload(platform, text)
+        if platform == "bark":
+            # Bark：POST {BARK_URL}/push，设备 key 可选用（不填走服务端默认设备组）
+            url = f"{url.rstrip('/')}/push"
+            key = os.environ.get("BARK_KEY", "")
+            if key:
+                payload["device_key"] = key
+        elif platform == "dingtalk":
             # 加签安全模式（机器人安全设置选了"加签"时必配 DINGTALK_SECRET）
             secret = os.environ.get("DINGTALK_SECRET", "")
             if secret:
                 url = publish_mod.dingtalk_sign(url, secret)
         try:
-            resp = httpx.post(
-                url, json=publish_mod.webhook_payload(platform, text),
-                timeout=15)
+            resp = httpx.post(url, json=payload, timeout=15)
             typer.echo(f"{name} 推送：HTTP {resp.status_code}")
         except (httpx.HTTPError, httpx.InvalidURL) as exc:
             typer.echo(f"{name} 推送失败：{exc}")

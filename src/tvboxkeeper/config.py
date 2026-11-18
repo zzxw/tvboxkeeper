@@ -30,6 +30,8 @@ DEFAULTS: dict[str, Any] = {
         "level": "L2",
         "dead_after_failures": 3,
         "anti_crawl_grace": 3,
+        # 延迟达到该值且体检成功时记为 slow（降权展示，但仍可发布）；0 表示关闭
+        "slow_ms": 3000,
         "max_probes": 12,
         "probe_timeout": 8,
         # jar 全量下载校验 md5 的字节上限（配置声明了 md5 才触发）
@@ -44,6 +46,7 @@ DEFAULTS: dict[str, Any] = {
         "min_health": 60,
         "duocang": "output/多仓.json",
         "report": "output/报告.md",
+        "csv": "output/榜单.csv",  # 源榜单 CSV（UTF-8 BOM，Excel 直开）
         "site": "output/site/index.html",
         "diff": "output/last_diff.json",
         "live": "output/直播.json",  # 直播合集配置（lives 数组，可作配置地址导入）
@@ -90,6 +93,16 @@ DEFAULTS: dict[str, Any] = {
     },
     "discover": {"max_depth": 2, "max_new_per_run": 100,
                  "max_live_per_run": 50},
+    "web": {
+        # 默认关闭：页面抓取容易误伤，确认种子页面内容后手动开启
+        "enabled": False,
+        "pages": [],  # 待抓取的页面 URL 列表
+        # 匹配配置文件地址的正则；带分组时取第一个非空分组
+        "pattern": r"https?://[^\s\"'<>]+?\.(?:json|txt|m3u)",
+        "timeout": 10,
+        "max_bytes": 2_000_000,
+        "max_new_per_run": 20,
+    },
     "github": {
         "token_env": "GITHUB_TOKEN",
         "repo_queries": [
