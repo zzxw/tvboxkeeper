@@ -8,6 +8,7 @@ network:
   # 同一主机的并发与最小请求间隔：同一站点源很多时避免打爆（被限流/封 IP）
   per_host_concurrency: 2
   per_host_interval: 0.5   # 秒；0 = 只限并发，不额外等待
+  batch_size: 100      # 每批调度的源数（分块体检，避免一次性建上千协程）
   max_bytes: 5242880   # 配置文件大小上限（5MB）
   verify_ssl: true     # 默认校验证书（比全局关掉更安全）
   # ↓ 若某个源因证书链不完整失败，仅对该源降级为不校验并重试一次（不掩盖超时/握手失败）；
@@ -22,6 +23,7 @@ validate:
   dead_after_failures: 3     # 连续失败 N 次判死
   anti_crawl_grace: 3        # 反爬页判死宽限倍数（3×3=9 次才判死）
   slow_ms: 3000              # 延迟 ≥ 该值且体检成功 → slow（降权但仍可发布；0=关闭）
+  run_deadline_min: 90       # 整轮体检时间预算（分钟），超时停止调度剩余源；0=不限
   max_probes: 12             # L2 最多探测的子资源数
   probe_timeout: 8           # 子资源探测超时（秒）
   jar_max_bytes: 20971520    # jar 全量校验 md5 的下载上限（20MB）

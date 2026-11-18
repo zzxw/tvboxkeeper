@@ -16,6 +16,8 @@ DEFAULTS: dict[str, Any] = {
         # 同一主机的并发与最小请求间隔：避免一次体检把单站打爆（被限流/封 IP）
         "per_host_concurrency": 2,
         "per_host_interval": 0.5,
+        # 每批调度的源数：分块 gather，避免一次性创建上千协程
+        "batch_size": 100,
         "max_bytes": 5_242_880,
         "verify_ssl": True,
         # 证书链校验失败时才对该源降级复检；设为 False 表示一律不校验证书
@@ -32,6 +34,8 @@ DEFAULTS: dict[str, Any] = {
         "anti_crawl_grace": 3,
         # 延迟达到该值且体检成功时记为 slow（降权展示，但仍可发布）；0 表示关闭
         "slow_ms": 3000,
+        # 整轮体检时间预算（分钟）：超时停止调度剩余源，照常发布已有结果；0=不限
+        "run_deadline_min": 90,
         "max_probes": 12,
         "probe_timeout": 8,
         # jar 全量下载校验 md5 的字节上限（配置声明了 md5 才触发）

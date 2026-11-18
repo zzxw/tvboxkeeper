@@ -155,6 +155,10 @@ async def _run_checks(reg: Registry, settings: dict, rows: list[dict]) -> list:
     # 同主机限速：同一站点挂了大量源时，避免并发请求把自己打成 dead / 被封
     host_gate = HostLimiter(net.get("per_host_concurrency", 2),
                             net.get("per_host_interval", 0.5))
+    batch_size = max(1, int(net.get("batch_size", 100)))
+    # 整轮时间预算：超预算不再调度新源，已体检结果照常入库/发布
+    deadline_min = float(settings["validate"].get("run_deadline_min", 0) or 0)
+    deadline = time.monotonic() + deadline_min * 60 if deadline_min > 0 else 0.0
     # 增量体检所需的上一轮状态：内容 md5 + 上次真实探测时间
     prev_map = {
         r["url"]: {"content_md5": r.get("content_md5") or "",
@@ -179,15 +183,27 @@ async def _run_checks(reg: Registry, settings: dict, rows: list[dict]) -> list:
 
         return await asyncio.gather(*(_one(item) for item in items))
 
+    async def _run_all(client: httpx.AsyncClient, urls: list[str]) -> list:
+        """分块调度；预算用尽即停止，返回已完成的体检结果。"""
+        out: list = []
+        for i in range(0, len(urls), batch_size):
+            if deadline and time.monotonic() >= deadline:
+                typer.echo(f"  时间预算用尽，剩余 {len(urls) - i} 个源本轮跳过。")
+                break
+            chunk = urls[i:i + batch_size]
+            out.extend(await _batch(client, [{"url": u} for u in chunk]))
+            typer.echo(f"  体检进度 {len(out)}/{len(urls)}")
+        return out
+
     async with _client(verify) as client:
-        outcomes = await _batch(client, [{"url": r["url"]} for r in rows])
+        outcomes = await _run_all(client, [r["url"] for r in rows])
 
     # 先按校验证书抓取；只有证书链失败才对该源降级复检一次。
     # 超时/DNS/握手失败不降级——关掉校验也连不上，降级只会掩盖真实原因。
     retry = [o for o in outcomes if is_cert_error(o.error)]
     if verify and fallback and retry:
         async with _client(False) as insecure:
-            retried = await _batch(insecure, [{"url": o.url} for o in retry])
+            retried = await _run_all(insecure, [o.url for o in retry])
         fixed = {o.url: o for o in retried}
         merged = []
         for outcome in outcomes:

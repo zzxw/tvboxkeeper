@@ -39,6 +39,66 @@ def test_valid_url_still_fetches():
     assert res.content == b"ok"
 
 
+def _fetch_with(handler, retries=0):
+    async def inner():
+        async with httpx.AsyncClient(
+                transport=httpx.MockTransport(handler)) as client:
+            return await fetch(client, asyncio.Semaphore(1),
+                               "http://h.example/c.json",
+                               max_bytes=1024, timeout=1, retries=retries)
+    return asyncio.run(inner())
+
+
+def test_404_is_not_retried():
+    """404/410 重试无意义，只应请求一次。"""
+    calls = []
+
+    def handler(request):
+        calls.append(request)
+        return httpx.Response(404)
+
+    res = _fetch_with(handler, retries=3)
+    assert res.status == 404 and res.error == "HTTP 404"
+    assert len(calls) == 1
+
+
+def test_403_is_not_retried():
+    calls = []
+
+    def handler(request):
+        calls.append(request)
+        return httpx.Response(403)
+
+    res = _fetch_with(handler, retries=3)
+    assert res.status == 403 and len(calls) == 1
+
+
+def test_429_honors_retry_after_then_recovers():
+    calls = []
+
+    def handler(request):
+        calls.append(request)
+        if len(calls) == 1:
+            return httpx.Response(429, headers={"Retry-After": "0"})
+        return httpx.Response(200, text="ok")
+
+    res = _fetch_with(handler, retries=1)
+    assert res.status == 200 and res.content == b"ok"
+    assert len(calls) == 2
+
+
+def test_500_retries_then_reports_http_error():
+    calls = []
+
+    def handler(request):
+        calls.append(request)
+        return httpx.Response(500)
+
+    res = _fetch_with(handler, retries=1)
+    assert res.status == 500 and res.error == "HTTP 500" and res.content == b""
+    assert len(calls) == 2
+
+
 def test_host_limiter_caps_same_host_concurrency():
     """同一主机的并发不超过配置值，避免把单站打爆。"""
 

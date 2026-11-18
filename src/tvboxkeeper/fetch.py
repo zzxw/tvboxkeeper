@@ -86,6 +86,21 @@ class HostLimiter:
             yield
 
 
+# 重试策略：404/410 及其余 4xx 重试无意义（配置/权限/反爬），直接返回；
+# 429 单独按 Retry-After 等待；408/425/5xx 与网络错误走退避重试。
+_RETRY_STATUS = frozenset({408, 425})
+MAX_RETRY_AFTER = 10.0
+
+
+def _retry_after(value: str | None) -> float | None:
+    """解析 Retry-After 的秒数写法；HTTP-date 或非法值返回 None。"""
+    try:
+        seconds = float((value or "").strip())
+    except ValueError:
+        return None
+    return min(max(seconds, 0.0), MAX_RETRY_AFTER)
+
+
 async def fetch(
     client: httpx.AsyncClient,
     sem: asyncio.Semaphore,
@@ -104,28 +119,42 @@ async def fetch(
     start = time.monotonic()
     headers = {"Range": f"bytes=0-{probe_bytes - 1}"} if probe_bytes else None
     last_error = "unknown"
+    last_status = 0
 
     for attempt in range(1, retries + 2):
         attempt_start = time.monotonic()  # 延迟只统计本次请求，不含重试等待
+        wait: float | None = None
         try:
             async with sem:
                 async with client.stream(
                     "GET", url, headers=headers, timeout=timeout
                 ) as resp:
-                    buf = bytearray()
-                    async for chunk in resp.aiter_bytes(65536):
-                        buf.extend(chunk)
-                        if len(buf) >= max_bytes:
-                            break
+                    status = last_status = resp.status_code
                     latency = int((time.monotonic() - attempt_start) * 1000)
-                    status = resp.status_code
-                    return FetchResult(
-                        url=url,
-                        status=status,
-                        content=bytes(buf[:max_bytes]),
-                        latency_ms=latency,
-                        error="" if status < 400 else f"HTTP {status}",
-                    )
+                    if (400 <= status < 500 and status != 429
+                            and status not in _RETRY_STATUS):
+                        # 404/410 及 400/401/403 等：重试不会改变结果，省配额
+                        return FetchResult(url=url, status=status,
+                                           latency_ms=latency,
+                                           error=f"HTTP {status}")
+                    if status == 429 or status >= 500 or status in _RETRY_STATUS:
+                        # 错误体没有分析价值，不下载；429 尊重服务端 Retry-After
+                        last_error = f"HTTP {status}"
+                        if status == 429:
+                            wait = _retry_after(resp.headers.get("Retry-After"))
+                    else:
+                        buf = bytearray()
+                        async for chunk in resp.aiter_bytes(65536):
+                            buf.extend(chunk)
+                            if len(buf) >= max_bytes:
+                                break
+                        return FetchResult(
+                            url=url,
+                            status=status,
+                            content=bytes(buf[:max_bytes]),
+                            latency_ms=latency,
+                            error="" if status < 400 else f"HTTP {status}",
+                        )
         except httpx.InvalidURL as exc:
             # URL 本身非法（如 host:1935:1935）：重试没有意义，直接判失败。
             # InvalidURL 不是 HTTPError 子类，必须单独捕获，否则单条脏 URL
@@ -135,13 +164,12 @@ async def fetch(
                                error=f"{type(exc).__name__}: {exc}")
         except (httpx.HTTPError, OSError, asyncio.TimeoutError) as exc:
             last_error = f"{type(exc).__name__}: {exc}"
-            if attempt > retries:
-                return FetchResult(
-                    url=url,
-                    status=0,
-                    latency_ms=int((time.monotonic() - start) * 1000),
-                    error=last_error,
-                )
-            await asyncio.sleep(min(1.0 * attempt, 3.0))
+            last_status = 0
 
-    return FetchResult(url=url, error=last_error)  # pragma: no cover
+        if attempt > retries:
+            break
+        await asyncio.sleep(wait if wait is not None else min(1.0 * attempt, 3.0))
+
+    return FetchResult(url=url, status=last_status,
+                       latency_ms=int((time.monotonic() - start) * 1000),
+                       error=last_error)
