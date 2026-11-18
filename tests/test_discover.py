@@ -78,3 +78,23 @@ def test_expand_skips_dead_parent(monkeypatch):
     created, live = asyncio.run(
         discover.expand(reg, None, None, load_settings(None)))
     assert (created, live) == (0, 0) and reg.created == []
+
+
+def test_expand_skips_low_credit_parent():
+    """历史子源存活率过低且样本充足时，本轮不再展开该父仓。"""
+    reg = FakeRegistry([parent_row()], snapshot=(CONFIG, "2026-11-09 00:00:00"))
+    reg.parent_credits = lambda: {PARENT_URL: (0, 4)}
+
+    created, live = asyncio.run(
+        discover.expand(reg, None, None, load_settings(None)))
+    assert (created, live) == (0, 0) and reg.created == []
+
+
+def test_expand_keeps_small_sample_parent():
+    """样本不足（<3）时不判断信用，避免新父仓被一次失败判死。"""
+    reg = FakeRegistry([parent_row()], snapshot=(CONFIG, "2026-11-09 00:00:00"))
+    reg.parent_credits = lambda: {PARENT_URL: (0, 2)}
+
+    created, _ = asyncio.run(
+        discover.expand(reg, None, None, load_settings(None)))
+    assert created == 2

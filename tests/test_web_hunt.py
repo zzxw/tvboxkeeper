@@ -69,3 +69,58 @@ def test_webhunt_respects_max_new_per_run(tmp_path):
     with make_client(lambda request: httpx.Response(200, text=BODY)) as client:
         stats = WebHunter(client, reg, make_settings(max_new_per_run=1)).run()
     assert stats["registered"] == 1
+
+
+def test_webhunt_follows_same_domain_link(tmp_path):
+    """depth=1：只跟进同域链接一层，链接页里的配置地址能登记。"""
+    reg = make_registry(tmp_path)
+    home = "http://page.example.com/home"
+    settings = make_settings(pages=[home], depth=1)
+
+    def handler(request):
+        url = str(request.url)
+        if url == home:
+            return httpx.Response(200, text='<a href="/list">more</a>')
+        if url.endswith("/list"):
+            return httpx.Response(200, text="http://deep.example.com/x.json")
+        return httpx.Response(404)
+
+    with make_client(handler) as client:
+        stats = WebHunter(client, reg, settings).run()
+    assert stats["pages"] == 2 and stats["registered"] == 1
+    assert {r["url"] for r in reg.sources()} == {"http://deep.example.com/x.json"}
+
+
+def test_webhunt_does_not_follow_cross_domain(tmp_path):
+    reg = make_registry(tmp_path)
+    home = "http://page.example.com/home"
+    settings = make_settings(pages=[home], depth=1)
+
+    def handler(request):
+        return httpx.Response(
+            200, text='<a href="http://other.example.com/list">x</a>')
+
+    with make_client(handler) as client:
+        stats = WebHunter(client, reg, settings).run()
+    assert stats["pages"] == 1
+
+
+def test_webhunt_expands_sitemap(tmp_path):
+    """sitemap 的 <loc> 作为待扫页面展开，页面内的配置地址正常登记。"""
+    reg = make_registry(tmp_path)
+    sm = "http://page.example.com/sitemap.xml"
+    settings = make_settings(pages=[sm], depth=0)
+
+    def handler(request):
+        url = str(request.url)
+        if url == sm:
+            return httpx.Response(200, text=(
+                '<?xml version="1.0"?><urlset><url><loc>'
+                'http://page.example.com/p1</loc></url></urlset>'))
+        if url.endswith("/p1"):
+            return httpx.Response(200, text="http://a.example.com/cfg.json")
+        return httpx.Response(404)
+
+    with make_client(handler) as client:
+        stats = WebHunter(client, reg, settings).run()
+    assert stats["pages"] == 2 and stats["registered"] == 1

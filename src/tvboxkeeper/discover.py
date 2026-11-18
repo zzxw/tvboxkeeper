@@ -52,6 +52,21 @@ async def expand(
         and r["schema_type"] in ("storehouse", "mixed")
         and r["status"] in ("active", "slow", "flaky", "new")
     ]
+    # 父仓按「历史产出子源存活率」排序：劣质父仓排到配额之后甚至跳过。
+    # 样本不足（<3 个子源）时不做判断，避免新父仓被一次失败判死。
+    credits_fn = getattr(registry, "parent_credits", None)
+    credits = credits_fn() if credits_fn else {}
+    min_rate = float(cfg.get("min_parent_alive_rate", 0.3))
+
+    def alive_rate(parent: dict) -> float:
+        alive, total = credits.get(parent["url"], (0, 0))
+        if total < 3:
+            return 1.0
+        return alive / total
+
+    parents = [p for p in parents if alive_rate(p) >= min_rate or
+               credits.get(p["url"], (0, 0))[1] < 3]
+    parents.sort(key=lambda p: (-alive_rate(p), -float(p.get("health_score") or 0)))
     created_total = 0
     for parent in parents:
         if created_total >= cfg["max_new_per_run"]:
