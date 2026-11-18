@@ -138,6 +138,8 @@ def test_notify_failure_alert(tmp_path, monkeypatch):
     monkeypatch.setenv("TVBOX_ROOT", str(tmp_path))
     monkeypatch.setenv("GITHUB_REPOSITORY", "zzxw/tvboxkeeper")
     monkeypatch.setenv("GITHUB_RUN_ID", "12345")
+    # CI 里该变量总是存在；本用例验证的是「无 summary 时的 stdout 兜底」
+    monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
     (tmp_path / "config").mkdir()
 
     result = CliRunner().invoke(app, ["notify", "--event", "failed"])
