@@ -1,29 +1,29 @@
 {
   "lives": [
     {
+      "name": "极简·直播",
+      "type": 0,
+      "url": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/c1b2bb4a16ed3f37.json"
+    },
+    {
+      "name": "牛虎·直播",
+      "type": 0,
+      "url": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/23cf883428dd5142.json"
+    },
+    {
+      "name": "牛虎·直播",
+      "type": 0,
+      "url": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/c085d55be5a9487c.json"
+    },
+    {
       "name": "🚀5-Clun在线·直播",
       "type": 0,
       "url": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/076d5bf1145c6b73.json"
     },
     {
-      "name": "🚀4-健康家用·直播",
-      "type": 0,
-      "url": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/d200387e02f2b5a6.json"
-    },
-    {
       "name": "🚀5-Clun在线·直播",
       "type": 0,
-      "url": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/401059947fe3b7a8.json"
-    },
-    {
-      "name": "🚀5-Clun在线·直播",
-      "type": 0,
-      "url": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/c39eee929e84a09a.json"
-    },
-    {
-      "name": "aowu·直播",
-      "type": 0,
-      "url": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/6a9fba7c43a75883.json"
+      "url": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/8ba5f786ff72b11d.json"
     }
   ]
 }
