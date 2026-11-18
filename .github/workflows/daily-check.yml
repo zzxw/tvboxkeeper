@@ -58,6 +58,8 @@ jobs:
           FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}     # 可选：飞书机器人
           DINGTALK_WEBHOOK_URL: ${{ secrets.DINGTALK_WEBHOOK_URL }} # 可选：钉钉机器人
           WECOM_WEBHOOK_URL: ${{ secrets.WECOM_WEBHOOK_URL }}       # 可选：企业微信机器人
+          BARK_URL: ${{ secrets.BARK_URL }}                         # 可选：Bark 服务地址
+          BARK_KEY: ${{ secrets.BARK_KEY }}                         # 可选：Bark 设备 key
         run: |
           tvboxkeeper import
           tvboxkeeper discover
@@ -85,6 +87,8 @@ jobs:
           DINGTALK_WEBHOOK_URL: ${{ secrets.DINGTALK_WEBHOOK_URL }}
           DINGTALK_SECRET: ${{ secrets.DINGTALK_SECRET }}
           WECOM_WEBHOOK_URL: ${{ secrets.WECOM_WEBHOOK_URL }}
+          BARK_URL: ${{ secrets.BARK_URL }}
+          BARK_KEY: ${{ secrets.BARK_KEY }}
         run: tvboxkeeper notify --event failed || true
 
   pages:
