@@ -34,6 +34,8 @@ DEFAULTS: dict[str, Any] = {
         "anti_crawl_grace": 3,
         # 延迟达到该值且体检成功时记为 slow（降权展示，但仍可发布）；0 表示关闭
         "slow_ms": 3000,
+        # slow 判定取近 N 次成功体检延迟的中位数（含本轮），抑制单次抖动
+        "slow_window": 5,
         # 整轮体检时间预算（分钟）：超时停止调度剩余源，照常发布已有结果；0=不限
         "run_deadline_min": 90,
         "max_probes": 12,
@@ -45,12 +47,15 @@ DEFAULTS: dict[str, Any] = {
         # 增量体检：内容 md5 未变且离上次真实探测不足 probe_every_days 时跳过 L2
         "incremental": {"enabled": True, "probe_every_days": 3},
     },
-    "score": {"weights": {"success": 0.5, "subs": 0.3, "richness": 0.2}},
+    "score": {"weights": {"success": 0.5, "subs": 0.3, "richness": 0.1,
+                          "l3": 0.1}},
     "publish": {
         "min_health": 60,
         "duocang": "output/多仓.json",
         "report": "output/报告.md",
         "csv": "output/榜单.csv",  # 源榜单 CSV（UTF-8 BOM，Excel 直开）
+        # 结构化跑批统计（JSON），供看板/监控复用
+        "stats": "output/stats.json",
         "site": "output/site/index.html",
         "diff": "output/last_diff.json",
         "live": "output/直播.json",  # 直播合集配置（lives 数组，可作配置地址导入）
@@ -96,7 +101,11 @@ DEFAULTS: dict[str, Any] = {
         "live_probe_days": 30, # 直播线路测活记录保留天数
     },
     "discover": {"max_depth": 2, "max_new_per_run": 100,
-                 "max_live_per_run": 50},
+                 "max_live_per_run": 50,
+                 # 父仓历史子源存活率低于该值（样本≥3）时本轮不展开
+                 "min_parent_alive_rate": 0.3},
+    # 同内容归并：fingerprint=true 时额外用结构指纹兜住时间戳/顺序抖动
+    "dedupe": {"fingerprint": True},
     "web": {
         # 默认关闭：页面抓取容易误伤，确认种子页面内容后手动开启
         "enabled": False,
@@ -106,6 +115,9 @@ DEFAULTS: dict[str, Any] = {
         "timeout": 10,
         "max_bytes": 2_000_000,
         "max_new_per_run": 20,
+        # 0=只扫配置页；1=再跟进同域链接一层
+        "depth": 1,
+        "max_pages_per_run": 20,
     },
     "github": {
         "token_env": "GITHUB_TOKEN",

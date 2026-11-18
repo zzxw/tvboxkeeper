@@ -13,6 +13,28 @@ API_URL = "http://s.example/api.php"
 SETTINGS = load_settings(None)
 
 
+def _fr(body: bytes, status: int = 200):
+    from tvboxkeeper.fetch import FetchResult
+    return FetchResult(url=API_URL, status=status, content=body, latency_ms=10)
+
+
+def test_l3_requires_non_empty_list():
+    from tvboxkeeper.validate import _l3_ok
+    assert _l3_ok(_fr(b'{"class": [{"type_id": 1}], "list": []}'))
+    assert _l3_ok(_fr(b'{"code": 1, "list": [{"vod_id": 1}]}'))
+    # 空列表 / 只有 code 字段：旧判定会误认为可用，现在判失败
+    assert not _l3_ok(_fr(b'{"class": [], "list": []}'))
+    assert not _l3_ok(_fr(b'{"code": 1}'))
+    assert not _l3_ok(_fr(b'[]'))
+    assert not _l3_ok(_fr(b'{"list": []}', status=404))
+
+
+def test_l3_falls_back_to_text_for_non_json():
+    from tvboxkeeper.validate import _l3_ok
+    assert _l3_ok(_fr(b'{"list":[{"vod_id":1}], broken'))
+    assert not _l3_ok(_fr(b"<html>anti crawl</html>"))
+
+
 def test_content_ok_channel():
     assert _content_ok("channel", b"#EXTM3U\nhttp://x/1.ts", 200)
     assert _content_ok("channel", b"\x00\x00\x00\x18ftypisom", 200)  # 二进制流
@@ -39,7 +61,8 @@ def _handler(request) -> httpx.Response:
         return httpx.Response(200, json={
             "sites": [{"type": 0, "api": API_URL}]})
     if url.startswith(API_URL):
-        return httpx.Response(200, json={"code": 1, "list": []})
+        # ac=list 正常应返回非空分类/列表；空 list 视为接口不可用
+        return httpx.Response(200, json={"code": 1, "list": [{"vod_id": 1}]})
     return httpx.Response(404)
 
 
@@ -94,7 +117,6 @@ def test_jar_md5_validation():
     # 哈希不匹配 → 200 也不算过（jar 被静默换包）
     settings2 = load_settings(None)
     settings2["validate"]["level"] = "L2"
-    bad_handler_ok = ok_handler  # jar 内容相同但配置声明 0*32
 
     def bad_config_handler(request) -> httpx.Response:
         url = str(request.url)

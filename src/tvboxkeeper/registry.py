@@ -6,6 +6,7 @@ import gzip
 import hashlib
 import json
 import sqlite3
+import statistics
 import time
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -43,6 +44,7 @@ CREATE TABLE IF NOT EXISTS source (
   https_sites      INTEGER DEFAULT 0,
   http_sites       INTEGER DEFAULT 0,
   content_md5      TEXT DEFAULT '',
+  content_sig      TEXT DEFAULT '',
   dup_of           TEXT DEFAULT '',
   health_score     REAL DEFAULT 0,
   starred          INTEGER DEFAULT 0,
@@ -179,6 +181,8 @@ class Registry:
             ("https_sites", "INTEGER DEFAULT 0"),
             ("http_sites", "INTEGER DEFAULT 0"),
             ("content_md5", "TEXT DEFAULT ''"),
+            # 结构指纹：md5 会因时间戳/顺序抖动而变，指纹用于二级归并
+            ("content_sig", "TEXT DEFAULT ''"),
             ("dup_of", "TEXT DEFAULT ''"),
             # 最近一次真正执行 L2/L3 探测的时间（增量体检判定依据）
             ("probe_ts", "TEXT DEFAULT ''"),
@@ -259,6 +263,24 @@ class Registry:
             [(ref, now) for ref in repo_full_names],
         )
         self.conn.commit()
+
+    def parent_credits(self) -> dict[str, tuple[int, int]]:
+        """父仓信用：{父仓 URL: (存活子源数, 子源总数)}。
+
+        存活指 active/slow；用于挖源排序，长期产出死源的父仓不应继续
+        优先消耗 max_new_per_run 配额。
+        """
+        rows = self.conn.execute(
+            "SELECT o.ref AS parent, s.status AS status FROM origin o "
+            "JOIN source s ON s.id = o.source_id "
+            "WHERE o.channel='storehouse' AND o.source_id!=''").fetchall()
+        agg: dict[str, list[int]] = {}
+        for r in rows:
+            counter = agg.setdefault(r["parent"], [0, 0])
+            counter[1] += 1
+            if r["status"] in ("active", "slow"):
+                counter[0] += 1
+        return {k: (v[0], v[1]) for k, v in agg.items()}
 
     def hunted_recently(self, repo_full_name: str, days: int) -> bool:
         cutoff = time.strftime(
@@ -414,7 +436,10 @@ class Registry:
         elif ok:
             # 可用但明显慢：单独标记降权展示，仍参与发布（订阅里排在 active 之后）
             slow_ms = int(settings["validate"].get("slow_ms", 3000))
-            status = ("slow" if slow_ms > 0 and outcome.latency_ms >= slow_ms
+            window = int(settings["validate"].get("slow_window", 5))
+            # 用近几次的中位数判定：单次抖动不至于让 active/slow 来回跳
+            latency = self._recent_latency_median(sid, window, outcome.latency_ms)
+            status = ("slow" if slow_ms > 0 and latency >= slow_ms
                       else "active")
         elif schema_type in ("invalid", "empty") and outcome.status > 0:
             status = "invalid"
@@ -433,6 +458,7 @@ class Registry:
         # 优先用体检实际执行的档位；旧调用方未填时按探测结果回退推断
         level = outcome.level or ("L2" if sub_total else "L1")
         content_md5 = hashlib.md5(outcome.content).hexdigest() if ok and outcome.content else ""
+        content_sig = schema.signature if (ok and schema) else ""
         # 内容级变更：与上一份快照比较站点构成（新快照稍后才写，这里读到的还是旧的）
         change: dict = {}
         if content_md5 and row["content_md5"] and content_md5 != row["content_md5"]:
@@ -460,7 +486,8 @@ class Registry:
             "VALUES(?,?,?,?,?,?)",
             (sid, now, level, 1 if ok else 0, outcome.latency_ms, detail),
         )
-        score = self._score(sid, ok, sub_ok, sub_total, schema, settings)
+        score = self._score(sid, ok, sub_ok, sub_total, schema, settings,
+                            outcome.l3_ok, outcome.l3_tested)
         probed = 1 if (sub_total or outcome.l3_tested) else 0
         self.conn.execute(
             "UPDATE source SET schema_type=?, status=?, last_checked=?, "
@@ -471,6 +498,7 @@ class Registry:
             "live_groups=?, compat=?, https_sites=?, http_sites=?, "
             "probe_ts=CASE WHEN ? THEN ? ELSE probe_ts END, "
             "content_md5=CASE WHEN ? THEN ? ELSE content_md5 END, "
+            "content_sig=CASE WHEN ? THEN ? ELSE content_sig END, "
             "dup_of='', health_score=? WHERE id=?",
             (schema_type, status, now, 1 if ok else 0, now,
              streak_ok, streak_fail, outcome.latency_ms,
@@ -485,7 +513,9 @@ class Registry:
              schema.https_sites if schema else 0,
              schema.http_sites if schema else 0,
              probed, now,
-             1 if ok else 0, content_md5, score, sid),
+             1 if ok else 0, content_md5,
+             1 if content_sig else 0, content_sig,
+             score, sid),
         )
         self.conn.commit()
         if hit:
@@ -496,6 +526,18 @@ class Registry:
         if ok and outcome.content:
             self._save_snapshot(sid, outcome.content,
                                 settings["snapshot"]["keep"])
+
+    def _recent_latency_median(self, sid: str, n: int, current: int) -> float:
+        """近 n 次成功体检延迟（含本轮）的中位数，n<=1 时直接取本轮。"""
+        if n <= 1:
+            return float(current)
+        rows = self.conn.execute(
+            "SELECT latency_ms FROM check_log WHERE source_id=? AND ok=1 "
+            "AND latency_ms>0 ORDER BY rowid DESC LIMIT ?",
+            (sid, n - 1),
+        ).fetchall()
+        values = [float(r["latency_ms"]) for r in rows] + [float(current)]
+        return statistics.median(values)
 
     def _recent_rate(self, sid: str, n: int = 10) -> float:
         rows = self.conn.execute(
@@ -514,6 +556,8 @@ class Registry:
         sub_total: int,
         schema: SchemaInfo | None,
         settings: dict,
+        l3_ok: int = 0,
+        l3_tested: int = 0,
     ) -> float:
         w = settings["score"]["weights"]
         rate = self._recent_rate(sid)
@@ -524,7 +568,10 @@ class Registry:
             richness = min(1.0, schema.live_channels / 300)
         else:
             richness = min(1.0, schema.sites_count / 40 * 0.7 + schema.lives_count / 5 * 0.3)
-        score = 100 * (w["success"] * rate + w["subs"] * sub_ratio + w["richness"] * richness)
+        # 未抽测 L3 的源不惩罚（按满分计），只有抽测失败才扣分
+        l3_ratio = (l3_ok / l3_tested) if l3_tested else 1.0
+        score = 100 * (w["success"] * rate + w["subs"] * sub_ratio
+                       + w["richness"] * richness + w.get("l3", 0.0) * l3_ratio)
         if not ok_now:
             score = min(score, 20)
         return round(score, 1)
@@ -603,35 +650,49 @@ class Registry:
 
     # ---------- 同内容去重 ----------
 
-    def dedupe(self) -> list[dict]:
-        """按最近内容 md5 归并同内容源：保留最优，其余标记 dup_of。
+    def dedupe(self, fingerprint: bool = True) -> list[dict]:
+        """按内容归并同内容源：保留最优，其余标记 dup_of。
 
+        先按原始 md5 归并；开启 fingerprint 时，再对剩余源按结构指纹归并，
+        覆盖「正文加时间戳/调整顺序」导致 md5 变化但实际内容未变的情况。
         每次全量重算（内容变化会自动解除归并）。返回归并组信息。
         """
         self.conn.execute("UPDATE source SET dup_of=''")
         rows = [dict(r) for r in self.conn.execute(
-            "SELECT id, url, name, starred, health_score, content_md5 "
-            "FROM source WHERE banned=0 AND status='active' "
-            "AND content_md5 IS NOT NULL AND content_md5!=''")]
-        groups: dict[str, list[dict]] = {}
-        for r in rows:
-            groups.setdefault(r["content_md5"], []).append(r)
+            "SELECT id, url, name, starred, health_score, content_md5, content_sig "
+            "FROM source WHERE banned=0 AND status='active'")]
         merged: list[dict] = []
-        for grp in groups.values():
-            if len(grp) < 2:
-                continue
-            grp.sort(key=lambda r: (-r["starred"], -r["health_score"]))
-            primary, rest = grp[0], grp[1:]
-            for r in rest:
-                self.conn.execute(
-                    "UPDATE source SET dup_of=? WHERE id=?",
-                    (primary["id"], r["id"]))
-                merged.append({
-                    "primary_name": primary["name"] or primary["url"],
-                    "primary": primary["url"],
-                    "merged_name": r["name"] or r["url"],
-                    "merged": r["url"],
-                })
+
+        def merge_groups(source_rows: list[dict], key: str) -> set[str]:
+            groups: dict[str, list[dict]] = {}
+            for r in source_rows:
+                value = r.get(key) or ""
+                if value:
+                    groups.setdefault(value, []).append(r)
+            removed: set[str] = set()
+            for grp in groups.values():
+                if len(grp) < 2:
+                    continue
+                grp.sort(key=lambda r: (-r["starred"], -r["health_score"]))
+                primary, rest = grp[0], grp[1:]
+                for r in rest:
+                    self.conn.execute(
+                        "UPDATE source SET dup_of=? WHERE id=?",
+                        (primary["id"], r["id"]))
+                    removed.add(r["id"])
+                    merged.append({
+                        "primary_name": primary["name"] or primary["url"],
+                        "primary": primary["url"],
+                        "merged_name": r["name"] or r["url"],
+                        "merged": r["url"],
+                    })
+            return removed
+
+        merged_ids = merge_groups(rows, "content_md5")
+        if fingerprint:
+            # 已按 md5 归并的源不再参与二级归并，避免链式合并到不同主源
+            rest = [r for r in rows if r["id"] not in merged_ids]
+            merge_groups(rest, "content_sig")
         self.conn.commit()
         return merged
 

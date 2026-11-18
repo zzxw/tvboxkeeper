@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import json
 import time
 
 import httpx
@@ -105,21 +106,40 @@ async def probe_stream(
     return _content_ok("channel", fr.content, fr.status), fr.latency_ms
 
 
+def _l3_ok(fr) -> bool:
+    """L3 判定：CMS 接口应返回结构化列表，空列表/纯文本噪声不算通过。
+
+    少量老接口返回非 JSON（伪 JSON/HTML），退回文本特征判定以兼容。
+    """
+    if not (200 <= fr.status < 400) or not fr.content:
+        return False
+    text = classify.decode_content(fr.content)
+    try:
+        data = json.loads(text)
+    except ValueError:
+        low = text.lower()
+        return "<list" in low or '"list"' in low
+    if not isinstance(data, dict):
+        return False
+    for key in ("class", "list"):
+        value = data.get(key)
+        if isinstance(value, list) and value:
+            return True
+    return False
+
+
 async def _probe_site_api(
     client: httpx.AsyncClient,
     sem: asyncio.Semaphore,
     api: str,
     settings: dict,
 ) -> tuple[int, str]:
-    """L3：请求 CMS 列表接口 ?ac=list，按返回内容宽松判定可用。"""
+    """L3：请求 CMS 列表接口 ?ac=list，按返回结构判定可用。"""
     l3 = settings["validate"].get("l3") or {}
     url = api + ("&" if "?" in api else "?") + "ac=list"
     fr = await fetch(client, sem, url, max_bytes=65536,
                      timeout=l3.get("timeout", 8), retries=0)
-    body = fr.content
-    ok = (200 <= fr.status < 400
-          and (b'"list"' in body or b'"code"' in body or b"<list" in body.lower()))
-    return (1 if ok else 0), url
+    return (1 if _l3_ok(fr) else 0), url
 
 
 async def check_source(

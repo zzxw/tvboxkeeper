@@ -48,6 +48,30 @@ def test_site_scheme_counts():
     assert info.https_sites == 1 and info.http_sites == 1
 
 
+def test_scheme_counts_include_parses_lives_spider():
+    """覆盖率口径扩展到解析/直播/spider，分母仍只含绝对 http(s) 地址。"""
+    text = """{
+      "spider": "https://j.example.com/spider.jar",
+      "sites": [{"type": 0, "api": "https://a.example.com/api.php"}],
+      "parses": [{"name": "p", "type": 0, "url": "http://p.example.com"}],
+      "lives": [{"name": "l", "type": 0, "url": "https://l.example.com/x.txt"}]
+    }"""
+    info = parse_config(BASE, text)
+    assert info.https_sites == 3 and info.http_sites == 1
+
+
+def test_signature_ignores_order_and_timestamp():
+    """结构指纹不看数组顺序与时间戳字段，站点集合变化才会变。"""
+    a = ('{"updated":"2026-01-01","sites":[{"key":"a","api":"http://a/x"},'
+         '{"key":"b","api":"http://b/x"}]}')
+    b = ('{"updated":"2026-11-18","sites":[{"key":"b","api":"http://b/x"},'
+         '{"key":"a","api":"http://a/x"}]}')
+    c = '{"sites":[{"key":"a","api":"http://a/x"}]}'
+    sig_a = parse_config(BASE, a).signature
+    assert sig_a and sig_a == parse_config(BASE, b).signature
+    assert sig_a != parse_config(BASE, c).signature
+
+
 def test_storehouse_children():
     info = parse_config(BASE, STOREHOUSE)
     assert info.schema_type == "storehouse"

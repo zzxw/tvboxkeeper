@@ -78,6 +78,41 @@ def test_slow_source_kept_but_flagged(tmp_path):
     assert reg.get_by_url("http://e.com/b.json")["status"] == "active"
 
 
+def test_l3_weight_only_penalizes_sampled_sources(tmp_path):
+    """L3 抽测失败的源要扣分；未抽测的源按满分计，不受影响。"""
+    reg = make_registry(tmp_path)
+    bad = make_outcome(url="http://e.com/l3bad.json")
+    bad.l3_tested, bad.l3_ok = 3, 0
+    reg.record(bad, SETTINGS)
+    good = make_outcome(url="http://e.com/l3none.json")
+    reg.record(good, SETTINGS)
+    bad_score = reg.get_by_url("http://e.com/l3bad.json")["health_score"]
+    good_score = reg.get_by_url("http://e.com/l3none.json")["health_score"]
+    # l3 权重 0.1：抽测全失败应比未抽测低 10 分
+    assert round(good_score - bad_score, 1) == 10.0
+
+
+def test_slow_uses_latency_median(tmp_path):
+    """单次慢不改变状态；连续慢才转 slow，避免抖动来回切换。"""
+    reg = make_registry(tmp_path)
+    url = "http://e.com/jitter.json"
+    reg.upsert(url)
+
+    def record(latency):
+        outcome = make_outcome(url=url)
+        outcome.latency_ms = latency
+        reg.record(outcome, SETTINGS)
+        return reg.get_by_url(url)["status"]
+
+    assert record(200) == "active"
+    assert record(200) == "active"
+    # 单次 4s：近 3 次中位数仍是 200，不判 slow
+    assert record(4000) == "active"
+    # 连续慢：中位数越过阈值后才置 slow
+    assert record(4000) == "active"
+    assert record(4000) == "slow"
+
+
 def test_invalid_reachable(tmp_path):
     reg = make_registry(tmp_path)
     reg.upsert("http://e.com/b.json")
@@ -421,3 +456,42 @@ def test_daily_stats_and_host_failures(tmp_path):
     hosts = reg.host_failures(days=1, min_fails=2)
     assert hosts[0]["host"] == "bad.example"
     assert hosts[0]["fails"] == 2 and hosts[0]["sources"] == 2
+
+
+def test_parent_credits_counts_alive_children(tmp_path):
+    """父仓信用统计：active/slow 计入存活，dead 只计总数。"""
+    reg = make_registry(tmp_path)
+    parent = "http://p.example/list.json"
+    reg.upsert(parent)
+    for i, ok in enumerate([True, True, False]):
+        url = f"http://c{i}.example/a.json"
+        reg.upsert(url, origin="storehouse", ref=parent)
+        for _ in range(1 if ok else 3):
+            reg.record(make_outcome(url=url, ok=ok), SETTINGS)
+    assert reg.parent_credits()[parent] == (2, 3)
+
+
+def test_dedupe_uses_signature_when_md5_differs(tmp_path):
+    """内容抖动（时间戳/顺序）导致 md5 不同，但结构指纹相同仍应归并。"""
+    reg = make_registry(tmp_path)
+    for name, body in (("A", b'{"sites": [], "ts": 1}'),
+                       ("B", b'{"sites": [], "ts": 2}')):
+        outcome = make_outcome(url=f"http://e.com/{name}.json", content=body)
+        outcome.schema.signature = "same-structure"
+        reg.record(outcome, SETTINGS)
+    a = reg.get_by_url("http://e.com/A.json")
+    b = reg.get_by_url("http://e.com/B.json")
+    assert a["content_md5"] != b["content_md5"]
+    assert len(reg.dedupe()) == 1
+    assert reg.get_by_url("http://e.com/B.json")["dup_of"]
+
+
+def test_dedupe_fingerprint_can_be_disabled(tmp_path):
+    reg = make_registry(tmp_path)
+    for name, body in (("A", b'{"sites": [], "ts": 1}'),
+                       ("B", b'{"sites": [], "ts": 2}')):
+        outcome = make_outcome(url=f"http://e.com/{name}.json", content=body)
+        outcome.schema.signature = "same-structure"
+        reg.record(outcome, SETTINGS)
+    assert reg.dedupe(fingerprint=False) == []
+    assert not reg.get_by_url("http://e.com/B.json")["dup_of"]

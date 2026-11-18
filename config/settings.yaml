@@ -23,6 +23,7 @@ validate:
   dead_after_failures: 3     # 连续失败 N 次判死
   anti_crawl_grace: 3        # 反爬页判死宽限倍数（3×3=9 次才判死）
   slow_ms: 3000              # 延迟 ≥ 该值且体检成功 → slow（降权但仍可发布；0=关闭）
+  slow_window: 5             # slow 判定取近 N 次成功延迟的中位数，抑制单次抖动
   run_deadline_min: 90       # 整轮体检时间预算（分钟），超时停止调度剩余源；0=不限
   max_probes: 12             # L2 最多探测的子资源数
   probe_timeout: 8           # 子资源探测超时（秒）
@@ -43,13 +44,15 @@ score:
   weights:
     success: 0.5   # 近 10 次检查成功率权重
     subs: 0.3      # 子资源（jar/直播等）探测通过率权重
-    richness: 0.2  # 内容丰富度权重
+    richness: 0.1  # 内容丰富度权重
+    l3: 0.1        # L3 站点接口抽测通过率权重（未抽测按满分，不惩罚）
 
 publish:
   min_health: 60           # 进入多仓订阅的健康分门槛
   duocang: output/多仓.json
   report: output/报告.md
   csv: output/榜单.csv           # 源榜单 CSV（UTF-8 BOM，Excel 双击直开）
+  stats: output/stats.json       # 结构化跑批统计（JSON）
   site: output/site/index.html   # 静态看板（GitHub Pages 用）
   diff: output/last_diff.json    # 本轮变化记录，notify 命令读取
   live: output/直播.json         # 直播合集配置（可作配置地址导入）
@@ -98,6 +101,7 @@ discover:
   max_depth: 2          # 多仓递归展开深度
   max_new_per_run: 100  # 单轮 discover 最多登记的新源数
   max_live_per_run: 50  # 单轮最多登记的直播源数
+  min_parent_alive_rate: 0.3  # 父仓历史子源存活率低于该值（样本≥3）本轮不展开
 
 # 网页挖源：抓取指定页面，按正则提取配置地址并登记（默认关闭）
 web:
@@ -106,7 +110,12 @@ web:
   pattern: 'https?://[^\s"''<>]+?\.(?:json|txt|m3u)'  # 候选地址正则
   timeout: 10           # 单页请求超时（秒）
   max_bytes: 2000000    # 单页最多解析的字节数
-  max_new_per_run: 20   # 单轮最多登记的新源数
+  max_new_per_run: 20
+  depth: 1                 # 0=只扫配置页；1=跟进同域链接一层（跨域不跟）
+  max_pages_per_run: 20    # 本轮最多抓取的页面数（含 sitemap 展开）   # 单轮最多登记的新源数
+
+dedupe:
+  fingerprint: true        # 二级归并：结构相同但时间戳/顺序不同的镜像也合并
 
 github:
   token_env: GITHUB_TOKEN   # 从哪个环境变量读 token（可选，但强烈建议）

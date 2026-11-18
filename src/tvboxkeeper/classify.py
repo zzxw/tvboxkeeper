@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from urllib.parse import urljoin
@@ -261,15 +262,24 @@ def parse_config(url: str, text: str) -> SchemaInfo:
         if api.startswith("csp_"):
             csp += 1
         low = api.lower()
-        if low.startswith("https://"):
-            info.https_sites += 1
-        elif low.startswith("http://"):
-            info.http_sites += 1
         if low.endswith(".js") or "drpy" in low:
             drpy += 1
         if stype in (0, 1) and is_fetchable_url(str(site.get("api") or "")):
             info.site_apis.append(site["api"])
     info.site_apis = info.site_apis[:10]
+    # HTTPS 覆盖率口径：站点 api + 解析接口 + 直播地址 + spider，
+    # 分母只含绝对 http(s) 地址（相对路径、csp_/proxy:// 等不计入）
+    scheme_urls = [str(site.get("api") or "") for site in (data.get("sites") or [])
+                   if isinstance(site, dict)]
+    scheme_urls += _parse_urls(data.get("parses"), url)
+    scheme_urls += _live_urls(data.get("lives"))
+    scheme_urls += [sp for sp, _md5 in _spider_urls(data.get("spider"), url)]
+    for target in scheme_urls:
+        low = target.lower()
+        if low.startswith("https://"):
+            info.https_sites += 1
+        elif low.startswith("http://"):
+            info.http_sites += 1
     info.compat = _compat_tag(info.sites_count, csp, drpy, ext)
 
     # 子资源探测清单：jar（含 md5 校验）→ 解析接口 → 直播 → 壁纸
@@ -284,4 +294,29 @@ def parse_config(url: str, text: str) -> SchemaInfo:
     wallpaper = _resolve_url(str(data.get("wallpaper") or ""), url)
     if wallpaper:
         info.probes.append(("wallpaper", wallpaper))
+    info.signature = _signature(data, info, url)
     return info
+
+
+def _signature(data: dict, info: SchemaInfo, base: str) -> str:
+    """结构指纹：站点 key/api、解析/直播地址、子仓地址的规范化集合。
+
+    与原始 md5 互补——正文里加时间戳或调整数组顺序后 md5 会变，但结构与
+    内容实际未变，用指纹仍能识别为同一份配置（避免镜像漏归并）。
+    """
+    parts: list[str] = []
+    for site in data.get("sites") or []:
+        if not isinstance(site, dict):
+            continue
+        key = str(site.get("key") or site.get("name") or "")
+        parts.append(f"s:{key}|{site.get('api') or ''}")
+    for target in _parse_urls(data.get("parses"), base):
+        parts.append(f"p:{target}")
+    for target in _live_urls(data.get("lives")):
+        parts.append(f"l:{target}")
+    for child in info.children:
+        parts.append(f"c:{child['sourceUrl']}")
+    if not parts:
+        return ""
+    joined = "\n".join(sorted(parts))
+    return hashlib.md5(joined.encode("utf-8")).hexdigest()
