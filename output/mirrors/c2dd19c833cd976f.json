@@ -1,0 +1,41 @@
+{
+  "name": "我的电视源",
+  "urls": [
+    {
+      "url": "https://9280.kstore.vip/newwex.json",
+      "name": "kstore/newwex"
+    },
+    {
+      "url": "https://raw.liucn.cc/box/m.json",
+      "name": "liucn/box"
+    },
+    {
+      "url": "https://qist.wyfc.qzz.io/jsm.json",
+      "name": "qist/jsm"
+    },
+    {
+      "url": "https://qist.wyfc.qzz.io/xiaosa/api.json",
+      "name": "qist/xiaosa"
+    },
+    {
+      "url": "https://qist.wyfc.qzz.io/fty.json",
+      "name": "qist/fty"
+    },
+    {
+      "url": "https://szyyds.cn/tv/x.json",
+      "name": "szyyds/x"
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/gh/2hacc/TVBox@main/oktv.json",
+      "name": "2hacc/oktv"
+    },
+    {
+      "url": "http://home.jundie.top:81/top98.json",
+      "name": "jundie/top98"
+    },
+    {
+      "url": "https://ys.cxkjg.cn/api/provide/tvbox",
+      "name": "cxkjg/tvbox"
+    }
+  ]
+}
