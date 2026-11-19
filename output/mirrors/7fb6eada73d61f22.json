@@ -2,10 +2,10 @@
  "wallpaper": "",
  "sites": [
   {
-   "key": "baofeng2",
-   "name": "baofeng2",
+   "key": "19量子",
+   "name": "19-量子",
    "type": 1,
-   "api": "https://app.bfzyapi.com/api.php/provide/vod",
+   "api": "https://lzizy.net/api.php/provide/vod",
    "searchable": 1,
    "quickSearch": 1,
    "filterable": 0
@@ -56,19 +56,19 @@
    "filterable": 0
   },
   {
-   "key": "19量子",
-   "name": "19-量子",
+   "key": "20量子",
+   "name": "20-量子",
    "type": 1,
-   "api": "https://lzizy.net/api.php/provide/vod",
+   "api": "https://lzizy3.com/api.php/provide/vod",
    "searchable": 1,
    "quickSearch": 1,
    "filterable": 0
   },
   {
-   "key": "20量子",
-   "name": "20-量子",
+   "key": "baofeng2",
+   "name": "baofeng2",
    "type": 1,
-   "api": "https://lzizy3.com/api.php/provide/vod",
+   "api": "https://app.bfzyapi.com/api.php/provide/vod",
    "searchable": 1,
    "quickSearch": 1,
    "filterable": 0
@@ -96,15 +96,6 @@
    "name": "暴風",
    "type": 1,
    "api": "https://bfzyapi.com/api.php/provide/vod",
-   "searchable": 1,
-   "quickSearch": 1,
-   "filterable": 0
-  },
-  {
-   "key": "暴风资源2",
-   "name": "暴风资源2",
-   "type": 1,
-   "api": "http://bf.xoxowin86cisyap.com/api.php/provide/vod",
    "searchable": 1,
    "quickSearch": 1,
    "filterable": 0
@@ -209,6 +200,15 @@
    "filterable": 0
   },
   {
+   "key": "CK资源",
+   "name": "C K 资源",
+   "type": 1,
+   "api": "https://api.xinlangapi.com/xinlangapi.php/provide/vod",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 0
+  },
+  {
    "key": "cmsfeifan2",
    "name": "cms_feifan2",
    "type": 1,
@@ -222,6 +222,15 @@
    "name": "cms_haohua",
    "type": 1,
    "api": "https://hhzyapi.com/api.php/provide/vod",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 0
+  },
+  {
+   "key": "cmsjinying",
+   "name": "cms_jinying",
+   "type": 1,
+   "api": "https://jyzyapi.com/provide/vod",
    "searchable": 1,
    "quickSearch": 1,
    "filterable": 0
@@ -254,6 +263,15 @@
    "filterable": 0
   },
   {
+   "key": "jinying",
+   "name": "jinying",
+   "type": 1,
+   "api": "https://jinyingzy.com/api.php/provide/vod",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 0
+  },
+  {
    "key": "创享",
    "name": "创享",
    "type": 1,
@@ -263,17 +281,8 @@
    "filterable": 0
   },
   {
-   "key": "新浪",
-   "name": "新浪",
-   "type": 1,
-   "api": "https://api.xinlangapi.com/xinlangapi.php/provide/vod",
-   "searchable": 1,
-   "quickSearch": 1,
-   "filterable": 0
-  },
-  {
    "key": "极速资源",
-   "name": "极速┃资源",
+   "name": "极速资源",
    "type": 1,
    "api": "https://jszyapi.com/api.php/provide/vod",
    "searchable": 1,
@@ -416,6 +425,15 @@
    "filterable": 0
   },
   {
+   "key": "66360",
+   "name": "66-360*",
+   "type": 1,
+   "api": "https://360zy.tv/api.php/provide/vod",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 0
+  },
+  {
    "key": "ruyi",
    "name": "ruyi",
    "type": 1,
@@ -461,24 +479,6 @@
    "filterable": 0
   },
   {
-   "key": "cmsjinying",
-   "name": "cms_jinying",
-   "type": 1,
-   "api": "https://jyzyapi.com/provide/vod",
-   "searchable": 1,
-   "quickSearch": 1,
-   "filterable": 0
-  },
-  {
-   "key": "jinying",
-   "name": "jinying",
-   "type": 1,
-   "api": "https://jinyingzy.com/api.php/provide/vod",
-   "searchable": 1,
-   "quickSearch": 1,
-   "filterable": 0
-  },
-  {
    "key": "pt",
    "name": "pt",
    "type": 1,
@@ -492,15 +492,6 @@
    "name": "taiee96",
    "type": 1,
    "api": "https://ww96.taiee.xyz/api.php/provide/vod",
-   "searchable": 1,
-   "quickSearch": 1,
-   "filterable": 0
-  },
-  {
-   "key": "光速资源2",
-   "name": "光速资源2",
-   "type": 1,
-   "api": "https://api.guangsuapi.com/api.php/provide/vod",
    "searchable": 1,
    "quickSearch": 1,
    "filterable": 0
@@ -544,5 +535,5 @@
  "flags": [],
  "spider": "",
  "logo": "",
- "version": "202611180533"
+ "version": "202611190533"
 }

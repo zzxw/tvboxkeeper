@@ -1,0 +1,19 @@
+{
+  "generated_at": "2026-11-19 02:56:50",
+  "total": 390,
+  "status": {
+    "active": 97,
+    "anti_crawl": 22,
+    "dead": 153,
+    "flaky": 61,
+    "invalid": 39,
+    "slow": 17
+  },
+  "banned": 1,
+  "publishable": 64,
+  "live": 42,
+  "min_health": 60,
+  "added": 2,
+  "removed": 3,
+  "https_ratio": 0.8854
+}
