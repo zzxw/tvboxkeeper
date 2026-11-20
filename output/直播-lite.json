@@ -6,9 +6,14 @@
       "url": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/c1b2bb4a16ed3f37.json"
     },
     {
-      "name": "牛虎·直播",
+      "name": "gh-proxy.com·直播",
       "type": 0,
       "url": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/23cf883428dd5142.json"
+    },
+    {
+      "name": "聚合大仓（片源最多）·直播",
+      "type": 0,
+      "url": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/a8e3867eaceb9839.json"
     },
     {
       "name": "牛虎·直播",
@@ -16,12 +21,7 @@
       "url": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/c085d55be5a9487c.json"
     },
     {
-      "name": "牛虎·直播",
-      "type": 0,
-      "url": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/5d01963ab089d894.json"
-    },
-    {
-      "name": "gh-proxy.com·直播",
+      "name": "raw.githubusercontent.com·直播",
       "type": 0,
       "url": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/076d5bf1145c6b73.json"
     }
