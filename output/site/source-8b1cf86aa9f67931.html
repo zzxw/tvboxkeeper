@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>gh-proxy.com·直播 · 详情</title>
+<style>
+
+:root{
+  color-scheme:dark;
+  --bg:#0f172a; --panel:#131e33; --card:#1e293b; --card-2:#24334a;
+  --line:#1c2840; --border:#334155; --border-2:#3d4f6b;
+  --text:#e2e8f0; --text-2:#94a3b8; --text-3:#7d8ea6; --text-4:#475569;
+  --ok:#4ade80; --ok-bg:#14532d; --warn:#fbbf24; --warn-bg:#451a03;
+  --bad:#f87171; --bad-bg:#450a0a; --accent:#3b82f6; --accent-solid:#1d4ed8;
+  --accent-soft:#93c5fd; --accent-soft-2:#bfdbfe; --link:#60a5fa;
+  --text-hi:#cbd5e1; --title:#f8fafc; --inv:#ffffff;
+  --bg-2:#0b1220; --card-3:#273449; --grid:#1f2d45;
+}
+html[data-theme="light"]{
+  color-scheme:light;
+  --bg:#f5f7fb; --bg-2:#eef1f8; --panel:#ffffff; --card:#ffffff; --card-2:#f1f4f9;
+  --line:#e3e8f0; --border:#d7dde8; --border-2:#c4cdda;
+  --text:#1f2937; --text-2:#5b6474; --text-3:#6b7280; --text-4:#98a1b0;
+  --ok:#15803d; --ok-bg:#dcfce7; --warn:#b45309; --warn-bg:#fef3c7;
+  --bad:#dc2626; --bad-bg:#fee2e2; --accent:#2563eb; --accent-solid:#1d4ed8;
+  --accent-soft:#2563eb; --accent-soft-2:#1d4ed8; --link:#2563eb;
+  --text-hi:#111827; --title:#0f172a; --inv:#ffffff;
+  --bg-2:#eef1f8; --card-3:#e7ecf5; --grid:#dde3ee;
+}
+
+body { margin: 0; padding: 24px; font: 14px/1.6 system-ui, "Segoe UI", "Microsoft YaHei", sans-serif;
+       background: var(--bg); color: var(--text); }
+h1 { font-size: 18px; } h2 { font-size: 15px; color: var(--text-2); }
+a { color: var(--link); }
+.tbtn { float: right; border: 1px solid var(--border); background: var(--card);
+        color: var(--text-2); border-radius: 8px; padding: 4px 10px;
+        font-size: 13px; cursor: pointer; }
+.tbtn:hover { background: var(--card-3); color: var(--text); }
+table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+th, td { padding: 5px 10px; border-bottom: 1px solid var(--card); text-align: left; }
+th { color: var(--text-2); font-weight: 500; }
+tr.ok td:nth-child(3) { color: var(--ok); }
+tr.bad td:nth-child(3) { color: var(--bad); }
+.num { font-variant-numeric: tabular-nums; }
+.meta td { color: var(--text-hi); }
+</style></head><body>
+<h1><a href="index.html">← 返回看板</a> · gh-proxy.com·直播
+<button type="button" id="theme-toggle" class="tbtn"
+        aria-label="切换亮色/暗色主题">☀️</button></h1>
+<table class="meta"><tr><th>状态</th><td>active</td></tr><tr><th>健康分</th><td>64.7</td></tr><tr><th>适配</th><td>—</td></tr><tr><th>30天可用</th><td>100%</td></tr><tr><th>站点/直播/子仓</th><td>0 / 0 / 0</td></tr><tr><th>HTTPS 覆盖率</th><td>—</td></tr><tr><th>延迟</th><td>881 ms</td></tr><tr><th>最近检查</th><td>2026-11-21 02:49:07</td></tr><tr><th>URL</th><td>https://gh-proxy.com/https://raw.githubusercontent.com/wwb521/live/main/tv.m3u</td></tr></table>
+
+<h2>体检历史</h2><table><tr><th>时间</th><th>档位</th><th>结果</th><th>延迟</th><th>类型</th><th>备注</th></tr><tr class='ok'><td>2026-11-21 02:49:07</td><td>L2</td><td>OK</td><td class='num'>881</td><td>live</td><td></td></tr></table>
+<script>
+(function () {
+  const root = document.documentElement;
+  let t = null;
+  try { t = localStorage.getItem('tvk.theme'); } catch (e) {}
+  if (t === 'light' || t === 'dark') { root.setAttribute('data-theme', t); }
+  const btn = document.getElementById('theme-toggle');
+  if (btn) {
+    const paint = () => {
+      btn.textContent = root.getAttribute('data-theme') === 'light' ? '🌙' : '☀️';
+    };
+    paint();
+    btn.addEventListener('click', () => {
+      const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('tvk.theme', next); } catch (e) {}
+      paint();
+    });
+  }
+})();
+</script>
+</body></html>
