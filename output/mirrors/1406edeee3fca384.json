@@ -1,36 +1,8 @@
 {
   "urls": [
     {
-      "name": "家庭电视版（无直播·推荐）",
-      "url": "https://gh-proxy.com/https://raw.githubusercontent.com/hesanyue50-lang/tvbox-config/main/sources/qist-jsm.json"
-    },
-    {
-      "name": "聚合大仓（片源最多）",
-      "url": "https://gh-proxy.com/https://raw.githubusercontent.com/hesanyue50-lang/tvbox-config/main/sources/lightconer.json"
-    },
-    {
-      "name": "大合集",
-      "url": "https://gh-proxy.com/https://raw.githubusercontent.com/hesanyue50-lang/tvbox-config/main/sources/qist-js.json"
-    },
-    {
-      "name": "牛虎",
-      "url": "https://gh-proxy.com/https://raw.githubusercontent.com/hesanyue50-lang/tvbox-config/main/sources/niubihu1.json"
-    },
-    {
-      "name": "采集站合集",
-      "url": "https://gh-proxy.com/https://raw.githubusercontent.com/hesanyue50-lang/tvbox-config/main/sources/hd9211.json"
-    },
-    {
-      "name": "电视自用",
-      "url": "https://gh-proxy.com/https://raw.githubusercontent.com/hesanyue50-lang/tvbox-config/main/sources/qist-dianshi.json"
-    },
-    {
-      "name": "小而精",
-      "url": "https://gh-proxy.com/https://raw.githubusercontent.com/hesanyue50-lang/tvbox-config/main/sources/qist-0825.json"
-    },
-    {
-      "name": "极简",
-      "url": "https://gh-proxy.com/https://raw.githubusercontent.com/hesanyue50-lang/tvbox-config/main/sources/qist-9918.json"
+      "name": "全量聚合（已去重·按实测速度排序）",
+      "url": "https://gh-proxy.com/https://raw.githubusercontent.com/hesanyue50-lang/tvbox-config/main/sources/all.json"
     }
   ]
 }

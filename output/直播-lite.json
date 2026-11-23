@@ -13,17 +13,17 @@
     {
       "name": "gh-proxy.com·直播",
       "type": 0,
+      "url": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/f78ef12e5978bfbb.json"
+    },
+    {
+      "name": "gh-proxy.com·直播",
+      "type": 0,
       "url": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/3321eff37d9805c5.json"
     },
     {
       "name": "gh-proxy.com·直播",
       "type": 0,
       "url": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/2cc1fe56b7b60d84.json"
-    },
-    {
-      "name": "gh-proxy.com·直播",
-      "type": 0,
-      "url": "https://gh-proxy.com/https://raw.githubusercontent.com/zzxw/tvboxkeeper/main/output/mirrors/e9a0933d8efc8af5.json"
     }
   ]
 }

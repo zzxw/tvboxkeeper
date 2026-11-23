@@ -11,15 +11,6 @@
    "filterable": 0
   },
   {
-   "key": "cmsqlys",
-   "name": "cms_qlys",
-   "type": 1,
-   "api": "https://qlys.cc/api.php/provide/vod",
-   "searchable": 1,
-   "quickSearch": 1,
-   "filterable": 0
-  },
-  {
    "key": "播剧影视",
    "name": "播剧影视",
    "type": 1,
@@ -51,15 +42,6 @@
    "name": "360资源ZZ",
    "type": 1,
    "api": "https://360zyzz.com/api.php/provide/vod",
-   "searchable": 1,
-   "quickSearch": 1,
-   "filterable": 0
-  },
-  {
-   "key": "非凡5",
-   "name": "非凡5",
-   "type": 1,
-   "api": "https://ffzy5.tv/api.php/provide/vod",
    "searchable": 1,
    "quickSearch": 1,
    "filterable": 0
@@ -159,15 +141,6 @@
    "name": "19-量子",
    "type": 1,
    "api": "https://lzizy.net/api.php/provide/vod",
-   "searchable": 1,
-   "quickSearch": 1,
-   "filterable": 0
-  },
-  {
-   "key": "红牛",
-   "name": "红牛",
-   "type": 1,
-   "api": "https://hongniuzy2.com/api.php/provide/vod",
    "searchable": 1,
    "quickSearch": 1,
    "filterable": 0
@@ -303,6 +276,15 @@
    "name": "量子",
    "type": 1,
    "api": "http://192.168.1.194:8105/api?u=https%3A%2F%2Fcj.lziapi.com%2Fapi.php%2Fprovide%2Fvod",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 0
+  },
+  {
+   "key": "量子资源2",
+   "name": "量子资源",
+   "type": 1,
+   "api": "http://192.168.1.194:8105/api?u=https%3A%2F%2Fcj.lzcaiji.com%2Fapi.php%2Fprovide%2Fvod",
    "searchable": 1,
    "quickSearch": 1,
    "filterable": 0
@@ -488,6 +470,24 @@
    "filterable": 0
   },
   {
+   "key": "红牛资源",
+   "name": "红牛资源",
+   "type": 1,
+   "api": "https://hongniuzy2.com/api.php/provide/vod",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 0
+  },
+  {
+   "key": "非凡影视",
+   "name": "非凡影视",
+   "type": 1,
+   "api": "http://ffzy5.tv/api.php/provide/vod",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 0
+  },
+  {
    "key": "分享迷你",
    "name": "分享迷你",
    "type": 1,
@@ -497,8 +497,8 @@
    "filterable": 0
   },
   {
-   "key": "360资源",
-   "name": "360资源",
+   "key": "360",
+   "name": "360",
    "type": 1,
    "api": "https://360zy.com/api.php/provide/vod",
    "searchable": 1,
@@ -557,5 +557,5 @@
  "flags": [],
  "spider": "",
  "logo": "",
- "version": "202611220838"
+ "version": "202611230533"
 }
