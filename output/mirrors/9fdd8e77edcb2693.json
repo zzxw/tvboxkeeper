@@ -1,193 +1,67 @@
 #EXTM3U name="88看球(动态联赛分组)"
-#EXTINF:-1 tvg-id="132045_0" tvg-name="07:00 NBA 热火 vs 雷霆 (国内线路 Q ⑥)" tvg-logo="https://img1.gtimg.com/sports/pics/hv1/212/15/2292/149041337.png" group-title="NBA",07:00 NBA 热火 vs 雷霆 (国内线路 Q ⑥)
-https://stymei1.pages.dev/live/132045/0
-#EXTINF:-1 tvg-id="132045_1" tvg-name="07:00 NBA 热火 vs 雷霆 (国内线路 M⑦)" tvg-logo="https://img1.gtimg.com/sports/pics/hv1/212/15/2292/149041337.png" group-title="NBA",07:00 NBA 热火 vs 雷霆 (国内线路 M⑦)
-https://stymei1.pages.dev/live/132045/1
-#EXTINF:-1 tvg-id="132045_2" tvg-name="07:00 NBA 热火 vs 雷霆 (国内线路⑧)" tvg-logo="https://img1.gtimg.com/sports/pics/hv1/212/15/2292/149041337.png" group-title="NBA",07:00 NBA 热火 vs 雷霆 (国内线路⑧)
-https://stymei1.pages.dev/live/132045/2
-#EXTINF:-1 tvg-id="132045_3" tvg-name="07:00 NBA 热火 vs 雷霆 (国内线路⑨)" tvg-logo="https://img1.gtimg.com/sports/pics/hv1/212/15/2292/149041337.png" group-title="NBA",07:00 NBA 热火 vs 雷霆 (国内线路⑨)
-https://stymei1.pages.dev/live/132045/3
-#EXTINF:-1 tvg-id="132045_4" tvg-name="07:00 NBA 热火 vs 雷霆 (线路Q1)" tvg-logo="https://img1.gtimg.com/sports/pics/hv1/212/15/2292/149041337.png" group-title="NBA",07:00 NBA 热火 vs 雷霆 (线路Q1)
-https://stymei1.pages.dev/live/132045/4
-#EXTINF:-1 tvg-id="132045_5" tvg-name="07:00 NBA 热火 vs 雷霆 (腾讯超清2)" tvg-logo="https://img1.gtimg.com/sports/pics/hv1/212/15/2292/149041337.png" group-title="NBA",07:00 NBA 热火 vs 雷霆 (腾讯超清2)
-https://stymei1.pages.dev/live/132045/5
-#EXTINF:-1 tvg-id="132045_6" tvg-name="07:00 NBA 热火 vs 雷霆 (线路A1)" tvg-logo="https://img1.gtimg.com/sports/pics/hv1/212/15/2292/149041337.png" group-title="NBA",07:00 NBA 热火 vs 雷霆 (线路A1)
-https://stymei1.pages.dev/live/132045/6
-#EXTINF:-1 tvg-id="132045_7" tvg-name="07:00 NBA 热火 vs 雷霆 (原声直播1)" tvg-logo="https://img1.gtimg.com/sports/pics/hv1/212/15/2292/149041337.png" group-title="NBA",07:00 NBA 热火 vs 雷霆 (原声直播1)
-https://stymei1.pages.dev/live/132045/7
-#EXTINF:-1 tvg-id="132045_8" tvg-name="07:00 NBA 热火 vs 雷霆 (HD | Home)" tvg-logo="https://img1.gtimg.com/sports/pics/hv1/212/15/2292/149041337.png" group-title="NBA",07:00 NBA 热火 vs 雷霆 (HD | Home)
-https://stymei1.pages.dev/live/132045/8
-#EXTINF:-1 tvg-id="132045_9" tvg-name="07:00 NBA 热火 vs 雷霆 (SD | Home)" tvg-logo="https://img1.gtimg.com/sports/pics/hv1/212/15/2292/149041337.png" group-title="NBA",07:00 NBA 热火 vs 雷霆 (SD | Home)
-https://stymei1.pages.dev/live/132045/9
-#EXTINF:-1 tvg-id="132045_10" tvg-name="07:00 NBA 热火 vs 雷霆 (HD | Away)" tvg-logo="https://img1.gtimg.com/sports/pics/hv1/212/15/2292/149041337.png" group-title="NBA",07:00 NBA 热火 vs 雷霆 (HD | Away)
-https://stymei1.pages.dev/live/132045/10
-#EXTINF:-1 tvg-id="132045_11" tvg-name="07:00 NBA 热火 vs 雷霆 (SD | Away)" tvg-logo="https://img1.gtimg.com/sports/pics/hv1/212/15/2292/149041337.png" group-title="NBA",07:00 NBA 热火 vs 雷霆 (SD | Away)
-https://stymei1.pages.dev/live/132045/11
-#EXTINF:-1 tvg-id="132515_0" tvg-name="07:00 阿根廷全国篮球联赛 金纳西亚 vs 博卡青年 (线路Q1)" tvg-logo="https://www.88kanqiu.la/static/img/default.png" group-title="阿根廷全国篮球联赛",07:00 阿根廷全国篮球联赛 金纳西亚 vs 博卡青年 (线路Q1)
-https://stymei1.pages.dev/live/132515/0
-#EXTINF:-1 tvg-id="132519_0" tvg-name="07:00 NCAA 明尼苏达大学 vs 犹他大学 (线路Q1)" tvg-logo="https://www.88kanqiu.la/static/img/default.png" group-title="NCAA",07:00 NCAA 明尼苏达大学 vs 犹他大学 (线路Q1)
-https://stymei1.pages.dev/live/132519/0
-#EXTINF:-1 tvg-id="132508_0" tvg-name="07:30 美职联 芝加哥火焰 vs 夏洛特FC (国内线路④)" tvg-logo="https://sd.qunliao.info/fastdfs3/M00/B5/7F/ChOxM1xC2UeAdmokAAAZTL5JwMs769.png" group-title="美职联",07:30 美职联 芝加哥火焰 vs 夏洛特FC (国内线路④)
-https://stymei1.pages.dev/live/132508/0
-#EXTINF:-1 tvg-id="132508_1" tvg-name="07:30 美职联 芝加哥火焰 vs 夏洛特FC (国内线路⑤)" tvg-logo="https://sd.qunliao.info/fastdfs3/M00/B5/7F/ChOxM1xC2UeAdmokAAAZTL5JwMs769.png" group-title="美职联",07:30 美职联 芝加哥火焰 vs 夏洛特FC (国内线路⑤)
-https://stymei1.pages.dev/live/132508/1
-#EXTINF:-1 tvg-id="132508_2" tvg-name="07:30 美职联 芝加哥火焰 vs 夏洛特FC (线路Q1)" tvg-logo="https://sd.qunliao.info/fastdfs3/M00/B5/7F/ChOxM1xC2UeAdmokAAAZTL5JwMs769.png" group-title="美职联",07:30 美职联 芝加哥火焰 vs 夏洛特FC (线路Q1)
-https://stymei1.pages.dev/live/132508/2
-#EXTINF:-1 tvg-id="132508_3" tvg-name="07:30 美职联 芝加哥火焰 vs 夏洛特FC (线路C4)" tvg-logo="https://sd.qunliao.info/fastdfs3/M00/B5/7F/ChOxM1xC2UeAdmokAAAZTL5JwMs769.png" group-title="美职联",07:30 美职联 芝加哥火焰 vs 夏洛特FC (线路C4)
-https://stymei1.pages.dev/live/132508/3
-#EXTINF:-1 tvg-id="132508_4" tvg-name="07:30 美职联 芝加哥火焰 vs 夏洛特FC (线路A1)" tvg-logo="https://sd.qunliao.info/fastdfs3/M00/B5/7F/ChOxM1xC2UeAdmokAAAZTL5JwMs769.png" group-title="美职联",07:30 美职联 芝加哥火焰 vs 夏洛特FC (线路A1)
-https://stymei1.pages.dev/live/132508/4
-#EXTINF:-1 tvg-id="132508_5" tvg-name="07:30 美职联 芝加哥火焰 vs 夏洛特FC (原声直播1)" tvg-logo="https://sd.qunliao.info/fastdfs3/M00/B5/7F/ChOxM1xC2UeAdmokAAAZTL5JwMs769.png" group-title="美职联",07:30 美职联 芝加哥火焰 vs 夏洛特FC (原声直播1)
-https://stymei1.pages.dev/live/132508/5
-#EXTINF:-1 tvg-id="132508_6" tvg-name="07:30 美职联 芝加哥火焰 vs 夏洛特FC (线路C4)" tvg-logo="https://sd.qunliao.info/fastdfs3/M00/B5/7F/ChOxM1xC2UeAdmokAAAZTL5JwMs769.png" group-title="美职联",07:30 美职联 芝加哥火焰 vs 夏洛特FC (线路C4)
-https://stymei1.pages.dev/live/132508/6
-#EXTINF:-1 tvg-id="132046_0" tvg-name="08:00 NBA 奇才 vs 魔术 (国内线路⑤)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/27.png" group-title="NBA",08:00 NBA 奇才 vs 魔术 (国内线路⑤)
-https://stymei1.pages.dev/live/132046/0
-#EXTINF:-1 tvg-id="132046_1" tvg-name="08:00 NBA 奇才 vs 魔术 (国内线路 M⑥)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/27.png" group-title="NBA",08:00 NBA 奇才 vs 魔术 (国内线路 M⑥)
-https://stymei1.pages.dev/live/132046/1
-#EXTINF:-1 tvg-id="132046_2" tvg-name="08:00 NBA 奇才 vs 魔术 (国内线路 Q ⑦)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/27.png" group-title="NBA",08:00 NBA 奇才 vs 魔术 (国内线路 Q ⑦)
-https://stymei1.pages.dev/live/132046/2
-#EXTINF:-1 tvg-id="132046_3" tvg-name="08:00 NBA 奇才 vs 魔术 (国内线路⑧)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/27.png" group-title="NBA",08:00 NBA 奇才 vs 魔术 (国内线路⑧)
-https://stymei1.pages.dev/live/132046/3
-#EXTINF:-1 tvg-id="132046_4" tvg-name="08:00 NBA 奇才 vs 魔术 (国内线路⑨)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/27.png" group-title="NBA",08:00 NBA 奇才 vs 魔术 (国内线路⑨)
-https://stymei1.pages.dev/live/132046/4
-#EXTINF:-1 tvg-id="132046_5" tvg-name="08:00 NBA 奇才 vs 魔术 (腾讯信号)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/27.png" group-title="NBA",08:00 NBA 奇才 vs 魔术 (腾讯信号)
-https://stymei1.pages.dev/live/132046/5
-#EXTINF:-1 tvg-id="132046_6" tvg-name="08:00 NBA 奇才 vs 魔术 (线路Q1)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/27.png" group-title="NBA",08:00 NBA 奇才 vs 魔术 (线路Q1)
-https://stymei1.pages.dev/live/132046/6
-#EXTINF:-1 tvg-id="132046_7" tvg-name="08:00 NBA 奇才 vs 魔术 (线路Q1)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/27.png" group-title="NBA",08:00 NBA 奇才 vs 魔术 (线路Q1)
-https://stymei1.pages.dev/live/132046/7
-#EXTINF:-1 tvg-id="132046_8" tvg-name="08:00 NBA 奇才 vs 魔术 (腾讯超清3)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/27.png" group-title="NBA",08:00 NBA 奇才 vs 魔术 (腾讯超清3)
-https://stymei1.pages.dev/live/132046/8
-#EXTINF:-1 tvg-id="132046_9" tvg-name="08:00 NBA 奇才 vs 魔术 (线路Q2)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/27.png" group-title="NBA",08:00 NBA 奇才 vs 魔术 (线路Q2)
-https://stymei1.pages.dev/live/132046/9
-#EXTINF:-1 tvg-id="132046_10" tvg-name="08:00 NBA 奇才 vs 魔术 (原声直播1)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/27.png" group-title="NBA",08:00 NBA 奇才 vs 魔术 (原声直播1)
-https://stymei1.pages.dev/live/132046/10
-#EXTINF:-1 tvg-id="132046_11" tvg-name="08:00 NBA 奇才 vs 魔术 (HD | Home)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/27.png" group-title="NBA",08:00 NBA 奇才 vs 魔术 (HD | Home)
-https://stymei1.pages.dev/live/132046/11
-#EXTINF:-1 tvg-id="132046_12" tvg-name="08:00 NBA 奇才 vs 魔术 (SD | Home)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/27.png" group-title="NBA",08:00 NBA 奇才 vs 魔术 (SD | Home)
-https://stymei1.pages.dev/live/132046/12
-#EXTINF:-1 tvg-id="132047_0" tvg-name="08:00 NBA 爵士 vs 独行侠 (国内线路 Q ⑤)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/26.png" group-title="NBA",08:00 NBA 爵士 vs 独行侠 (国内线路 Q ⑤)
-https://stymei1.pages.dev/live/132047/0
-#EXTINF:-1 tvg-id="132047_1" tvg-name="08:00 NBA 爵士 vs 独行侠 (国内线路 M⑥)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/26.png" group-title="NBA",08:00 NBA 爵士 vs 独行侠 (国内线路 M⑥)
-https://stymei1.pages.dev/live/132047/1
-#EXTINF:-1 tvg-id="132047_2" tvg-name="08:00 NBA 爵士 vs 独行侠 (国内线路⑦)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/26.png" group-title="NBA",08:00 NBA 爵士 vs 独行侠 (国内线路⑦)
-https://stymei1.pages.dev/live/132047/2
-#EXTINF:-1 tvg-id="132047_3" tvg-name="08:00 NBA 爵士 vs 独行侠 (国内线路⑧)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/26.png" group-title="NBA",08:00 NBA 爵士 vs 独行侠 (国内线路⑧)
-https://stymei1.pages.dev/live/132047/3
-#EXTINF:-1 tvg-id="132047_4" tvg-name="08:00 NBA 爵士 vs 独行侠 (国内线路 Q ⑨)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/26.png" group-title="NBA",08:00 NBA 爵士 vs 独行侠 (国内线路 Q ⑨)
-https://stymei1.pages.dev/live/132047/4
-#EXTINF:-1 tvg-id="132047_5" tvg-name="08:00 NBA 爵士 vs 独行侠 (线路Q1)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/26.png" group-title="NBA",08:00 NBA 爵士 vs 独行侠 (线路Q1)
-https://stymei1.pages.dev/live/132047/5
-#EXTINF:-1 tvg-id="132047_6" tvg-name="08:00 NBA 爵士 vs 独行侠 (线路Q1)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/26.png" group-title="NBA",08:00 NBA 爵士 vs 独行侠 (线路Q1)
-https://stymei1.pages.dev/live/132047/6
-#EXTINF:-1 tvg-id="132047_7" tvg-name="08:00 NBA 爵士 vs 独行侠 (腾讯超清5)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/26.png" group-title="NBA",08:00 NBA 爵士 vs 独行侠 (腾讯超清5)
-https://stymei1.pages.dev/live/132047/7
-#EXTINF:-1 tvg-id="132047_8" tvg-name="08:00 NBA 爵士 vs 独行侠 (线路Q2)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/26.png" group-title="NBA",08:00 NBA 爵士 vs 独行侠 (线路Q2)
-https://stymei1.pages.dev/live/132047/8
-#EXTINF:-1 tvg-id="132047_9" tvg-name="08:00 NBA 爵士 vs 独行侠 (原声直播1)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/26.png" group-title="NBA",08:00 NBA 爵士 vs 独行侠 (原声直播1)
-https://stymei1.pages.dev/live/132047/9
-#EXTINF:-1 tvg-id="132047_10" tvg-name="08:00 NBA 爵士 vs 独行侠 (HD | Home)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/26.png" group-title="NBA",08:00 NBA 爵士 vs 独行侠 (HD | Home)
-https://stymei1.pages.dev/live/132047/10
-#EXTINF:-1 tvg-id="132047_11" tvg-name="08:00 NBA 爵士 vs 独行侠 (SD | Home)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/26.png" group-title="NBA",08:00 NBA 爵士 vs 独行侠 (SD | Home)
-https://stymei1.pages.dev/live/132047/11
-#EXTINF:-1 tvg-id="132047_12" tvg-name="08:00 NBA 爵士 vs 独行侠 (HD | Away)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/26.png" group-title="NBA",08:00 NBA 爵士 vs 独行侠 (HD | Away)
-https://stymei1.pages.dev/live/132047/12
-#EXTINF:-1 tvg-id="132047_13" tvg-name="08:00 NBA 爵士 vs 独行侠 (SD | Away)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/26.png" group-title="NBA",08:00 NBA 爵士 vs 独行侠 (SD | Away)
-https://stymei1.pages.dev/live/132047/13
-#EXTINF:-1 tvg-id="132509_0" tvg-name="08:00 NBA 公牛 vs 掘金 (国内线路 Q ④)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/4.png" group-title="NBA",08:00 NBA 公牛 vs 掘金 (国内线路 Q ④)
-https://stymei1.pages.dev/live/132509/0
-#EXTINF:-1 tvg-id="132509_1" tvg-name="08:00 NBA 公牛 vs 掘金 (国内线路 M⑤)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/4.png" group-title="NBA",08:00 NBA 公牛 vs 掘金 (国内线路 M⑤)
-https://stymei1.pages.dev/live/132509/1
-#EXTINF:-1 tvg-id="132509_2" tvg-name="08:00 NBA 公牛 vs 掘金 (国内线路⑥)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/4.png" group-title="NBA",08:00 NBA 公牛 vs 掘金 (国内线路⑥)
-https://stymei1.pages.dev/live/132509/2
-#EXTINF:-1 tvg-id="132509_3" tvg-name="08:00 NBA 公牛 vs 掘金 (国内线路⑦)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/4.png" group-title="NBA",08:00 NBA 公牛 vs 掘金 (国内线路⑦)
-https://stymei1.pages.dev/live/132509/3
-#EXTINF:-1 tvg-id="132509_4" tvg-name="08:00 NBA 公牛 vs 掘金 (国内线路 Q ⑧)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/4.png" group-title="NBA",08:00 NBA 公牛 vs 掘金 (国内线路 Q ⑧)
-https://stymei1.pages.dev/live/132509/4
-#EXTINF:-1 tvg-id="132509_5" tvg-name="08:00 NBA 公牛 vs 掘金 (线路Q1)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/4.png" group-title="NBA",08:00 NBA 公牛 vs 掘金 (线路Q1)
-https://stymei1.pages.dev/live/132509/5
-#EXTINF:-1 tvg-id="132509_6" tvg-name="08:00 NBA 公牛 vs 掘金 (线路Q1)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/4.png" group-title="NBA",08:00 NBA 公牛 vs 掘金 (线路Q1)
-https://stymei1.pages.dev/live/132509/6
-#EXTINF:-1 tvg-id="132509_7" tvg-name="08:00 NBA 公牛 vs 掘金 (腾讯超清4)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/4.png" group-title="NBA",08:00 NBA 公牛 vs 掘金 (腾讯超清4)
-https://stymei1.pages.dev/live/132509/7
-#EXTINF:-1 tvg-id="132509_8" tvg-name="08:00 NBA 公牛 vs 掘金 (线路Q2)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/4.png" group-title="NBA",08:00 NBA 公牛 vs 掘金 (线路Q2)
-https://stymei1.pages.dev/live/132509/8
-#EXTINF:-1 tvg-id="132509_9" tvg-name="08:00 NBA 公牛 vs 掘金 (原声直播1)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/4.png" group-title="NBA",08:00 NBA 公牛 vs 掘金 (原声直播1)
-https://stymei1.pages.dev/live/132509/9
-#EXTINF:-1 tvg-id="132509_10" tvg-name="08:00 NBA 公牛 vs 掘金 (HD | Home)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/4.png" group-title="NBA",08:00 NBA 公牛 vs 掘金 (HD | Home)
-https://stymei1.pages.dev/live/132509/10
-#EXTINF:-1 tvg-id="132509_11" tvg-name="08:00 NBA 公牛 vs 掘金 (SD | Home)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/4.png" group-title="NBA",08:00 NBA 公牛 vs 掘金 (SD | Home)
-https://stymei1.pages.dev/live/132509/11
-#EXTINF:-1 tvg-id="132516_0" tvg-name="09:00 NBA 尼克斯 vs 步行者 (国内线路 Q ⑤)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/18.png" group-title="NBA",09:00 NBA 尼克斯 vs 步行者 (国内线路 Q ⑤)
-https://stymei1.pages.dev/live/132516/0
-#EXTINF:-1 tvg-id="132516_1" tvg-name="09:00 NBA 尼克斯 vs 步行者 (国内线路 M⑥)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/18.png" group-title="NBA",09:00 NBA 尼克斯 vs 步行者 (国内线路 M⑥)
-https://stymei1.pages.dev/live/132516/1
-#EXTINF:-1 tvg-id="132516_2" tvg-name="09:00 NBA 尼克斯 vs 步行者 (国内线路⑦)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/18.png" group-title="NBA",09:00 NBA 尼克斯 vs 步行者 (国内线路⑦)
-https://stymei1.pages.dev/live/132516/2
-#EXTINF:-1 tvg-id="132516_3" tvg-name="09:00 NBA 尼克斯 vs 步行者 (国内线路⑧)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/18.png" group-title="NBA",09:00 NBA 尼克斯 vs 步行者 (国内线路⑧)
-https://stymei1.pages.dev/live/132516/3
-#EXTINF:-1 tvg-id="132516_4" tvg-name="09:00 NBA 尼克斯 vs 步行者 (国内线路 Q ⑨)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/18.png" group-title="NBA",09:00 NBA 尼克斯 vs 步行者 (国内线路 Q ⑨)
-https://stymei1.pages.dev/live/132516/4
-#EXTINF:-1 tvg-id="132516_5" tvg-name="09:00 NBA 尼克斯 vs 步行者 (线路D1)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/18.png" group-title="NBA",09:00 NBA 尼克斯 vs 步行者 (线路D1)
-https://stymei1.pages.dev/live/132516/5
-#EXTINF:-1 tvg-id="132516_6" tvg-name="09:00 NBA 尼克斯 vs 步行者 (腾讯超清6)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/18.png" group-title="NBA",09:00 NBA 尼克斯 vs 步行者 (腾讯超清6)
-https://stymei1.pages.dev/live/132516/6
-#EXTINF:-1 tvg-id="132516_7" tvg-name="09:00 NBA 尼克斯 vs 步行者 (线路Q2)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/18.png" group-title="NBA",09:00 NBA 尼克斯 vs 步行者 (线路Q2)
-https://stymei1.pages.dev/live/132516/7
-#EXTINF:-1 tvg-id="132516_8" tvg-name="09:00 NBA 尼克斯 vs 步行者 (原声直播1)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/18.png" group-title="NBA",09:00 NBA 尼克斯 vs 步行者 (原声直播1)
-https://stymei1.pages.dev/live/132516/8
-#EXTINF:-1 tvg-id="132516_9" tvg-name="09:00 NBA 尼克斯 vs 步行者 (HD | Home)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/18.png" group-title="NBA",09:00 NBA 尼克斯 vs 步行者 (HD | Home)
-https://stymei1.pages.dev/live/132516/9
-#EXTINF:-1 tvg-id="132516_10" tvg-name="09:00 NBA 尼克斯 vs 步行者 (SD | Home)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/18.png" group-title="NBA",09:00 NBA 尼克斯 vs 步行者 (SD | Home)
-https://stymei1.pages.dev/live/132516/10
-#EXTINF:-1 tvg-id="132516_11" tvg-name="09:00 NBA 尼克斯 vs 步行者 (HD | Away)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/18.png" group-title="NBA",09:00 NBA 尼克斯 vs 步行者 (HD | Away)
-https://stymei1.pages.dev/live/132516/11
-#EXTINF:-1 tvg-id="132516_12" tvg-name="09:00 NBA 尼克斯 vs 步行者 (SD | Away)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/18.png" group-title="NBA",09:00 NBA 尼克斯 vs 步行者 (SD | Away)
-https://stymei1.pages.dev/live/132516/12
-#EXTINF:-1 tvg-id="132521_0" tvg-name="09:00 NCAA 加州圣玛丽大学 vs 曼隆学院 (线路Q1)" tvg-logo="https://www.88kanqiu.la/static/img/default.png" group-title="NCAA",09:00 NCAA 加州圣玛丽大学 vs 曼隆学院 (线路Q1)
-https://stymei1.pages.dev/live/132521/0
-#EXTINF:-1 tvg-id="132522_0" tvg-name="09:00 NCAA 犹他河谷大学 vs 田纳西大学马丁分校 (线路Q1)" tvg-logo="https://www.88kanqiu.la/static/img/default.png" group-title="NCAA",09:00 NCAA 犹他河谷大学 vs 田纳西大学马丁分校 (线路Q1)
-https://stymei1.pages.dev/live/132522/0
-#EXTINF:-1 tvg-id="132520_0" tvg-name="09:20 NFL 明尼苏达维京人 vs 旧金山49人 (HD | NBC)" tvg-logo="https://www.88kanqiu.la/static/img/default.png" group-title="NFL",09:20 NFL 明尼苏达维京人 vs 旧金山49人 (HD | NBC)
-https://stymei1.pages.dev/live/132520/0
-#EXTINF:-1 tvg-id="132520_1" tvg-name="09:20 NFL 明尼苏达维京人 vs 旧金山49人 (SD | NBC)" tvg-logo="https://www.88kanqiu.la/static/img/default.png" group-title="NFL",09:20 NFL 明尼苏达维京人 vs 旧金山49人 (SD | NBC)
-https://stymei1.pages.dev/live/132520/1
-#EXTINF:-1 tvg-id="132517_0" tvg-name="09:30 NBA 勇士 vs 凯尔特人 (纬来体育⑤)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/9.png" group-title="NBA",09:30 NBA 勇士 vs 凯尔特人 (纬来体育⑤)
-https://stymei1.pages.dev/live/132517/0
-#EXTINF:-1 tvg-id="132517_1" tvg-name="09:30 NBA 勇士 vs 凯尔特人 (国内线路⑥)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/9.png" group-title="NBA",09:30 NBA 勇士 vs 凯尔特人 (国内线路⑥)
-https://stymei1.pages.dev/live/132517/1
-#EXTINF:-1 tvg-id="132517_2" tvg-name="09:30 NBA 勇士 vs 凯尔特人 (国内线路 M⑦)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/9.png" group-title="NBA",09:30 NBA 勇士 vs 凯尔特人 (国内线路 M⑦)
-https://stymei1.pages.dev/live/132517/2
-#EXTINF:-1 tvg-id="132517_3" tvg-name="09:30 NBA 勇士 vs 凯尔特人 (国内线路 Q ⑧)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/9.png" group-title="NBA",09:30 NBA 勇士 vs 凯尔特人 (国内线路 Q ⑧)
-https://stymei1.pages.dev/live/132517/3
-#EXTINF:-1 tvg-id="132517_4" tvg-name="09:30 NBA 勇士 vs 凯尔特人 (国内线路⑨)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/9.png" group-title="NBA",09:30 NBA 勇士 vs 凯尔特人 (国内线路⑨)
-https://stymei1.pages.dev/live/132517/4
-#EXTINF:-1 tvg-id="132517_5" tvg-name="09:30 NBA 勇士 vs 凯尔特人 (腾讯信号)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/9.png" group-title="NBA",09:30 NBA 勇士 vs 凯尔特人 (腾讯信号)
-https://stymei1.pages.dev/live/132517/5
-#EXTINF:-1 tvg-id="132517_6" tvg-name="09:30 NBA 勇士 vs 凯尔特人 (线路D1)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/9.png" group-title="NBA",09:30 NBA 勇士 vs 凯尔特人 (线路D1)
-https://stymei1.pages.dev/live/132517/6
-#EXTINF:-1 tvg-id="132517_7" tvg-name="09:30 NBA 勇士 vs 凯尔特人 (腾讯超清7)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/9.png" group-title="NBA",09:30 NBA 勇士 vs 凯尔特人 (腾讯超清7)
-https://stymei1.pages.dev/live/132517/7
-#EXTINF:-1 tvg-id="132517_8" tvg-name="09:30 NBA 勇士 vs 凯尔特人 (线路Q2)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/9.png" group-title="NBA",09:30 NBA 勇士 vs 凯尔特人 (线路Q2)
-https://stymei1.pages.dev/live/132517/8
-#EXTINF:-1 tvg-id="132517_9" tvg-name="09:30 NBA 勇士 vs 凯尔特人 (原声直播1)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/9.png" group-title="NBA",09:30 NBA 勇士 vs 凯尔特人 (原声直播1)
-https://stymei1.pages.dev/live/132517/9
-#EXTINF:-1 tvg-id="132517_10" tvg-name="09:30 NBA 勇士 vs 凯尔特人 (HD | Home)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/9.png" group-title="NBA",09:30 NBA 勇士 vs 凯尔特人 (HD | Home)
-https://stymei1.pages.dev/live/132517/10
-#EXTINF:-1 tvg-id="132517_11" tvg-name="09:30 NBA 勇士 vs 凯尔特人 (SD | Home)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/9.png" group-title="NBA",09:30 NBA 勇士 vs 凯尔特人 (SD | Home)
-https://stymei1.pages.dev/live/132517/11
-#EXTINF:-1 tvg-id="132518_0" tvg-name="09:30 美职联 温哥华白浪 vs 皇家盐湖城 (国内线路④)" tvg-logo="https://sd.qunliao.info/fastdfs3/M00/B5/8E/ChOxM1xC24SAf4sbAAAS8h6wRjE186.png" group-title="美职联",09:30 美职联 温哥华白浪 vs 皇家盐湖城 (国内线路④)
-https://stymei1.pages.dev/live/132518/0
-#EXTINF:-1 tvg-id="132518_1" tvg-name="09:30 美职联 温哥华白浪 vs 皇家盐湖城 (国内线路⑤)" tvg-logo="https://sd.qunliao.info/fastdfs3/M00/B5/8E/ChOxM1xC24SAf4sbAAAS8h6wRjE186.png" group-title="美职联",09:30 美职联 温哥华白浪 vs 皇家盐湖城 (国内线路⑤)
-https://stymei1.pages.dev/live/132518/1
-#EXTINF:-1 tvg-id="132518_2" tvg-name="09:30 美职联 温哥华白浪 vs 皇家盐湖城 (线路D1)" tvg-logo="https://sd.qunliao.info/fastdfs3/M00/B5/8E/ChOxM1xC24SAf4sbAAAS8h6wRjE186.png" group-title="美职联",09:30 美职联 温哥华白浪 vs 皇家盐湖城 (线路D1)
-https://stymei1.pages.dev/live/132518/2
-#EXTINF:-1 tvg-id="132518_3" tvg-name="09:30 美职联 温哥华白浪 vs 皇家盐湖城 (线路C4)" tvg-logo="https://sd.qunliao.info/fastdfs3/M00/B5/8E/ChOxM1xC24SAf4sbAAAS8h6wRjE186.png" group-title="美职联",09:30 美职联 温哥华白浪 vs 皇家盐湖城 (线路C4)
-https://stymei1.pages.dev/live/132518/3
-#EXTINF:-1 tvg-id="132518_4" tvg-name="09:30 美职联 温哥华白浪 vs 皇家盐湖城 (线路A1)" tvg-logo="https://sd.qunliao.info/fastdfs3/M00/B5/8E/ChOxM1xC24SAf4sbAAAS8h6wRjE186.png" group-title="美职联",09:30 美职联 温哥华白浪 vs 皇家盐湖城 (线路A1)
-https://stymei1.pages.dev/live/132518/4
-#EXTINF:-1 tvg-id="132518_5" tvg-name="09:30 美职联 温哥华白浪 vs 皇家盐湖城 (线路A2)" tvg-logo="https://sd.qunliao.info/fastdfs3/M00/B5/8E/ChOxM1xC24SAf4sbAAAS8h6wRjE186.png" group-title="美职联",09:30 美职联 温哥华白浪 vs 皇家盐湖城 (线路A2)
-https://stymei1.pages.dev/live/132518/5
-#EXTINF:-1 tvg-id="132518_6" tvg-name="09:30 美职联 温哥华白浪 vs 皇家盐湖城 (原声直播1)" tvg-logo="https://sd.qunliao.info/fastdfs3/M00/B5/8E/ChOxM1xC24SAf4sbAAAS8h6wRjE186.png" group-title="美职联",09:30 美职联 温哥华白浪 vs 皇家盐湖城 (原声直播1)
-https://stymei1.pages.dev/live/132518/6
+#EXTINF:-1 tvg-id="132579_0" tvg-name="10:30 NCAA 佩珀代因大学 vs 北卡罗莱纳绿乡大学 (线路Q1)" tvg-logo="https://www.88kanqiu.la/static/img/default.png" group-title="NCAA",10:30 NCAA 佩珀代因大学 vs 北卡罗莱纳绿乡大学 (线路Q1)
+https://stymei1.pages.dev/live/132579/0
+#EXTINF:-1 tvg-id="132574_0" tvg-name="11:00 NBA 湖人 vs 爵士 (纬来体育⑤)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/13.png" group-title="NBA",11:00 NBA 湖人 vs 爵士 (纬来体育⑤)
+https://stymei1.pages.dev/live/132574/0
+#EXTINF:-1 tvg-id="132574_1" tvg-name="11:00 NBA 湖人 vs 爵士 (国内线路 Q ⑥)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/13.png" group-title="NBA",11:00 NBA 湖人 vs 爵士 (国内线路 Q ⑥)
+https://stymei1.pages.dev/live/132574/1
+#EXTINF:-1 tvg-id="132574_2" tvg-name="11:00 NBA 湖人 vs 爵士 (国内线路 M⑦)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/13.png" group-title="NBA",11:00 NBA 湖人 vs 爵士 (国内线路 M⑦)
+https://stymei1.pages.dev/live/132574/2
+#EXTINF:-1 tvg-id="132574_3" tvg-name="11:00 NBA 湖人 vs 爵士 (国内线路⑧)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/13.png" group-title="NBA",11:00 NBA 湖人 vs 爵士 (国内线路⑧)
+https://stymei1.pages.dev/live/132574/3
+#EXTINF:-1 tvg-id="132574_4" tvg-name="11:00 NBA 湖人 vs 爵士 (国内线路⑨)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/13.png" group-title="NBA",11:00 NBA 湖人 vs 爵士 (国内线路⑨)
+https://stymei1.pages.dev/live/132574/4
+#EXTINF:-1 tvg-id="132574_5" tvg-name="11:00 NBA 湖人 vs 爵士 (线路D1)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/13.png" group-title="NBA",11:00 NBA 湖人 vs 爵士 (线路D1)
+https://stymei1.pages.dev/live/132574/5
+#EXTINF:-1 tvg-id="132574_6" tvg-name="11:00 NBA 湖人 vs 爵士 (腾讯超清7)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/13.png" group-title="NBA",11:00 NBA 湖人 vs 爵士 (腾讯超清7)
+https://stymei1.pages.dev/live/132574/6
+#EXTINF:-1 tvg-id="132574_7" tvg-name="11:00 NBA 湖人 vs 爵士 (线路Q2)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/13.png" group-title="NBA",11:00 NBA 湖人 vs 爵士 (线路Q2)
+https://stymei1.pages.dev/live/132574/7
+#EXTINF:-1 tvg-id="132574_8" tvg-name="11:00 NBA 湖人 vs 爵士 (线路Q1)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/13.png" group-title="NBA",11:00 NBA 湖人 vs 爵士 (线路Q1)
+https://stymei1.pages.dev/live/132574/8
+#EXTINF:-1 tvg-id="132574_9" tvg-name="11:00 NBA 湖人 vs 爵士 (线路A1)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/13.png" group-title="NBA",11:00 NBA 湖人 vs 爵士 (线路A1)
+https://stymei1.pages.dev/live/132574/9
+#EXTINF:-1 tvg-id="132574_10" tvg-name="11:00 NBA 湖人 vs 爵士 (原声直播1)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/13.png" group-title="NBA",11:00 NBA 湖人 vs 爵士 (原声直播1)
+https://stymei1.pages.dev/live/132574/10
+#EXTINF:-1 tvg-id="132574_11" tvg-name="11:00 NBA 湖人 vs 爵士 (HD | NBA TV)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/13.png" group-title="NBA",11:00 NBA 湖人 vs 爵士 (HD | NBA TV)
+https://stymei1.pages.dev/live/132574/11
+#EXTINF:-1 tvg-id="132574_12" tvg-name="11:00 NBA 湖人 vs 爵士 (SD | NBA TV)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/13.png" group-title="NBA",11:00 NBA 湖人 vs 爵士 (SD | NBA TV)
+https://stymei1.pages.dev/live/132574/12
+#EXTINF:-1 tvg-id="132574_13" tvg-name="11:00 NBA 湖人 vs 爵士 (HD | Home)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/13.png" group-title="NBA",11:00 NBA 湖人 vs 爵士 (HD | Home)
+https://stymei1.pages.dev/live/132574/13
+#EXTINF:-1 tvg-id="132574_14" tvg-name="11:00 NBA 湖人 vs 爵士 (SD | Home)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/13.png" group-title="NBA",11:00 NBA 湖人 vs 爵士 (SD | Home)
+https://stymei1.pages.dev/live/132574/14
+#EXTINF:-1 tvg-id="132574_15" tvg-name="11:00 NBA 湖人 vs 爵士 (HD | Away)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/13.png" group-title="NBA",11:00 NBA 湖人 vs 爵士 (HD | Away)
+https://stymei1.pages.dev/live/132574/15
+#EXTINF:-1 tvg-id="132574_16" tvg-name="11:00 NBA 湖人 vs 爵士 (SD | Away)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/13.png" group-title="NBA",11:00 NBA 湖人 vs 爵士 (SD | Away)
+https://stymei1.pages.dev/live/132574/16
+#EXTINF:-1 tvg-id="132575_0" tvg-name="11:00 NBA 国王 vs 马刺 (国内线路 Q ⑤)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/23.png" group-title="NBA",11:00 NBA 国王 vs 马刺 (国内线路 Q ⑤)
+https://stymei1.pages.dev/live/132575/0
+#EXTINF:-1 tvg-id="132575_1" tvg-name="11:00 NBA 国王 vs 马刺 (国内线路 M⑥)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/23.png" group-title="NBA",11:00 NBA 国王 vs 马刺 (国内线路 M⑥)
+https://stymei1.pages.dev/live/132575/1
+#EXTINF:-1 tvg-id="132575_2" tvg-name="11:00 NBA 国王 vs 马刺 (国内线路⑦)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/23.png" group-title="NBA",11:00 NBA 国王 vs 马刺 (国内线路⑦)
+https://stymei1.pages.dev/live/132575/2
+#EXTINF:-1 tvg-id="132575_3" tvg-name="11:00 NBA 国王 vs 马刺 (国内线路⑧)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/23.png" group-title="NBA",11:00 NBA 国王 vs 马刺 (国内线路⑧)
+https://stymei1.pages.dev/live/132575/3
+#EXTINF:-1 tvg-id="132575_4" tvg-name="11:00 NBA 国王 vs 马刺 (国内线路 Q ⑨)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/23.png" group-title="NBA",11:00 NBA 国王 vs 马刺 (国内线路 Q ⑨)
+https://stymei1.pages.dev/live/132575/4
+#EXTINF:-1 tvg-id="132575_5" tvg-name="11:00 NBA 国王 vs 马刺 (线路D1)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/23.png" group-title="NBA",11:00 NBA 国王 vs 马刺 (线路D1)
+https://stymei1.pages.dev/live/132575/5
+#EXTINF:-1 tvg-id="132575_6" tvg-name="11:00 NBA 国王 vs 马刺 (腾讯超清8)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/23.png" group-title="NBA",11:00 NBA 国王 vs 马刺 (腾讯超清8)
+https://stymei1.pages.dev/live/132575/6
+#EXTINF:-1 tvg-id="132575_7" tvg-name="11:00 NBA 国王 vs 马刺 (线路A1)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/23.png" group-title="NBA",11:00 NBA 国王 vs 马刺 (线路A1)
+https://stymei1.pages.dev/live/132575/7
+#EXTINF:-1 tvg-id="132575_8" tvg-name="11:00 NBA 国王 vs 马刺 (原声直播1)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/23.png" group-title="NBA",11:00 NBA 国王 vs 马刺 (原声直播1)
+https://stymei1.pages.dev/live/132575/8
+#EXTINF:-1 tvg-id="132575_9" tvg-name="11:00 NBA 国王 vs 马刺 (线路Q1)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/23.png" group-title="NBA",11:00 NBA 国王 vs 马刺 (线路Q1)
+https://stymei1.pages.dev/live/132575/9
+#EXTINF:-1 tvg-id="132575_10" tvg-name="11:00 NBA 国王 vs 马刺 (HD | Home)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/23.png" group-title="NBA",11:00 NBA 国王 vs 马刺 (HD | Home)
+https://stymei1.pages.dev/live/132575/10
+#EXTINF:-1 tvg-id="132575_11" tvg-name="11:00 NBA 国王 vs 马刺 (SD | Home)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/23.png" group-title="NBA",11:00 NBA 国王 vs 马刺 (SD | Home)
+https://stymei1.pages.dev/live/132575/11
+#EXTINF:-1 tvg-id="132575_12" tvg-name="11:00 NBA 国王 vs 马刺 (HD | Away)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/23.png" group-title="NBA",11:00 NBA 国王 vs 马刺 (HD | Away)
+https://stymei1.pages.dev/live/132575/12
+#EXTINF:-1 tvg-id="132575_13" tvg-name="11:00 NBA 国王 vs 马刺 (SD | Away)" tvg-logo="https://mat1.gtimg.com/sports/nba/logo/1602/23.png" group-title="NBA",11:00 NBA 国王 vs 马刺 (SD | Away)
+https://stymei1.pages.dev/live/132575/13
+#EXTINF:-1 tvg-id="132580_0" tvg-name="11:00 NCAA 加州大学伯克利分校 vs 阿拉巴马州立大学 (线路Q1)" tvg-logo="https://www.88kanqiu.la/static/img/default.png" group-title="NCAA",11:00 NCAA 加州大学伯克利分校 vs 阿拉巴马州立大学 (线路Q1)
+https://stymei1.pages.dev/live/132580/0

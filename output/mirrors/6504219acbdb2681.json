@@ -1,63 +1,17 @@
 #EXTM3U
 # 大米直播 - 实时全线路源
-# 北京时间: 2026/11/23 09:56:24
-# 当前直播场次: 18 场
+# 北京时间: 2026/11/24 13:28:11
+# 当前直播场次: 5 场
 
 #EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="✈️ TG频道@stymei",☁️官网地址jsnzkpg.com
 https://tymov2.a.kwimgs.com/upic/2026/08/15/09/BMjAyNjA4MTUwOTE2MzRfNDI0MDI5NTBfMjA1NjA5Mjg4OTg3XzFfMw==_b_B664d90218f70be73e07dd3cf02d473f1.mp4
-#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="阿根廷全国篮球联赛" tvg-name="[07:00] 金纳西亚 VS 博卡青年 (高清K)",[07:00] 金纳西亚 VS 博卡青年 (高清K)
-https://hello.ooo0ooo.top/live/3960559.m3u8
-#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="阿甲" tvg-name="[09:00] 科尔多瓦学院 VS 飓风队 (高清K)",[09:00] 科尔多瓦学院 VS 飓风队 (高清K)
-https://hello.ooo0ooo.top/live/4667159.m3u8
-#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="阿甲" tvg-name="[09:00] 科尔多瓦学院 VS 飓风队 (高清B)",[09:00] 科尔多瓦学院 VS 飓风队 (高清B)
-https://pul-tenm.gkykp.com/live/sd-1-4667159.m3u8?txSecret=55f9cfeec0173fab1ef246ca94c57818&txTime=6B04EE38
-#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="阿乙" tvg-name="[08:00] 迪罗甘拿斯亚 VS 特里斯顿 (高清K)",[08:00] 迪罗甘拿斯亚 VS 特里斯顿 (高清K)
-https://hello.ooo0ooo.top/live/4669953.m3u8
-#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="东亚锦标U15" tvg-name="[10:00] 蒙古U15 VS 北马里亚纳群岛U15 (高清K)",[10:00] 蒙古U15 VS 北马里亚纳群岛U15 (高清K)
-https://hello.ooo0ooo.top/live/4665675.m3u8
-#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="美职业" tvg-name="[09:40] 温哥华白浪 VS 皇家盐湖城 (高清K)",[09:40] 温哥华白浪 VS 皇家盐湖城 (高清K)
-https://hello.ooo0ooo.top/live/4670830.m3u8
-#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="美职业" tvg-name="[09:40] 温哥华白浪 VS 皇家盐湖城 (高清B)",[09:40] 温哥华白浪 VS 皇家盐湖城 (高清B)
-https://pul-tenm.gkykp.com/live/hd-en-1-4670830.m3u8?txSecret=38a10ef3df90fc0c7e418b7ec2f77bb3&txTime=6B04EE38
-#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="墨联" tvg-name="[09:00] 太阳 VS 太空人 (高清K)",[09:00] 太阳 VS 太空人 (高清K)
-https://hello.ooo0ooo.top/live/3961099.m3u8
-#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="墨联" tvg-name="[09:00] 太阳 VS 太空人 (高清B)",[09:00] 太阳 VS 太空人 (高清B)
-https://pul-tenm.gkykp.com/live/sd-2-3961099.m3u8?txSecret=4b46b2c5441154a4ea0e2c8582cd1f84&txTime=6B04EE38
-#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="墨西超" tvg-name="[09:10] 克雷塔罗 VS 内卡萨 (高清K)",[09:10] 克雷塔罗 VS 内卡萨 (高清K)
-https://hello.ooo0ooo.top/live/4553947.m3u8
-#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="墨西超" tvg-name="[09:10] 克雷塔罗 VS 内卡萨 (高清B)",[09:10] 克雷塔罗 VS 内卡萨 (高清B)
-https://pul-tenm.gkykp.com/live/sd-1-4553947.m3u8?txSecret=3fde83c478fa010baedcc855a7242a0c&txTime=6B04EE38
-#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="NBA" tvg-name="[08:00] 魔术 VS 奇才 (中文解说14)",[08:00] 魔术 VS 奇才 (中文解说14)
-https://live01-cn-ali.xqnbu.com/live/12851176_tsc.m3u8
-#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="NBA" tvg-name="[08:00] 魔术 VS 奇才 (高清K)",[08:00] 魔术 VS 奇才 (高清K)
-https://hello.ooo0ooo.top/live/3931724.m3u8
-#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="NBA" tvg-name="[08:00] 魔术 VS 奇才 (高清B)",[08:00] 魔术 VS 奇才 (高清B)
-https://pul-tenm.gkykp.com/live/hd-en-2-3931724.m3u8?txSecret=c532c63ab5c490f7711be31b105e2257&txTime=6B04EE38
-#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="NBA" tvg-name="[08:00] 掘金 VS 公牛 (中文解说24)",[08:00] 掘金 VS 公牛 (中文解说24)
-https://live01-cn-ali.xqnbu.com/live/90486222_tsc.m3u8
-#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="NBA" tvg-name="[08:00] 掘金 VS 公牛 (高清K)",[08:00] 掘金 VS 公牛 (高清K)
-https://hello.ooo0ooo.top/live/3931725.m3u8
-#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="NBA" tvg-name="[08:00] 掘金 VS 公牛 (高清B)",[08:00] 掘金 VS 公牛 (高清B)
-https://pul-tenm.gkykp.com/live/hd-en-2-3931725.m3u8?txSecret=9a127be40eba0bd5e921457b3f4073b8&txTime=6B04EE38
-#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="NBA" tvg-name="[08:00] 独行侠 VS 爵士 (中文解说28)",[08:00] 独行侠 VS 爵士 (中文解说28)
-https://live01-cn-ali.xqnbu.com/live/55306035_tsc.m3u8
-#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="NBA" tvg-name="[08:00] 独行侠 VS 爵士 (高清K)",[08:00] 独行侠 VS 爵士 (高清K)
-https://hello.ooo0ooo.top/live/3931726.m3u8
-#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="NBA" tvg-name="[08:00] 独行侠 VS 爵士 (高清B)",[08:00] 独行侠 VS 爵士 (高清B)
-https://pul-tenm.gkykp.com/live/hd-en-2-3931726.m3u8?txSecret=e84a350a721f82c28edbcb51efa8ded3&txTime=6B04EE38
-#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="NBA" tvg-name="[09:00] 步行者 VS 尼克斯 (中文解说12)",[09:00] 步行者 VS 尼克斯 (中文解说12)
-https://live01-cn-ali.xqnbu.com/live/77880323_tsc.m3u8
-#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="NBA" tvg-name="[09:00] 步行者 VS 尼克斯 (高清K)",[09:00] 步行者 VS 尼克斯 (高清K)
-https://hello.ooo0ooo.top/live/3931727.m3u8
-#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="NBA" tvg-name="[09:00] 步行者 VS 尼克斯 (高清B)",[09:00] 步行者 VS 尼克斯 (高清B)
-https://pul-tenm.gkykp.com/live/hd-en-2-3931727.m3u8?txSecret=13fab22173995eacfa81575203aeb33a&txTime=6B04EE38
-#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="NBA" tvg-name="[09:30] 凯尔特人 VS 勇士 (中文解说7)",[09:30] 凯尔特人 VS 勇士 (中文解说7)
-https://live01-cn-ali.xqnbu.com/live/80721633_tsc.m3u8
-#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="NBA" tvg-name="[09:30] 凯尔特人 VS 勇士 (高清K)",[09:30] 凯尔特人 VS 勇士 (高清K)
-https://hello.ooo0ooo.top/live/3931728.m3u8
-#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="NBA" tvg-name="[09:30] 凯尔特人 VS 勇士 (高清B)",[09:30] 凯尔特人 VS 勇士 (高清B)
-https://pul-tenm.gkykp.com/live/hd-en-2-3931728.m3u8?txSecret=701ea496de57b51f15d9d7661336dd9f&txTime=6B04EE38
-#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="NCAA" tvg-name="[09:00] 加州圣玛丽大学 VS 曼隆学院 (高清K)",[09:00] 加州圣玛丽大学 VS 曼隆学院 (高清K)
-https://hello.ooo0ooo.top/live/3952680.m3u8
-#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="NCAA" tvg-name="[09:00] 犹他河谷大学 VS 田纳西大学马丁分校 (高清K)",[09:00] 犹他河谷大学 VS 田纳西大学马丁分校 (高清K)
-https://hello.ooo0ooo.top/live/3961090.m3u8
+#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="印班超" tvg-name="[13:25] 皇家班加罗尔 VS 反叛者SC (高清K)",[13:25] 皇家班加罗尔 VS 反叛者SC (高清K)
+https://hello.ooo0ooo.top/live/4670091.m3u8
+#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="NBA" tvg-name="[11:00] 爵士 VS 湖人 (中文解说4)",[11:00] 爵士 VS 湖人 (中文解说4)
+https://live01-cn-ali.xqnbu.com/live/78598853_tsc.m3u8
+#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="NBA" tvg-name="[11:00] 爵士 VS 湖人 (高清K)",[11:00] 爵士 VS 湖人 (高清K)
+https://hello.ooo0ooo.top/live/3931737.m3u8
+#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="NBA" tvg-name="[11:00] 爵士 VS 湖人 (高清B)",[11:00] 爵士 VS 湖人 (高清B)
+https://pul-tenm.gkykp.com/live/hd-en-2-3931737.m3u8?txSecret=8d688f519f815063d22ef90aa3c6dfd7&txTime=6B067168
+#EXTINF:-1 tvg-logo="https://jsnz.pages.dev/f/5ab7e916.gif" group-title="NCAA" tvg-name="[12:30] 科罗拉多州立大学 VS 亚利桑那大学 (高清K)",[12:30] 科罗拉多州立大学 VS 亚利桑那大学 (高清K)
+https://hello.ooo0ooo.top/live/3952010.m3u8
