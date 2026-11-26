@@ -1,0 +1,81 @@
+{
+  "spider": "",
+  "sites": [],
+  "parses": [
+    {
+      "name": "默认嗅探",
+      "url": "",
+      "type": 0
+    }
+  ],
+  "flags": [
+    "纪录片",
+    "新闻",
+    "科教",
+    "少儿",
+    "音乐",
+    "旅行",
+    "天气"
+  ],
+  "lives": [
+    {
+      "name": "纪录片 · Documentary",
+      "type": 0,
+      "url": "https://iptv-org.github.io/iptv/categories/documentary.m3u",
+      "playertype": 2
+    },
+    {
+      "name": "新闻 · News",
+      "type": 0,
+      "url": "https://iptv-org.github.io/iptv/categories/news.m3u",
+      "playertype": 2
+    },
+    {
+      "name": "科教 · Science",
+      "type": 0,
+      "url": "https://iptv-org.github.io/iptv/categories/science.m3u",
+      "playertype": 2
+    },
+    {
+      "name": "少儿 · Kids",
+      "type": 0,
+      "url": "https://iptv-org.github.io/iptv/categories/kids.m3u",
+      "playertype": 2
+    },
+    {
+      "name": "音乐 · Music",
+      "type": 0,
+      "url": "https://iptv-org.github.io/iptv/categories/music.m3u",
+      "playertype": 2
+    },
+    {
+      "name": "旅行 · Travel",
+      "type": 0,
+      "url": "https://iptv-org.github.io/iptv/categories/travel.m3u",
+      "playertype": 2
+    },
+    {
+      "name": "天气 · Weather",
+      "type": 0,
+      "url": "https://iptv-org.github.io/iptv/categories/weather.m3u",
+      "playertype": 2
+    }
+  ],
+  "ijk": {
+    "mediaCodec": 1,
+    "mediaCodecAutoRotate": 1,
+    "mediaCodecHandleResolutionChange": 1,
+    "opensles": 0,
+    "soundTouch": 1
+  },
+  "ads": [
+    "mimg.0c1q0l.cn",
+    "www.googletagmanager.com"
+  ],
+  "doh": [
+    {
+      "name": "Cloudflare",
+      "url": "https://cloudflare-dns.com/dns-query"
+    }
+  ]
+}
