@@ -104,9 +104,13 @@ jobs:
       id-token: write
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url || steps.deployment_retry.outputs.page_url }}
     steps:
+      # run job 已把当天产物推送回 main，检出最新 main 才能部署当天看板；
+      # 默认检出的是触发提交（昨天的产物），会导致线上看板永远滞后一天
       - uses: actions/checkout@v4
+        with:
+          ref: main
 
       # Pages 站点必须由仓库管理员一次性开通（Settings → Pages → Source: GitHub Actions）。
       # GITHUB_TOKEN 无权创建站点（enablement 需 PAT/App），故先探测：
@@ -132,6 +136,18 @@ jobs:
         with:
           path: output/site
 
+      # 产物上传后索引存在延迟，紧接着部署会偶发
+      # "No artifacts named github-pages were found"（产物实际已存在）
+      - name: 等待产物可检索
+        if: steps.probe.outputs.enabled == 'true'
+        run: sleep 15
+
       - id: deployment
         if: steps.probe.outputs.enabled == 'true'
+        continue-on-error: true
+        uses: actions/deploy-pages@v4
+
+      - name: 部署重试（首次失败时）
+        id: deployment_retry
+        if: steps.probe.outputs.enabled == 'true' && steps.deployment.outcome == 'failure'
         uses: actions/deploy-pages@v4
