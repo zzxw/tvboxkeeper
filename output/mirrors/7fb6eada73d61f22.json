@@ -20,19 +20,19 @@
    "filterable": 0
   },
   {
-   "key": "全网",
-   "name": "全网",
+   "key": "dd资源",
+   "name": "dd资源",
    "type": 1,
-   "api": "https://hong.hgyx.vip/api.php/provide/vod",
+   "api": "https://dd.jzcbed.xyz/api.php/provide/vod",
    "searchable": 1,
    "quickSearch": 1,
    "filterable": 0
   },
   {
-   "key": "巨量",
-   "name": "巨量",
+   "key": "全网",
+   "name": "全网",
    "type": 1,
-   "api": "https://api.juliang.live/api/provide/vod",
+   "api": "https://hong.hgyx.vip/api.php/provide/vod",
    "searchable": 1,
    "quickSearch": 1,
    "filterable": 0
@@ -47,19 +47,19 @@
    "filterable": 0
   },
   {
-   "key": "360资源ZZ",
-   "name": "360资源ZZ",
+   "key": "巨量",
+   "name": "巨量",
    "type": 1,
-   "api": "https://360zyzz.com/api.php/provide/vod",
+   "api": "https://api.juliang.live/api/provide/vod",
    "searchable": 1,
    "quickSearch": 1,
    "filterable": 0
   },
   {
-   "key": "360",
-   "name": "360",
+   "key": "360资源ZZ",
+   "name": "360资源ZZ",
    "type": 1,
-   "api": "https://360zy.com/api.php/provide/vod",
+   "api": "https://360zyzz.com/api.php/provide/vod",
    "searchable": 1,
    "quickSearch": 1,
    "filterable": 0
@@ -74,19 +74,10 @@
    "filterable": 0
   },
   {
-   "key": "dd资源",
-   "name": "dd资源",
+   "key": "360",
+   "name": "360",
    "type": 1,
-   "api": "https://dd.jzcbed.xyz/api.php/provide/vod",
-   "searchable": 1,
-   "quickSearch": 1,
-   "filterable": 0
-  },
-  {
-   "key": "cmsfeifan2",
-   "name": "cms_feifan2",
-   "type": 1,
-   "api": "http://ffzy5.tv/api.php/provide/vod",
+   "api": "https://360zy.com/api.php/provide/vod",
    "searchable": 1,
    "quickSearch": 1,
    "filterable": 0
@@ -101,10 +92,19 @@
    "filterable": 0
   },
   {
-   "key": "6非凡",
-   "name": "6-非凡",
+   "key": "feifanapi",
+   "name": "feifanapi",
    "type": 1,
-   "api": "https://ffzy3.tv/api.php/provide/vod",
+   "api": "https://api.ffzyapi.com/api.php/provide/vod",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 0
+  },
+  {
+   "key": "cmsfeifan2",
+   "name": "cms_feifan2",
+   "type": 1,
+   "api": "http://ffzy5.tv/api.php/provide/vod",
    "searchable": 1,
    "quickSearch": 1,
    "filterable": 0
@@ -114,6 +114,15 @@
    "name": "7-非凡",
    "type": 1,
    "api": "https://ffzy4.tv/api.php/provide/vod",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 0
+  },
+  {
+   "key": "6非凡",
+   "name": "6-非凡",
+   "type": 1,
+   "api": "https://ffzy3.tv/api.php/provide/vod",
    "searchable": 1,
    "quickSearch": 1,
    "filterable": 0
@@ -137,28 +146,19 @@
    "filterable": 0
   },
   {
+   "key": "19量子",
+   "name": "19-量子",
+   "type": 1,
+   "api": "https://lzizy.net/api.php/provide/vod",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 0
+  },
+  {
    "key": "量子影视lzzytv",
    "name": "量子影视 · lzzy.tv",
    "type": 1,
    "api": "https://lzzy.tv/api.php/provide/vod",
-   "searchable": 1,
-   "quickSearch": 1,
-   "filterable": 0
-  },
-  {
-   "key": "15量子",
-   "name": "15-量子",
-   "type": 1,
-   "api": "https://lzizy8.com/api.php/provide/vod",
-   "searchable": 1,
-   "quickSearch": 1,
-   "filterable": 0
-  },
-  {
-   "key": "17量子",
-   "name": "17-量子",
-   "type": 1,
-   "api": "https://lzizy5.com/api.php/provide/vod",
    "searchable": 1,
    "quickSearch": 1,
    "filterable": 0
@@ -173,19 +173,28 @@
    "filterable": 0
   },
   {
-   "key": "19量子",
-   "name": "19-量子",
+   "key": "17量子",
+   "name": "17-量子",
    "type": 1,
-   "api": "https://lzizy.net/api.php/provide/vod",
+   "api": "https://lzizy5.com/api.php/provide/vod",
    "searchable": 1,
    "quickSearch": 1,
    "filterable": 0
   },
   {
-   "key": "jinying",
-   "name": "jinying",
+   "key": "15量子",
+   "name": "15-量子",
    "type": 1,
-   "api": "https://jinyingzy.com/api.php/provide/vod",
+   "api": "https://lzizy8.com/api.php/provide/vod",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 0
+  },
+  {
+   "key": "量子资源",
+   "name": "量子 资源",
+   "type": 1,
+   "api": "https://lzizy1.com/api.php/provide/vod",
    "searchable": 1,
    "quickSearch": 1,
    "filterable": 0
@@ -200,24 +209,6 @@
    "filterable": 0
   },
   {
-   "key": "cmshaohua",
-   "name": "cms_haohua",
-   "type": 1,
-   "api": "https://hhzyapi.com/api.php/provide/vod",
-   "searchable": 1,
-   "quickSearch": 1,
-   "filterable": 0
-  },
-  {
-   "key": "虎牙资源站",
-   "name": "虎牙资源站",
-   "type": 1,
-   "api": "https://huyazy.net/api.php/provide/vod",
-   "searchable": 1,
-   "quickSearch": 1,
-   "filterable": 0
-  },
-  {
    "key": "hongniu3",
    "name": "hongniu3",
    "type": 1,
@@ -227,19 +218,28 @@
    "filterable": 0
   },
   {
-   "key": "cmssubo",
-   "name": "cms_subo",
+   "key": "豪华",
+   "name": "豪华",
    "type": 1,
-   "api": "https://subocj.com/api.php/provide/vod",
+   "api": "https://haohuazy.com/api.php/provide/vod",
    "searchable": 1,
    "quickSearch": 1,
    "filterable": 0
   },
   {
-   "key": "豪华",
-   "name": "豪华",
+   "key": "cmshaohua",
+   "name": "cms_haohua",
    "type": 1,
-   "api": "https://haohuazy.com/api.php/provide/vod",
+   "api": "https://hhzyapi.com/api.php/provide/vod",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 0
+  },
+  {
+   "key": "cmssubo",
+   "name": "cms_subo",
+   "type": 1,
+   "api": "https://subocj.com/api.php/provide/vod",
    "searchable": 1,
    "quickSearch": 1,
    "filterable": 0
@@ -308,7 +308,7 @@
    "filterable": 0
   },
   {
-   "key": "量子资源",
+   "key": "量子资源2",
    "name": "量子资源",
    "type": 1,
    "api": "http://192.168.1.194:8105/api?u=https%3A%2F%2Fcj.lzcaiji.com%2Fapi.php%2Fprovide%2Fvod",
@@ -326,19 +326,19 @@
    "filterable": 0
   },
   {
-   "key": "feifanapi",
-   "name": "feifanapi",
+   "key": "feifancj2",
+   "name": "feifancj2",
    "type": 1,
-   "api": "http://192.168.1.194:8105/api?u=https%3A%2F%2Fapi.ffzyapi.com%2Fapi.php%2Fprovide%2Fvod",
+   "api": "http://192.168.1.194:8105/api?u=https%3A%2F%2Fcj.ffzyapi.com%2Fapi.php%2Fprovide%2Fvod",
    "searchable": 1,
    "quickSearch": 1,
    "filterable": 0
   },
   {
-   "key": "feifancj2",
-   "name": "feifancj2",
+   "key": "jinying",
+   "name": "jinying",
    "type": 1,
-   "api": "http://192.168.1.194:8105/api?u=https%3A%2F%2Fcj.ffzyapi.com%2Fapi.php%2Fprovide%2Fvod",
+   "api": "http://192.168.1.194:8105/api?u=https%3A%2F%2Fjinyingzy.com%2Fapi.php%2Fprovide%2Fvod",
    "searchable": 1,
    "quickSearch": 1,
    "filterable": 0
@@ -366,6 +366,15 @@
    "name": "极速资源",
    "type": 1,
    "api": "http://192.168.1.194:8105/api?u=https%3A%2F%2Fjszyapi.com%2Fapi.php%2Fprovide%2Fvod",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 0
+  },
+  {
+   "key": "虎牙资源站",
+   "name": "虎牙资源站",
+   "type": 1,
+   "api": "http://192.168.1.194:8105/api?u=https%3A%2F%2Fhuyazy.net%2Fapi.php%2Fprovide%2Fvod",
    "searchable": 1,
    "quickSearch": 1,
    "filterable": 0
@@ -488,10 +497,10 @@
    "filterable": 0
   },
   {
-   "key": "量子资源2",
-   "name": "量子 资源",
+   "key": "cmsjinying",
+   "name": "cms_jinying",
    "type": 1,
-   "api": "https://lzizy1.com/api.php/provide/vod",
+   "api": "https://jyzyapi.com/provide/vod",
    "searchable": 1,
    "quickSearch": 1,
    "filterable": 0
@@ -506,15 +515,6 @@
    "filterable": 0
   },
   {
-   "key": "金鹰资源",
-   "name": "金鹰资源",
-   "type": 1,
-   "api": "https://jyzyapi.com/provide/vod",
-   "searchable": 1,
-   "quickSearch": 1,
-   "filterable": 0
-  },
-  {
    "key": "分享迷你",
    "name": "分享迷你",
    "type": 1,
@@ -524,8 +524,8 @@
    "filterable": 0
   },
   {
-   "key": "麒麟影音",
-   "name": "麒麟┃影音",
+   "key": "cmsqlys",
+   "name": "cms_qlys",
    "type": 1,
    "api": "https://qlys.cc/api.php/provide/vod",
    "searchable": 1,
@@ -575,5 +575,5 @@
  "flags": [],
  "spider": "",
  "logo": "",
- "version": "202611270532"
+ "version": "202611280532"
 }

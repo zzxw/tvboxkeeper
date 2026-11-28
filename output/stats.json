@@ -1,19 +1,19 @@
 {
-  "generated_at": "2026-11-27 04:02:46",
-  "total": 702,
+  "generated_at": "2026-11-28 03:48:33",
+  "total": 703,
   "status": {
-    "active": 160,
-    "anti_crawl": 7,
-    "dead": 379,
+    "active": 154,
+    "anti_crawl": 5,
+    "dead": 380,
     "flaky": 4,
-    "invalid": 52,
-    "slow": 96
+    "invalid": 53,
+    "slow": 103
   },
   "banned": 4,
-  "publishable": 73,
+  "publishable": 74,
   "live": 164,
   "min_health": 60,
   "added": 4,
-  "removed": 2,
-  "https_ratio": 0.8772
+  "removed": 3,
+  "https_ratio": 0.8773
 }
